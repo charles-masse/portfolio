@@ -1,0 +1,9 @@
+
+html, body {
+    margin: 0;
+}
+
+#c {
+    float: left;
+    background: linear-gradient(to bottom, #87CEEB, #FFFFFF);
+}
