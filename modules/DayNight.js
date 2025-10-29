@@ -14,32 +14,28 @@ function lerpColor(c1, c2, t) {
 export class DayNight {
 
     constructor(scene, canvas, debug=false) {
+        // Settings
+        this.radius = 7.5;
+        this.omega = -5; // Speed
+        this.inclination = 100;
+        this.azimuth = 0;
 
-        this.canvas = canvas
-        this.debug = debug
+        this.canvas = canvas;
+        this.debug = debug;
 
-        const sun = new THREE.DirectionalLight(0xffffff, 20);
-        this.sun = sun
+        this.sun = new THREE.DirectionalLight(0xffffff, 20);
         this.sun.castShadow = true;
         this.sun.shadow.radius = 2;
         this.sun.shadow.bias = -0.001;
         this.sun.shadow.mapSize.set(2048, 2048);
         scene.add(this.sun);
 
-        const helper = new THREE.DirectionalLightHelper(this.sun, 1);
-        this.helper = helper
+        this.helper = new THREE.DirectionalLightHelper(this.sun, 1);
         if (this.debug) {
             scene.add(this.helper);
         }
-        const ambient = new THREE.AmbientLight(0xffffff, 10);
-        this.ambient = ambient
+        this.ambient = new THREE.AmbientLight(0xffffff, 10);
         scene.add(this.ambient);
-        // Settings
-        this.radius = 7.5;
-        this.omega = -5; // Speed
-        this.inclination = 100;
-        this.azimuth = 0;
-        //
     }
 
     sunOrbit(t) {
@@ -47,7 +43,6 @@ export class DayNight {
         const theta = THREE.MathUtils.degToRad(this.omega) * t;
 
         const pos = new THREE.Vector3(this.radius * Math.cos(theta), 0, this.radius * Math.sin(theta));
-
         pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(this.inclination));
         pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(this.azimuth));
 
@@ -61,7 +56,7 @@ export class DayNight {
     colorChange(t) {
 
         const day_full = 360 / Math.abs(this.omega);
-        const day_portion = (t % (day_full)) / day_full
+        const day_portion = (t % (day_full)) / day_full;
 
         let color;
         if (day_portion > 0.5) {
@@ -79,10 +74,9 @@ export class DayNight {
 
     update() {
         // Time in seconds
-        const time_in_secs = performance.now() / 1000
+        const time_in_secs = performance.now() / 1000;
         // Sun
-        const sunPos = this.sunOrbit(time_in_secs);
-        this.sun.position.copy(sunPos);
+        this.sun.position.copy(this.sunOrbit(time_in_secs));
         this.helper.update();
         // Ambient
         const ambientColor = this.colorChange(time_in_secs);

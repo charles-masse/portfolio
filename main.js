@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 // Custom modules
-import {DayNight} from './modules/DayNightCycle.js';
-import {FollowPath} from './modules/FollowPath.js';
+import {DayNight} from './modules/DayNight.js';
+import {Crowd} from './modules/Crowd.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -29,9 +29,9 @@ renderer.setAnimationLoop(animate);
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
-    emissive: 0xff0000,
-    emissiveIntensity: 1,
-    emissiveMap: textureLoader.load('checker.jpg'),
+    // emissive: 0xff0000,
+    // emissiveIntensity: 1,
+    // emissiveMap: textureLoader.load('checker.jpg'),
     side: THREE.DoubleSide,
 });
 
@@ -50,8 +50,8 @@ objLoader.load('city.obj', (object) => {
     scene.add(object);
 });
 
-const DayNightCycle = new DayNight(scene, canvas);
-const Follow = new FollowPath(scene);
+const dayNight = new DayNight(scene, canvas);
+const crowd = new Crowd(scene);
 
 let frames = 0
 let prevTime = performance.now();
@@ -61,7 +61,7 @@ function animate() {
     const time = performance.now();
     frames++;
     
-    if ( time >= prevTime + 1000 ) {
+    if (time >= prevTime + 1000) {
 
         const fps = Math.round((frames * 1000) / (time - prevTime));
 
@@ -72,8 +72,8 @@ function animate() {
 
     }
     // Update modules
-    DayNightCycle.update();
-    Follow.update();
+    dayNight.update();
+    crowd.update();
     // Render frame
     renderer.render(scene, camera);
 }
@@ -82,8 +82,7 @@ function onWindowResize() {
 
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
+    
     renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
-//
