@@ -1,8 +1,9 @@
-// Three
+// THREE
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
-// custom
-import {DayNight} from './DayNightCycle.js';
+// Custom modules
+import {DayNight} from './modules/DayNightCycle.js';
+import {FollowPath} from './modules/FollowPath.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -10,57 +11,79 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 1, 5);
 camera.lookAt(0, 0, 0);
-// Renderer
+// Canvas
 const canvas = document.querySelector('#c');
+// Renderer
 const renderer = new THREE.WebGLRenderer({
     canvas,
     alpha: true,
     antialias: true,
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
+window.addEventListener('resize', onWindowResize, false);
 document.body.appendChild(renderer.domElement);
+renderer.shadowMap.enabled = true;
+//renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.setAnimationLoop(animate);
 // Test geo
-const material = new THREE.MeshStandardMaterial({color: 0x808080});
+const textureLoader = new THREE.TextureLoader();
+const material = new THREE.MeshStandardMaterial({
+    color: 0x808080,
+    emissive: 0xff0000,
+    emissiveIntensity: 1,
+    emissiveMap: textureLoader.load('checker.jpg'),
+    side: THREE.DoubleSide,
+});
 
 const objLoader = new OBJLoader();
 objLoader.load('city.obj', (object) => {
     object.traverse((child) => {
+
         if (child.isMesh) {
             child.material = material;
             child.castShadow = true;
             child.receiveShadow = true;
         }
+
     });
+
     scene.add(object);
 });
-// Sun
-const sun = new THREE.DirectionalLight(0xffffff, 20);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-scene.add(sun);
-// Sun helper
-const helper = new THREE.DirectionalLightHelper(sun, 1);
-scene.add(helper);
-// Ambient
-const ambient = new THREE.AmbientLight(0xffffff, 10);
-scene.add(ambient);
-// Time
-const clock = new THREE.Clock();
-const DayNightCycle = new DayNight();
+
+const DayNightCycle = new DayNight(scene, canvas);
+const Follow = new FollowPath(scene);
+
+let frames = 0
+let prevTime = performance.now();
 
 function animate() {
+    // FPS -- https://jsfiddle.net/z2c19qab/1/
+    const time = performance.now();
+    frames++;
+    
+    if ( time >= prevTime + 1000 ) {
 
-    const time = clock.getElapsedTime();
-    // console.log(time);
-    // DayNight cycle
-    const {sunPos, ambientColor} = DayNightCycle.update(time);
-    sun.position.copy(sunPos);
-    canvas.style.background = `linear-gradient(to bottom, ${ambientColor}, #ffffff)`;
-    ambient.color.set(ambientColor);
+        const fps = Math.round((frames * 1000) / (time - prevTime));
+
+        console.log(`fps: ${fps}`);
+      
+        frames = 0;
+        prevTime = time;
+
+    }
+    // Update modules
+    DayNightCycle.update();
+    Follow.update();
     // Render frame
-    helper.update();
     renderer.render(scene, camera);
+}
+//
+function onWindowResize() {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
+//
