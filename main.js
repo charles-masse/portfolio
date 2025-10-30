@@ -3,8 +3,7 @@ import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 // Custom modules
 import {DayNight} from './modules/DayNight.js';
-import {Crowd} from './modules/Crowd.js';
-
+import {CrowdSpawner} from './modules/CrowdSpawner.js';
 // Scene
 const scene = new THREE.Scene();
 // Camera
@@ -19,13 +18,15 @@ const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true,
 });
-renderer.setSize(window.innerWidth, window.innerHeight);
-window.addEventListener('resize', onWindowResize, false);
 document.body.appendChild(renderer.domElement);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 //renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.gammaOutput = true;
+window.addEventListener('resize', onWindowResize, false);
 renderer.setAnimationLoop(animate);
-// Test geo
+// Test city
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
@@ -51,21 +52,18 @@ objLoader.load('city.obj', (object) => {
 });
 
 const dayNight = new DayNight(scene, canvas);
-const crowd = new Crowd(scene);
+const crowdSpawner = new CrowdSpawner(scene);
 
-let frames = 0
+let frames = 0;
 let prevTime = performance.now();
 
 function animate() {
     // FPS -- https://jsfiddle.net/z2c19qab/1/
     const time = performance.now();
     frames++;
-    
+
     if (time >= prevTime + 1000) {
-
-        const fps = Math.round((frames * 1000) / (time - prevTime));
-
-        console.log(`fps: ${fps}`);
+        console.log(`fps: ${Math.round((frames * 1000) / (time - prevTime))}`);
       
         frames = 0;
         prevTime = time;
@@ -73,7 +71,7 @@ function animate() {
     }
     // Update modules
     dayNight.update();
-    crowd.update();
+    crowdSpawner.update();
     // Render frame
     renderer.render(scene, camera);
 }

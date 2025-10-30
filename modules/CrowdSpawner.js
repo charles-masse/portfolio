@@ -2,11 +2,13 @@
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
 
+import {PictogramAgent} from '../agents/pictogram.js';
+
 function sync(entity, renderComponent) {
     renderComponent.matrix.copy(entity.worldMatrix);
 }
 
-export class Crowd {
+export class CrowdSpawner {
 
     constructor(scene, debug=false) {
         // Setup
@@ -16,15 +18,10 @@ export class Crowd {
         this.clock = new THREE.Clock();
 
         this.entityManager = new YUKA.EntityManager();
-        // Character test
-        this.vehicleGeometry = new THREE.ConeGeometry(0.1, 0.5, 8);
-        this.vehicleGeometry.rotateX(Math.PI * 0.5);
-        this.vehicleMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
 
     }
 
     spawn() {
-
         // Path
         const path = new YUKA.Path();
         path.loop = true;
@@ -56,19 +53,38 @@ export class Crowd {
 
         // }
 
-        const vehicleMesh = new THREE.Mesh(this.vehicleGeometry, this.vehicleMaterial);
-        vehicleMesh.matrixAutoUpdate = false;
-        this.scene.add(vehicleMesh);
+        // Agent
+        // Agent - Geo
+        const vehicleGeometry = new THREE.ConeGeometry(0.1, 0.5, 8);
+        vehicleGeometry.rotateX(Math.PI * 0.5);
 
+        const vehicleMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+
+        const pictogramMesh = new THREE.Mesh(vehicleGeometry, vehicleMaterial);
+        pictogramMesh.matrixAutoUpdate = false;
+
+        this.scene.add(pictogramMesh);
+        // Agent - Animations
+        //const mixer = new THREE.AnimationMixer(model);
+        //const animations = new Map();
+
+        // const walkAnim = mixer.clipAction('Walk');
+        //alkAnim.play();
+        //walkAnim.enabled = false;
+        //animations.set('WALK', walkAnim );
+
+        //const pictogram = new PictogramAgent(mixer, animations);
+        //entityManager.add(pictogram);
+        // Agent - Behaviors
         const vehicle = new YUKA.Vehicle();
         vehicle.maxSpeed = Math.random() + 1;
-        vehicle.setRenderComponent(vehicleMesh, sync);
-
+        vehicle.setRenderComponent(pictogramMesh, sync);
+        
         const followPathBehavior = new YUKA.FollowPathBehavior(path);
         vehicle.steering.add(followPathBehavior);
 
-        // const onPathBehavior = new YUKA.OnPathBehavior(path);
-        // vehicle.steering.add(onPathBehavior);
+        const onPathBehavior = new YUKA.OnPathBehavior(path);
+        vehicle.steering.add(onPathBehavior);
 
         this.entityManager.add(vehicle);
         vehicle.position.copy(path._waypoints[0]);
