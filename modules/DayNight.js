@@ -1,6 +1,6 @@
 
 import * as THREE from 'three';
-//
+
 function lerpColor(c1, c2, t) {
 
     return {
@@ -10,11 +10,11 @@ function lerpColor(c1, c2, t) {
     };
 
 }
-//
+
 export class DayNight {
 
     constructor(scene, canvas, debug=false) {
-        // Settings
+        //Settings
         this.radius = 7.5;
         this.omega = -5; // Speed
         this.inclination = 100;
@@ -73,12 +73,12 @@ export class DayNight {
     }
 
     update() {
-        // Time in seconds
+        //Time in seconds
         const time_in_secs = performance.now() / 1000;
-        // Sun
+        //Sun
         this.sun.position.copy(this.sunOrbit(time_in_secs));
         this.helper.update();
-        // Ambient
+        //Ambient
         const ambientColor = this.colorChange(time_in_secs);
         this.ambient.color.set(ambientColor);
         this.canvas.style.background = `linear-gradient(to bottom, ${ambientColor}, rgb(255, 255, 255))`;
