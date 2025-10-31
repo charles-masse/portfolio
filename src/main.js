@@ -32,12 +32,12 @@ const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
     // emissive: 0xffffff,
     // emissiveIntensity: 1,
-    // emissiveMap: textureLoader.load('checker.jpg'),
+    // emissiveMap: textureLoader.load('textures/checker.jpg'),
     side: THREE.DoubleSide,
 });
 
 const objLoader = new OBJLoader();
-objLoader.load('city.obj', (object) => {
+objLoader.load('models/city.obj', (object) => {
     object.traverse((child) => {
 
         if (child.isMesh) {

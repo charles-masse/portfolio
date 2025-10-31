@@ -19,22 +19,24 @@ class PictogramAgent extends YUKA.GameEntity {
         this.crossFadeDuration = 1; //duration of a crossfade in seconds
         //Geo
         const loader = new FBXLoader();
-        loader.load('pictogram.fbx', (fbx) => {
+        loader.load('models/pictogram.fbx', (fbx) => {
 
             fbx.traverse((child) => {
+
                 if (child.isMesh) {
+
                     child.material = new THREE.MeshBasicMaterial({
                         color: 0x000000,
                         side: THREE.DoubleSide,
                     });
+
                 }
+
             });
 
             const model = fbx;
-            
             model.matrixAutoUpdate = false;
             this.setRenderComponent(model, sync);
-
             scene.add(model);
             //Animations
             const animations = model.animations;
