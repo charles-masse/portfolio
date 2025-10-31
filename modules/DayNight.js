@@ -11,6 +11,12 @@ function lerpColor(c1, c2, t) {
 
 }
 
+function colorToString(color) {
+
+    return `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+}
+
 export class DayNight {
 
     constructor(scene, canvas, debug=false) {
@@ -46,9 +52,6 @@ export class DayNight {
         pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(this.inclination));
         pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(this.azimuth));
 
-        if (this.debug) {
-            console.log(`Sun Orbit position : ${pos.toArray()}`);
-        }
         return pos;
 
     }
@@ -65,10 +68,12 @@ export class DayNight {
             color = lerpColor({r:0, g:191, b:255}, {r:25, g:25, b:112}, day_portion * 2);
         }
 
+        const color_string = colorToString(color);
+
         if (this.debug) {
-            console.log(`Ambient Color : rgb(${color.r}, ${color.g}, ${color.b})`);
+            console.log(`Ambient Color : ${color_string}`);
         }
-        return `rgb(${color.r}, ${color.g}, ${color.b})`;
+        return color_string;
 
     }
 

@@ -1,12 +1,12 @@
 
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
-
-import {PictogramAgent} from '../agents/pictogram.js';
+//Agents
+import {PictogramAgent} from '../agents/Pictogram.js';
 
 export class CrowdSpawner {
 
-    constructor(scene, debug=false) {
+    constructor(scene) {
         
         this.time = new YUKA.Time();
         this.clock = new THREE.Clock();
@@ -19,15 +19,15 @@ export class CrowdSpawner {
     spawn() {
         //Path
         const path = new YUKA.Path();
+        path.add(new YUKA.Vector3(-2, -1, 2));
+        path.add(new YUKA.Vector3(-3, -1, 0));
+        path.add(new YUKA.Vector3(-2, -1, -2));
+        path.add(new YUKA.Vector3(0, -1, 0));
+        path.add(new YUKA.Vector3(2, -1, -2));
+        path.add(new YUKA.Vector3(3, -1, 0));
+        path.add(new YUKA.Vector3(2, -1, 2));
+        path.add(new YUKA.Vector3(0, -1, 3));
         path.loop = true;
-        path.add(new YUKA.Vector3(-2, -0.75, 2));
-        path.add(new YUKA.Vector3(-3, -0.75, 0));
-        path.add(new YUKA.Vector3(-2, -0.75, -2));
-        path.add(new YUKA.Vector3(0, -0.75, 0));
-        path.add(new YUKA.Vector3(2, -0.75, -2));
-        path.add(new YUKA.Vector3(3, -0.75, 0));
-        path.add(new YUKA.Vector3(2, -0.75, 2));
-        path.add(new YUKA.Vector3(0, -0.75, 3));
 
         // if (debug) {
 
@@ -47,18 +47,17 @@ export class CrowdSpawner {
         //     this.scene.add(lines);
 
         // }
-
-        const agent = new PictogramAgent(path);
-        // Behaviors
-        const followPathBehavior = new YUKA.FollowPathBehavior(path);
+        //Create agent
+        const agent = new PictogramAgent(this.scene);
+        //Behaviors
+        const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.25);
         agent.vehicle.steering.add(followPathBehavior);
 
-        const onPathBehavior = new YUKA.OnPathBehavior(path);
-        agent.vehicle.steering.add(onPathBehavior);
-
+        // const onPathBehavior = new YUKA.OnPathBehavior(path);
+        // agent.vehicle.steering.add(onPathBehavior);
+        
         agent.vehicle.position.copy(path._waypoints[0]);
 
-        this.scene.add(agent.mesh);
         this.entityManager.add(agent);
 
     }

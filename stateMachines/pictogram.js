@@ -14,6 +14,8 @@ class Walk extends YUKA.State {
 
     execute(char) {
 
+        // char.mixer.timeScale = 0.5; //speed up/down anims
+
         // if (char.currentTime >= char.stateDuration) {
 
         //     char.currentTime = 0;

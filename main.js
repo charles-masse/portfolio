@@ -1,4 +1,4 @@
-//THREE
+
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 //Custom modules
@@ -11,7 +11,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.set(0, 1, 5);
 camera.lookAt(0, 0, 0);
 //Canvas
-const canvas = document.querySelector('#c');
+const canvas = document.querySelector('#canvas');
 //Renderer
 const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -30,7 +30,7 @@ renderer.setAnimationLoop(animate);
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
-    // emissive: 0xff0000,
+    // emissive: 0xffffff,
     // emissiveIntensity: 1,
     // emissiveMap: textureLoader.load('checker.jpg'),
     side: THREE.DoubleSide,
