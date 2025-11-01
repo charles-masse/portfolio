@@ -30,9 +30,9 @@ renderer.setAnimationLoop(animate);
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
-    // emissive: 0xffffff,
-    // emissiveIntensity: 1,
-    // emissiveMap: textureLoader.load('textures/checker.jpg'),
+    emissive: 0xffffff,
+    emissiveIntensity: 1,
+    emissiveMap: textureLoader.load('textures/cityEmission.jpg'),
     side: THREE.DoubleSide,
 });
 

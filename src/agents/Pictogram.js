@@ -5,10 +5,6 @@ import * as YUKA from 'yuka';
 //States
 import {Walk} from '../stateMachines/Pictogram.js';
 
-function sync(entity, renderComponent) {
-    renderComponent.matrix.copy(entity.worldMatrix);
-}
-
 class PictogramAgent extends YUKA.GameEntity {
 
     constructor(scene) {
@@ -77,6 +73,10 @@ class PictogramAgent extends YUKA.GameEntity {
 
     }
 
+}
+
+function sync(entity, renderComponent) {
+    renderComponent.matrix.copy(entity.worldMatrix);
 }
 
 export {PictogramAgent};

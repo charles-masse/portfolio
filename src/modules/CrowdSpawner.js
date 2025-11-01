@@ -4,6 +4,9 @@ import * as YUKA from 'yuka';
 //Agents
 import {PictogramAgent} from '../agents/Pictogram.js';
 
+const SPAWN_MIN = 3;
+const SPAWN_MAX = 10;
+
 export class CrowdSpawner {
 
     constructor(scene) {
@@ -64,7 +67,7 @@ export class CrowdSpawner {
 
     update() {
 
-        if (this.clock.getElapsedTime() > Math.round(Math.random() * (10 - 3) + 3)) {
+        if (this.clock.getElapsedTime() > Math.round(Math.random() * (SPAWN_MAX - SPAWN_MIN) + SPAWN_MIN)) {
 
             this.spawn();
             this.clock.start();
