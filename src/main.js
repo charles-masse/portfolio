@@ -63,7 +63,7 @@ function animate() {
     frames++;
 
     if (time >= prevTime + 1000) {
-        console.log(`fps: ${Math.round((frames * 1000) / (time - prevTime))}`);
+        document.getElementById('fps').textContent = `FPS: ${Math.round((frames * 1000) / (time - prevTime))}`;
       
         frames = 0;
         prevTime = time;
@@ -72,7 +72,7 @@ function animate() {
     //Update modules
     dayNight.update();
     crowdSpawner.update();
-    //Render frame
+
     renderer.render(scene, camera);
 }
 

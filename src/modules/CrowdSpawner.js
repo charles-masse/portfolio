@@ -4,33 +4,61 @@ import * as YUKA from 'yuka';
 //Agents
 import {PictogramAgent} from '../agents/Pictogram.js';
 
-const SPAWN_MIN = 3;
-const SPAWN_MAX = 10;
+const AGENTS_PER_FRAMES = 5;
+const MAX_AGENTS = 100;
+
+const CANDIDATE_NB = 5;
 
 export class CrowdSpawner {
 
     constructor(scene) {
-        
-        this.time = new YUKA.Time();
-        this.clock = new THREE.Clock();
 
         this.scene = scene;
         this.entityManager = new YUKA.EntityManager();
 
+        this.time = new YUKA.Time();
+
+    }
+
+    bestCandidate() {
+
+        let positions = [];
+
+        const current_positions = this.entityManager.entities.map(entity => entity.position);
+
+        let position;
+        let candidates = 0;
+        while (candidates < CANDIDATE_NB) {
+
+            position = new YUKA.Vector3(
+                YUKA.MathUtils.randFloat(-5, 5),
+                -1,
+                YUKA.MathUtils.randFloat(1, 3)
+            );
+
+            const distances = current_positions.map(pos => position.distanceTo(pos));
+            const min_dist = Math.min(...distances);
+            positions.push({pos: position, dist:min_dist});
+
+            candidates++;
+        }
+
+        const best_candidate = positions.reduce((a, b) => (a.dist > b.dist ? a : b));
+        return best_candidate.pos;
     }
 
     spawn() {
-        //Path
-        const path = new YUKA.Path();
-        path.add(new YUKA.Vector3(-2, -1, 2));
-        path.add(new YUKA.Vector3(-3, -1, 0));
-        path.add(new YUKA.Vector3(-2, -1, -2));
-        path.add(new YUKA.Vector3(0, -1, 0));
-        path.add(new YUKA.Vector3(2, -1, -2));
-        path.add(new YUKA.Vector3(3, -1, 0));
-        path.add(new YUKA.Vector3(2, -1, 2));
-        path.add(new YUKA.Vector3(0, -1, 3));
-        path.loop = true;
+        // //Path
+        // const path = new YUKA.Path();
+        // path.add(new YUKA.Vector3(-2, -1, 2));
+        // path.add(new YUKA.Vector3(-3, -1, 0));
+        // path.add(new YUKA.Vector3(-2, -1, -2));
+        // path.add(new YUKA.Vector3(0, -1, 0));
+        // path.add(new YUKA.Vector3(2, -1, -2));
+        // path.add(new YUKA.Vector3(3, -1, 0));
+        // path.add(new YUKA.Vector3(2, -1, 2));
+        // path.add(new YUKA.Vector3(0, -1, 3));
+        // path.loop = true;
 
         // if (debug) {
 
@@ -41,6 +69,7 @@ export class CrowdSpawner {
         //         const waypoint = path._waypoints[i];
         //         position.push(waypoint.x, waypoint.y, waypoint.z);
 
+
         //     }
 
         //     const lineGeometry = new THREE.BufferGeometry();
@@ -50,16 +79,15 @@ export class CrowdSpawner {
         //     this.scene.add(lines);
 
         // }
-        //Create agent
+        
         const agent = new PictogramAgent(this.scene);
-        //Behaviors
-        const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.25);
-        agent.vehicle.steering.add(followPathBehavior);
+        agent.vehicle.position.copy(this.bestCandidate());
+        // //Behaviors
+        // const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.25);
+        // agent.vehicle.steering.add(followPathBehavior);
 
         // const onPathBehavior = new YUKA.OnPathBehavior(path);
         // agent.vehicle.steering.add(onPathBehavior);
-        
-        agent.vehicle.position.copy(path._waypoints[0]);
 
         this.entityManager.add(agent);
 
@@ -67,11 +95,13 @@ export class CrowdSpawner {
 
     update() {
 
-        if (this.clock.getElapsedTime() > Math.round(Math.random() * (SPAWN_MAX - SPAWN_MIN) + SPAWN_MIN)) {
+        if (this.entityManager.entities.length < MAX_AGENTS) {
 
-            this.spawn();
-            this.clock.start();
-            console.log(`Population : ${this.entityManager.entities.length}`);
+            for (let x = 0; x < AGENTS_PER_FRAMES; x++) {
+                this.spawn();
+            }
+
+            document.getElementById('population').textContent = `Population: ${this.entityManager.entities.length}`;
 
         }
 

@@ -1,6 +1,9 @@
 
 import * as THREE from 'three';
 
+const START_TIME_SECS = 5;
+const SUN_SPEED = -20;
+
 const DAY_EVENTS = [
     {   //Sunrise
         time:0,
@@ -34,11 +37,6 @@ export class DayNight {
 
         this.canvas = canvas;
         this.debug = debug;
-        //Settings
-        this.radius = 7.5;
-        this.omega = -10; // Speed
-        this.inclination = 100;
-        this.azimuth = 0;
         //Lights
         this.sun = new THREE.DirectionalLight(0xffffff, 20);
         this.sun.castShadow = true;
@@ -60,18 +58,22 @@ export class DayNight {
 
     sunOrbit(t) {
 
-        const theta = THREE.MathUtils.degToRad(this.omega) * t;
+        const radius = 7.5;
+        const inclination = 100;
+        const azimuth = 0;
 
-        const pos = new THREE.Vector3(this.radius * Math.cos(theta), 0, this.radius * Math.sin(theta));
-        pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(this.inclination));
-        pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(this.azimuth));
+        const theta = THREE.MathUtils.degToRad(SUN_SPEED) * t;
+
+        const pos = new THREE.Vector3(radius * Math.cos(theta), 0, radius * Math.sin(theta));
+        pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(inclination));
+        pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(azimuth));
 
         return pos;
     }
 
     colorChange(t) {
 
-        const day_full = 360 / Math.abs(this.omega);
+        const day_full = 360 / Math.abs(SUN_SPEED);
         const day_portion = (t % day_full) / day_full;
 
         let current_event;
@@ -108,7 +110,7 @@ export class DayNight {
 
     update() {
 
-        const time_in_secs = performance.now() / 1000;
+        const time_in_secs = (performance.now() / 1000) + START_TIME_SECS;
         //Sun
         this.sun.position.copy(this.sunOrbit(time_in_secs));
         this.helper.update();
@@ -123,7 +125,7 @@ export class DayNight {
 
 function lerpFactor(a, b, value) {
     if (a > b) b += 1; //Cheat for now, make it better if needed
-    return (value - a) / (b - a);
+    return THREE.MathUtils.inverseLerp(a, b, value);
 }
 
 function lerpColor(c1, c2, t) {

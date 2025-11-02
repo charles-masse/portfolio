@@ -13,12 +13,32 @@
         float: left;
         background: linear-gradient(to bottom, #87CEEB, #FFFFFF);
       }
+      #info {
+        top: 0;
+        padding: 0.5em;
+        background-color: #282828;
+        position: absolute;
+        display: flex;
+        font-size: 28px;
+        color: #ffffff;
+        line-height: 1em;
+      }
+      #info>div {
+        width: 100%;
+      }
     </style>
   </head>
 
   <body>
     <canvas id="canvas"></canvas>
     <script type="module" src="src/main.js"></script>
+    <section id="info">
+      <div>
+        <span id="population"></span>
+        <br>
+        <span id="fps"></span>
+      </div>
+    </section>
   </body>
 
 </html>
