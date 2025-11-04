@@ -7,9 +7,10 @@ import {CrowdSpawner} from './modules/CrowdSpawner.js';
 //Scene
 const scene = new THREE.Scene();
 //Camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1, 5);
-camera.lookAt(0, 0, 0);
+const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.setFocalLength(14.872)
+camera.position.set(22.436, 30.551, 67.458);
+camera.lookAt(53.598, 23.026, 12.505);
 //Canvas
 const canvas = document.querySelector('#canvas');
 //Renderer
@@ -22,7 +23,6 @@ document.body.appendChild(renderer.domElement);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
-// renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.gammaOutput = true;
 window.addEventListener('resize', onWindowResize, false);
 renderer.setAnimationLoop(animate);
@@ -30,9 +30,9 @@ renderer.setAnimationLoop(animate);
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
     color: 0x808080,
-    emissive: 0xffffff,
-    emissiveIntensity: 1,
-    emissiveMap: textureLoader.load('textures/cityEmission.jpg'),
+    // emissive: 0xffffff,
+    // emissiveIntensity: 1,
+    // emissiveMap: textureLoader.load('textures/cityEmission.jpg'),
     side: THREE.DoubleSide,
 });
 

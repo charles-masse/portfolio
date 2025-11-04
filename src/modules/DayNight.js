@@ -77,15 +77,17 @@ export class DayNight {
         const day_portion = (t % day_full) / day_full;
 
         let current_event;
+        let current_time;
         let next_event;
+        let next_time;
         for (let i = 0; i < DAY_EVENTS.length; i++) {
-            const idx_time = DAY_EVENTS[i].time;
+            current_time = DAY_EVENTS[i].time;
 
             const next_idx = (i + 1) % DAY_EVENTS.length;
-            let next_idx_time = DAY_EVENTS[next_idx].time;
-            if (next_idx_time < idx_time) next_idx_time += 1;
+            next_time = DAY_EVENTS[next_idx].time;
+            if (next_time < current_time) next_time += 1;
 
-            if (day_portion >= idx_time && day_portion < next_idx_time) {
+            if (day_portion >= current_time && day_portion < next_time) {
                 current_event = i;
                 next_event = (current_event + 1) % DAY_EVENTS.length;
                 break;
@@ -93,9 +95,7 @@ export class DayNight {
 
         }
 
-        const curent_time = DAY_EVENTS[current_event].time;
-        const next_time = DAY_EVENTS[next_event].time;
-        const blend_factor = lerpFactor(curent_time, next_time, day_portion);
+        const blend_factor = THREE.MathUtils.inverseLerp(current_time, next_time, day_portion);
 
         const top_color = lerpColor(DAY_EVENTS[current_event].top_color, DAY_EVENTS[next_event].top_color, blend_factor);
         const bot_color = lerpColor(DAY_EVENTS[current_event].bot_color, DAY_EVENTS[next_event].bot_color, blend_factor);
@@ -121,11 +121,6 @@ export class DayNight {
 
     }
 
-}
-
-function lerpFactor(a, b, value) {
-    if (a > b) b += 1; //Cheat for now, make it better if needed
-    return THREE.MathUtils.inverseLerp(a, b, value);
 }
 
 function lerpColor(c1, c2, t) {

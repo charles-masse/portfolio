@@ -17,34 +17,62 @@ export class CrowdSpawner {
         this.entityManager = new YUKA.EntityManager();
 
         this.time = new YUKA.Time();
+        // Spawn zone
+        const polygon = [
+            new THREE.Vector2(0, 10),
+            new THREE.Vector2(75, 15),
+            new THREE.Vector2(50, -20),
+            new THREE.Vector2(0, -5)
+        ];
+        this.spawnTris = this.triangulate(polygon);
+
+    }
+
+    triangulate(polygon) {
+
+        const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
+
+        return triangles.map(pt => pt.map(i => polygon[i]));
+    }
+
+    randomPointInTriangles(triangles) {
+
+        const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
+
+        let r1 = Math.random();
+        let r2 = Math.random();
+
+        if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;}
+
+        return {
+            x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
+            y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
+        };
 
     }
 
     bestCandidate() {
 
-        let positions = [];
-
         const current_positions = this.entityManager.entities.map(entity => entity.position);
 
-        let position;
-        let candidates = 0;
-        while (candidates < CANDIDATE_NB) {
+        let best;
+        let maxDist = -Infinity;
 
-            position = new YUKA.Vector3(
-                YUKA.MathUtils.randFloat(-5, 5),
-                -1,
-                YUKA.MathUtils.randFloat(1, 3)
-            );
+        for (let i = 0; i < CANDIDATE_NB; i++) {
 
-            const distances = current_positions.map(pos => position.distanceTo(pos));
-            const min_dist = Math.min(...distances);
-            positions.push({pos: position, dist:min_dist});
+            const {x, y} = this.randomPointInTriangles(this.spawnTris);
 
-            candidates++;
+            const pos = new YUKA.Vector3(x, 0, y);
+            const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
+
+            if (minDist > maxDist) {
+                maxDist = minDist;
+                best = pos;
+            }
+
         }
 
-        const best_candidate = positions.reduce((a, b) => (a.dist > b.dist ? a : b));
-        return best_candidate.pos;
+    return best;
     }
 
     spawn() {
@@ -79,7 +107,7 @@ export class CrowdSpawner {
         //     this.scene.add(lines);
 
         // }
-        
+
         const agent = new PictogramAgent(this.scene);
         agent.vehicle.position.copy(this.bestCandidate());
         // //Behaviors
