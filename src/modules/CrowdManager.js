@@ -1,0 +1,182 @@
+
+import * as THREE from 'three';
+import * as YUKA from 'yuka';
+//Agents
+import {PictogramAgent} from '../agents/Pictogram.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+
+const MAX_AGENTS = 1000;
+const CANDIDATE_NB = 5;
+
+export class CrowdManager {
+
+    constructor(scene) {
+
+        this.time = new YUKA.Time();
+
+        this.scene = scene;
+        this.entity_manager = new YUKA.EntityManager();
+
+        const slider = document.getElementById('mySlider');
+        slider.addEventListener('input', () => {this.spawn(slider.value)});
+        //Spawn zone
+        const polygon = [
+            new THREE.Vector2(0, 10),
+            new THREE.Vector2(75, 15),
+            new THREE.Vector2(50, -20),
+            new THREE.Vector2(0, -5)
+        ];
+        this.triangulated_spawn = triangulate(polygon);
+        //Create instanced geo
+        let geo;
+        const loader = new FBXLoader();
+        loader.load('models/pictogram.fbx', (fbx) => {
+
+            fbx.traverse((child) => {
+                geo = child.geometry;
+            });
+
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                side: THREE.DoubleSide,
+            });
+
+            this.instanced_mesh = new THREE.InstancedMesh(geo, material, MAX_AGENTS);
+            this.scene.add(this.instanced_mesh);
+
+        });
+        //Link to yuka agents
+        this.agents = [];
+        for (let i = 0; i < MAX_AGENTS; i++) {
+
+            const positions = this.entity_manager.entities.map(entity => entity.position);
+
+            const agent = new PictogramAgent();
+            agent.position = bestCandidate(positions, this.triangulated_spawn);
+            this.entity_manager.add(agent);
+
+            this.agents.push(agent);
+
+        }
+
+    }
+
+    update() {
+        //Skip update if instance mesh is created yet
+        if (this.instanced_mesh) {
+
+            const tempMatrix = new THREE.Matrix4();
+            for (let i = 0; i < this.agents.length; i++) {
+
+                const agent = this.agents[i];
+                tempMatrix.fromArray(agent.worldMatrix.elements);
+
+                this.instanced_mesh.setMatrixAt(i, tempMatrix);
+
+            }
+
+            this.instanced_mesh.instanceMatrix.needsUpdate = true;
+
+            document.getElementById('population').textContent = `Population: ${this.agents.length}`;
+
+        }
+
+    }
+
+}
+
+function triangulate(polygon) {
+
+    const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
+
+    return triangles.map(pt => pt.map(i => polygon[i]));
+}
+
+function bestCandidate(current_positions, triangulated_zone) {
+
+    let best;
+    let maxDist = -Infinity;
+
+    for (let i = 0; i < CANDIDATE_NB; i++) {
+
+        const {x, y} = randomPointInTriangles(triangulated_zone);
+
+        const pos = new YUKA.Vector3(x, 0, y);
+        const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
+
+        if (minDist > maxDist) {
+
+            maxDist = minDist;
+            best = pos;
+
+        }
+
+    }
+
+    return best;
+}
+
+function randomPointInTriangles(triangles) {
+
+    const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
+
+    let r1 = Math.random();
+    let r2 = Math.random();
+
+    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;}
+
+    return {
+        x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
+        y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
+    };
+
+}
+
+//     // if (this.entity_manager.entities.length < MAX_AGENTS) {
+
+//     //     for (let x = 0; x < AGENTS_PER_FRAMES; x++) {
+//     //         this.spawn();
+//     //     }
+
+//     // }
+
+//     // //Path
+//     // const path = new YUKA.Path();
+//     // path.add(new YUKA.Vector3(-2, -1, 2));
+//     // path.add(new YUKA.Vector3(-3, -1, 0));
+//     // path.add(new YUKA.Vector3(-2, -1, -2));
+//     // path.add(new YUKA.Vector3(0, -1, 0));
+//     // path.add(new YUKA.Vector3(2, -1, -2));
+//     // path.add(new YUKA.Vector3(3, -1, 0));
+//     // path.add(new YUKA.Vector3(2, -1, 2));
+//     // path.add(new YUKA.Vector3(0, -1, 3));
+//     // path.loop = true;
+
+//     // if (debug) {
+
+//     //     const position = [];
+
+//     //     for (let i = 0; i < path._waypoints.length; i ++) {
+
+//     //         const waypoint = path._waypoints[i];
+//     //         position.push(waypoint.x, waypoint.y, waypoint.z);
+
+
+//     //     }
+
+//     //     const lineGeometry = new THREE.BufferGeometry();
+//     //     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+//     //     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+//     //     const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
+//     //     this.scene.add(lines);
+
+//     // }
+
+//     // //Behaviors
+//     // const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.25);
+//     // agent.vehicle.steering.add(followPathBehavior);
+
+//     // const onPathBehavior = new YUKA.OnPathBehavior(path);
+//     // agent.vehicle.steering.add(onPathBehavior);
+
+// }

@@ -7,48 +7,25 @@ import {Walk} from '../stateMachines/Pictogram.js';
 
 class PictogramAgent extends YUKA.GameEntity {
 
-    constructor(scene) {
+    constructor() {
         super();
 
         this.currentTime = 0; //tracks how long the entity is in the current state
         this.stateDuration = 5; //duration of a single state in seconds
         this.crossFadeDuration = 1; //duration of a crossfade in seconds
-        //Geo
-        const loader = new FBXLoader();
-        loader.load('models/pictogram.fbx', (fbx) => {
+        // //Animations
+        // const animations = model.animations;
+        // this.mixer = new THREE.AnimationMixer(model);
 
-            fbx.traverse((child) => {
+        // const actions = {};
+        // animations.forEach((clip) => {
+        //     actions[clip.name] = this.mixer.clipAction(clip);
+        // });
 
-                if (child.isMesh) {
+        // actions['Take 001'].play();
 
-                    child.material = new THREE.MeshBasicMaterial({
-                        color: 0x000000,
-                        side: THREE.DoubleSide,
-                    });
-
-                }
-
-            });
-
-            const model = fbx;
-            model.matrixAutoUpdate = false;
-            this.setRenderComponent(model, sync);
-            scene.add(model);
-            //Animations
-            const animations = model.animations;
-            this.mixer = new THREE.AnimationMixer(model);
-
-            const actions = {};
-            animations.forEach((clip) => {
-                actions[clip.name] = this.mixer.clipAction(clip);
-            });
-
-            actions['Take 001'].play();
-
-            // this.stateMachine = new YUKA.StateMachine(this);
-            // this.stateMachine.add('WALK', new Walk());
-
-        });
+        // this.stateMachine = new YUKA.StateMachine(this);
+        // this.stateMachine.add('WALK', new Walk());
         //Vehicle
         this.vehicle = new YUKA.Vehicle();
         this.vehicle.maxSpeed = (Math.random() + 0.1) * 0.5;
@@ -61,22 +38,22 @@ class PictogramAgent extends YUKA.GameEntity {
 
         this.currentTime += delta;
 
-        if (this.mixer) {
-            this.mixer.update(delta);
-        }
+        // if (this.mixer) {
+        //     this.mixer.update(delta);
+        // }
         // this.stateMachine.update();
+        
         this.vehicle.update(delta);
         this.position.copy(this.vehicle.position);
         this.rotation.copy(this.vehicle.rotation);
-
-        return this;
+        super.update(delta);
 
     }
 
 }
 
-function sync(entity, renderComponent) {
-    renderComponent.matrix.copy(entity.worldMatrix);
-}
+// function sync(entity, renderComponent) {
+//     renderComponent.matrix.copy(entity.worldMatrix);
+// }
 
 export {PictogramAgent};

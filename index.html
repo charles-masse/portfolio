@@ -13,6 +13,7 @@
         float: left;
         background: linear-gradient(to bottom, #87CEEB, #FFFFFF);
       }
+      
       #info {
         top: 0;
         padding: 0.5em;
@@ -23,6 +24,7 @@
         color: #ffffff;
         line-height: 1em;
       }
+
       #info>div {
         width: 100%;
       }
@@ -34,9 +36,11 @@
     <script type="module" src="src/main.js"></script>
     <section id="info">
       <div>
-        <span id="population"></span>
+        <span id="population">Population: 0</span>
         <br>
-        <span id="fps"></span>
+        <input type="range" id="mySlider" min="0" max="500" value="100">
+        <br>
+        <span id="fps">FPS: -</span>
       </div>
     </section>
   </body>
