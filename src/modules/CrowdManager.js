@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
 //Agents
-import {PictogramAgent} from '../agents/Pictogram.js';
+import {Agent} from '../objects/Agent.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 
 const MAX_AGENTS = 1000;
@@ -12,13 +12,15 @@ export class CrowdManager {
 
     constructor(scene) {
 
-        this.time = new YUKA.Time();
-
         this.scene = scene;
-        this.entity_manager = new YUKA.EntityManager();
 
+        this.time = new YUKA.Time();
+        this.entity_manager = new YUKA.EntityManager();
+        //UI
         const slider = document.getElementById('mySlider');
-        slider.addEventListener('input', () => {this.spawn(slider.value)});
+        slider.max = MAX_AGENTS;
+        slider.value = Math.round(MAX_AGENTS / 2);
+        slider.addEventListener('input', () => {this.updateAgents(slider.value)});
         //Spawn zone
         const polygon = [
             new THREE.Vector2(0, 10),
@@ -43,41 +45,61 @@ export class CrowdManager {
 
             this.instanced_mesh = new THREE.InstancedMesh(geo, material, MAX_AGENTS);
             this.scene.add(this.instanced_mesh);
+            //Link each instance to individual agents
+            for (let i = 0; i < MAX_AGENTS; i++) {
+
+                const agent = new Agent();
+                this.entity_manager.add(agent);
+
+            }
+            //Activate default number of agents
+            this.updateAgents(slider.value)
 
         });
-        //Link to yuka agents
-        this.agents = [];
-        for (let i = 0; i < MAX_AGENTS; i++) {
 
-            const positions = this.entity_manager.entities.map(entity => entity.position);
+    }
 
-            const agent = new PictogramAgent();
-            agent.position = bestCandidate(positions, this.triangulated_spawn);
-            this.entity_manager.add(agent);
+    updateAgents(nb) {
 
-            this.agents.push(agent);
+        let active_agents = this.entity_manager.entities.filter(agent => agent.active);
+
+        while (active_agents.length != nb) {
+
+            if (active_agents.length < nb) {
+
+                const positions = this.entity_manager.entities.map(agent => agent.position);
+                const spawn_position = bestCandidate(positions, this.triangulated_spawn);
+                this.entity_manager.entities[active_agents.length].setActive(true, spawn_position);
+
+            } else {
+
+                this.entity_manager.entities[active_agents.length - 1].setActive(false);
+
+            }
+
+            active_agents = this.entity_manager.entities.filter(agent => agent.active);
 
         }
 
     }
 
     update() {
-        //Skip update if instance mesh is created yet
+
+        this.entity_manager.update(this.time.update().getDelta());
+
         if (this.instanced_mesh) {
 
             const tempMatrix = new THREE.Matrix4();
-            for (let i = 0; i < this.agents.length; i++) {
+            this.entity_manager.entities.forEach((entity, i) => {
 
-                const agent = this.agents[i];
-                tempMatrix.fromArray(agent.worldMatrix.elements);
-
+                tempMatrix.fromArray(entity.worldMatrix.elements);
                 this.instanced_mesh.setMatrixAt(i, tempMatrix);
 
-            }
+            });
 
             this.instanced_mesh.instanceMatrix.needsUpdate = true;
-
-            document.getElementById('population').textContent = `Population: ${this.agents.length}`;
+            
+            document.getElementById('population').textContent = `Population: ${this.entity_manager.entities.filter(entity => entity.active).length}`;
 
         }
 
@@ -88,7 +110,6 @@ export class CrowdManager {
 function triangulate(polygon) {
 
     const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
-
     return triangles.map(pt => pt.map(i => polygon[i]));
 }
 
@@ -96,7 +117,6 @@ function bestCandidate(current_positions, triangulated_zone) {
 
     let best;
     let maxDist = -Infinity;
-
     for (let i = 0; i < CANDIDATE_NB; i++) {
 
         const {x, y} = randomPointInTriangles(triangulated_zone);
@@ -123,22 +143,13 @@ function randomPointInTriangles(triangles) {
     let r1 = Math.random();
     let r2 = Math.random();
 
-    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;}
+    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;};
 
     return {
         x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
         y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
     };
-
 }
-
-//     // if (this.entity_manager.entities.length < MAX_AGENTS) {
-
-//     //     for (let x = 0; x < AGENTS_PER_FRAMES; x++) {
-//     //         this.spawn();
-//     //     }
-
-//     // }
 
 //     // //Path
 //     // const path = new YUKA.Path();
