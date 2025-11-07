@@ -7,43 +7,51 @@ import {Agent} from '../superClasses/Agent.js';
 import {Walk} from '../stateMachines/Pictogram.js';
 
 const MAX_AGENTS = 1000;
-const CANDIDATE_NB = 5;
+const CANDIDATE_NB = 7;
 
 class Pictogram extends Agent {
 
     constructor() {
         super();
         //State Machine
-        this.currentTime = 0;
-        this.stateDuration = 5;
-        this.crossFadeDuration = 1;
-
         this.stateMachine = new YUKA.StateMachine(this);
-
-        this.stateMachine.add('WALK', new Walk());
-        //Animations
-        // const animations = model.animations;
-        // this.mixer = new THREE.AnimationMixer(model);
-
-        // const actions = {};
-        // animations.forEach((clip) => {
-        //     actions[clip.name] = this.mixer.clipAction(clip);
-        // });
-
-        // actions['Take 001'].play();
-        //Path
+        this.stateMachine.add('walk', new Walk());
+        //Path [TO-DO] find nearest waypoint and set the path direction per agent based on global path
         const path = new YUKA.Path();
         path.add(new YUKA.Vector3(0, 0, 0));
         path.add(new YUKA.Vector3(50, 0, 30));
         path.add(new YUKA.Vector3(50, 0, -30));
         path.add(new YUKA.Vector3(0, 0, -30));
-        path.loop = true;
-        //Behaviors
-        const followPathBehavior = new YUKA.FollowPathBehavior(path);
-        this.vehicle.steering.add(followPathBehavior);
-        // const onPathBehavior = new YUKA.OnPathBehavior(path);
-        // this.vehicle.steering.add(onPathBehavior);
+        path.loop = true; //At end of line, deactivate agent (.finished())
+        for (let i = 0; i < THREE.MathUtils.randInt(0, 3); i++) path.advance();
 
+        // if (debug) {
+
+        //     const position = [];
+        //     for (let i = 0; i < path._waypoints.length; i ++) {
+
+        //         const waypoint = path._waypoints[i];
+        //         position.push(waypoint.x, waypoint.y, waypoint.z);
+
+        //     }
+
+        //     const lineGeometry = new THREE.BufferGeometry();
+        //     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+        //     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+        //     const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
+
+        //     this.scene.add(lines);
+
+        // }
+        //Behaviors
+        const followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
+        this.vehicle.steering.add(followPathBehavior);
+
+    }
+
+    update(delta) {
+        super.update(delta);
+        this.stateMachine.update();
     }
 
 }
@@ -61,7 +69,7 @@ export class CrowdManager {
         slider.max = MAX_AGENTS;
         slider.value = Math.round(MAX_AGENTS / 2);
         slider.addEventListener('input', () => {this.updateAgents(slider.value)});
-        //Spawn zone
+        //Spawn Zone
         const polygon = [
             new THREE.Vector2(0, 10),
             new THREE.Vector2(75, 15),
@@ -78,18 +86,43 @@ export class CrowdManager {
                 geo = child.geometry;
             });
 
-            const material = new THREE.MeshBasicMaterial({
-                color: 0x000000,
-                side: THREE.DoubleSide,
+            this.material = new THREE.ShaderMaterial({
+                vertexShader: `
+                    attribute vec3 instanceOffset;
+                    attribute float instanceTimeOffset;
+                    uniform float time;
+
+                    void main() {
+                        vec3 pos = position + instanceOffset;
+                        pos.y += sin(time + instanceTimeOffset);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    void main() {
+                        gl_FragColor = vec4(0, 0, 0, 1.0);
+                    }
+                `,
+                uniforms: {
+                    time: { value: 0 }
+                }
             });
 
-            this.instanced_mesh = new THREE.InstancedMesh(geo, material, MAX_AGENTS);
-            this.scene.add(this.instanced_mesh);
-            //Link each instance to individual agents
+            const instanceOffsets = new Float32Array(MAX_AGENTS * 3);
+            geo.setAttribute('instanceOffset', new THREE.InstancedBufferAttribute(instanceOffsets, 3));
+            const instanceTimeOffsets = new Float32Array(MAX_AGENTS);
+            geo.setAttribute('instanceTimeOffset', new THREE.InstancedBufferAttribute(instanceTimeOffsets, 1));
+
+            this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
+
             for (let i = 0; i < MAX_AGENTS; i++) {
-                this.entity_manager.add(new Pictogram());
+                instanceOffsets.set([Math.random() * 100, 0, Math.random() * 20], i * 3);
+                instanceTimeOffsets[i] = Math.random() * 10;
             }
-            //Activate default number of agents
+
+            this.scene.add(this.instanced_mesh);
+            //Link each instance to individual agents and active the right amount
+            for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
             this.updateAgents(slider.value);
 
         });
@@ -123,10 +156,12 @@ export class CrowdManager {
 
     update() {
 
-        this.entity_manager.update(this.time.update().getDelta());
 
         if (this.instanced_mesh) {
 
+            this.material.uniforms.time.value = performance.now() * 0.001;
+
+            this.entity_manager.update(this.time.update().getDelta());
             const tempMatrix = new THREE.Matrix4();
             this.entity_manager.entities.forEach((entity, i) => {
 
@@ -157,7 +192,7 @@ function bestCandidate(current_positions, triangulated_zone) {
     let maxDist = -Infinity;
     for (let i = 0; i < CANDIDATE_NB; i++) {
 
-        const {x, y} = randomPointInTriangles(triangulated_zone);
+        const {x, y} = randomPointInTriangulated(triangulated_zone);
 
         const pos = new YUKA.Vector3(x, 0, y);
         const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
@@ -174,13 +209,12 @@ function bestCandidate(current_positions, triangulated_zone) {
     return best;
 }
 
-function randomPointInTriangles(triangles) {
-
+function randomPointInTriangulated(triangles) {
+    //Get random triangle
     const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
 
     let r1 = Math.random();
     let r2 = Math.random();
-
     if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;};
 
     return {
@@ -188,23 +222,3 @@ function randomPointInTriangles(triangles) {
         y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
     };
 }
-
-//     // if (debug) {
-
-//     //     const position = [];
-
-//     //     for (let i = 0; i < path._waypoints.length; i ++) {
-
-//     //         const waypoint = path._waypoints[i];
-//     //         position.push(waypoint.x, waypoint.y, waypoint.z);
-
-
-//     //     }
-
-//     //     const lineGeometry = new THREE.BufferGeometry();
-//     //     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-//     //     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
-//     //     const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
-//     //     this.scene.add(lines);
-
-//     // }
