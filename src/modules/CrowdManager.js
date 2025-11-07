@@ -1,12 +1,52 @@
 
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
-//Agents
-import {Agent} from '../objects/Agent.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+
+import {Agent} from '../superClasses/Agent.js';
+import {Walk} from '../stateMachines/Pictogram.js';
 
 const MAX_AGENTS = 1000;
 const CANDIDATE_NB = 5;
+
+class Pictogram extends Agent {
+
+    constructor() {
+        super();
+        //State Machine
+        this.currentTime = 0;
+        this.stateDuration = 5;
+        this.crossFadeDuration = 1;
+
+        this.stateMachine = new YUKA.StateMachine(this);
+
+        this.stateMachine.add('WALK', new Walk());
+        //Animations
+        // const animations = model.animations;
+        // this.mixer = new THREE.AnimationMixer(model);
+
+        // const actions = {};
+        // animations.forEach((clip) => {
+        //     actions[clip.name] = this.mixer.clipAction(clip);
+        // });
+
+        // actions['Take 001'].play();
+        //Path
+        const path = new YUKA.Path();
+        path.add(new YUKA.Vector3(0, 0, 0));
+        path.add(new YUKA.Vector3(50, 0, 30));
+        path.add(new YUKA.Vector3(50, 0, -30));
+        path.add(new YUKA.Vector3(0, 0, -30));
+        path.loop = true;
+        //Behaviors
+        const followPathBehavior = new YUKA.FollowPathBehavior(path);
+        this.vehicle.steering.add(followPathBehavior);
+        // const onPathBehavior = new YUKA.OnPathBehavior(path);
+        // this.vehicle.steering.add(onPathBehavior);
+
+    }
+
+}
 
 export class CrowdManager {
 
@@ -47,27 +87,10 @@ export class CrowdManager {
             this.scene.add(this.instanced_mesh);
             //Link each instance to individual agents
             for (let i = 0; i < MAX_AGENTS; i++) {
-
-                const agent = new Agent();
-                //Path
-                const path = new YUKA.Path();
-                path.add(new YUKA.Vector3(0, 0, 0));
-                path.add(new YUKA.Vector3(50, 0, 30));
-                path.add(new YUKA.Vector3(50, 0, -30));
-                path.add(new YUKA.Vector3(0, 0, -30));
-                path.loop = true;
-                //Behaviors
-                const followPathBehavior = new YUKA.FollowPathBehavior(path);
-                agent.vehicle.steering.add(followPathBehavior);
-
-                // const onPathBehavior = new YUKA.OnPathBehavior(path);
-                // agent.vehicle.steering.add(onPathBehavior);
-
-                this.entity_manager.add(agent);
-
+                this.entity_manager.add(new Pictogram());
             }
             //Activate default number of agents
-            this.updateAgents(slider.value)
+            this.updateAgents(slider.value);
 
         });
 
@@ -76,14 +99,15 @@ export class CrowdManager {
     updateAgents(nb) {
 
         let active_agents = this.entity_manager.entities.filter(agent => agent.active);
-
         while (active_agents.length != nb) {
 
             if (active_agents.length < nb) {
 
                 const positions = this.entity_manager.entities.map(agent => agent.position);
                 const spawn_position = bestCandidate(positions, this.triangulated_spawn);
-                this.entity_manager.entities[active_agents.length].setActive(true, spawn_position);
+
+                this.entity_manager.entities[active_agents.length].setActive(true);
+                this.entity_manager.entities[active_agents.length].setPosition(spawn_position);
 
             } else {
 
