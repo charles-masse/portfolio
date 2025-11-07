@@ -46,9 +46,7 @@ export class DayNight {
         scene.add(this.sun);
 
         this.helper = new THREE.DirectionalLightHelper(this.sun, 1);
-        if (this.debug) {
-            scene.add(this.helper);
-        }
+        if (this.debug) scene.add(this.helper);
         this.ambient = new THREE.AmbientLight(0xffffff, 10);
         scene.add(this.ambient);
 

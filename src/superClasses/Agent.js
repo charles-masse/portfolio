@@ -54,11 +54,9 @@ class Agent extends YUKA.GameEntity {
         if (this.active) {
 
             this.currentTime += delta;
-
-            this.stateMachine.update();
-            // this.mixer.update(delta);
             this.vehicle.update(delta);
             this.sync();
+            
             super.update(delta);
 
         }
