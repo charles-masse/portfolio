@@ -1,5 +1,4 @@
 
-// import * as THREE from 'three';
 import * as YUKA from 'yuka';
 // //States
 // import {Walk} from '../stateMachines/Pictogram.js';
@@ -14,7 +13,7 @@ class Agent extends YUKA.GameEntity {
         this.crossFadeDuration = 1; //duration of a crossfade in seconds
         //Vehicle
         this.vehicle = new YUKA.Vehicle();
-        this.vehicle.maxSpeed = (Math.random() + 0.1) * 0.5;
+        this.vehicle.maxSpeed = (Math.random() + 0.5) * 3;
 
         this.setActive(false)
 
@@ -36,7 +35,7 @@ class Agent extends YUKA.GameEntity {
 
     setActive(bool, pos=NaN) {
 
-        if (bool === true) {
+        if (bool) {
             this.active = true;
             if (pos) {
                 this.vehicle.position = pos;
@@ -44,13 +43,9 @@ class Agent extends YUKA.GameEntity {
                 this.vehicle.position.set(0, 0, 0);
             }
             
-        }
-
-        if (bool === false) {
+        } else {
             this.active = false;
-            this.vehicle.position.set(0, 25, 0);
-            console.log(bool)
-            // this.steering.behaviors.length = 0;
+            this.vehicle.position.set(0, 25, 0); //Shadow Realm
         }
 
         this.position.copy(this.vehicle.position) 

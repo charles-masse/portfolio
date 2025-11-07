@@ -1,8 +1,6 @@
 # Node.js dependencies
 node_modules/
-package.json
-package-lock.json
-# 3d assets
+# 3d
 public/
 scenes/
 # Build output directories

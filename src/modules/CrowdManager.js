@@ -49,6 +49,20 @@ export class CrowdManager {
             for (let i = 0; i < MAX_AGENTS; i++) {
 
                 const agent = new Agent();
+                //Path
+                const path = new YUKA.Path();
+                path.add(new YUKA.Vector3(0, 0, 0));
+                path.add(new YUKA.Vector3(50, 0, 30));
+                path.add(new YUKA.Vector3(50, 0, -30));
+                path.add(new YUKA.Vector3(0, 0, -30));
+                path.loop = true;
+                //Behaviors
+                const followPathBehavior = new YUKA.FollowPathBehavior(path);
+                agent.vehicle.steering.add(followPathBehavior);
+
+                // const onPathBehavior = new YUKA.OnPathBehavior(path);
+                // agent.vehicle.steering.add(onPathBehavior);
+
                 this.entity_manager.add(agent);
 
             }
@@ -151,18 +165,6 @@ function randomPointInTriangles(triangles) {
     };
 }
 
-//     // //Path
-//     // const path = new YUKA.Path();
-//     // path.add(new YUKA.Vector3(-2, -1, 2));
-//     // path.add(new YUKA.Vector3(-3, -1, 0));
-//     // path.add(new YUKA.Vector3(-2, -1, -2));
-//     // path.add(new YUKA.Vector3(0, -1, 0));
-//     // path.add(new YUKA.Vector3(2, -1, -2));
-//     // path.add(new YUKA.Vector3(3, -1, 0));
-//     // path.add(new YUKA.Vector3(2, -1, 2));
-//     // path.add(new YUKA.Vector3(0, -1, 3));
-//     // path.loop = true;
-
 //     // if (debug) {
 
 //     //     const position = [];
@@ -182,12 +184,3 @@ function randomPointInTriangles(triangles) {
 //     //     this.scene.add(lines);
 
 //     // }
-
-//     // //Behaviors
-//     // const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.25);
-//     // agent.vehicle.steering.add(followPathBehavior);
-
-//     // const onPathBehavior = new YUKA.OnPathBehavior(path);
-//     // agent.vehicle.steering.add(onPathBehavior);
-
-// }
