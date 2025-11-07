@@ -4,32 +4,15 @@ import * as YUKA from 'yuka';
 class Walk extends YUKA.State {
 
     enter(char) {
-
-        // char.ui.currentState.textContent = 'WALK';
-
-        const walk = char.animations.get('WALK');
-        walk.reset().fadeIn(char.crossFadeDuration);
-
+        console.log(`enter: Walk`)
     }
 
     execute(char) {
-
-        // char.mixer.timeScale = 0.5; //speed up/down anims
-
-        // if (char.currentTime >= char.stateDuration) {
-
-        //     char.currentTime = 0;
-        //     char.stateMachine.changeTo(IDLE);
-
-        // }
-
+        console.log(`Walk`)
     }
 
     exit(char) {
-
-        const walk = char.animations.get('WALK');
-        walk.fadeOut(char.crossFadeDuration);
-
+        console.log(`exit: Walk`)
     }
 
 }

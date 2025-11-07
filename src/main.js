@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 //Custom modules
 import {DayNight} from './modules/DayNight.js';
-import {CrowdSpawner} from './modules/CrowdSpawner.js';
+import {CrowdManager} from './modules/CrowdManager.js';
 //Scene
 const scene = new THREE.Scene();
 //Camera
@@ -19,13 +19,14 @@ const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true,
 });
-document.body.appendChild(renderer.domElement);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 renderer.gammaOutput = true;
-window.addEventListener('resize', onWindowResize, false);
 renderer.setAnimationLoop(animate);
+
+document.body.appendChild(renderer.domElement);
+window.addEventListener('resize', onWindowResize, false);
 //Test city
 const textureLoader = new THREE.TextureLoader();
 const material = new THREE.MeshStandardMaterial({
@@ -52,7 +53,7 @@ objLoader.load('models/city.obj', (object) => {
 });
 
 const dayNight = new DayNight(scene, canvas);
-const crowdSpawner = new CrowdSpawner(scene);
+const crowdManager = new CrowdManager(scene);
 
 let frames = 0;
 let prevTime = performance.now();
@@ -71,9 +72,10 @@ function animate() {
     }
     //Update modules
     dayNight.update();
-    crowdSpawner.update();
+    crowdManager.update();
 
     renderer.render(scene, camera);
+
 }
 
 function onWindowResize() {
