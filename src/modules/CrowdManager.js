@@ -3,62 +3,57 @@ import * as THREE from 'three';
 import * as YUKA from 'yuka';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 
-import {Agent} from '../superClasses/Agent.js';
-import {Walk} from '../stateMachines/Pictogram.js';
+import {Pictogram} from '../Agents/Pictogram.js';
 
 const MAX_AGENTS = 1000;
 const CANDIDATE_NB = 7;
 
-class Pictogram extends Agent {
+function triangulate(polygon) {
 
-    constructor() {
-        super();
-        //State Machine
-        this.stateMachine = new YUKA.StateMachine(this);
-        this.stateMachine.add('walk', new Walk());
-        //Path [TO-DO] find nearest waypoint and set the path direction per agent based on global path
-        const path = new YUKA.Path();
-        path.add(new YUKA.Vector3(0, 0, 0));
-        path.add(new YUKA.Vector3(50, 0, 30));
-        path.add(new YUKA.Vector3(50, 0, -30));
-        path.add(new YUKA.Vector3(0, 0, -30));
-        path.loop = true; //At end of line, deactivate agent (.finished())
-        for (let i = 0; i < THREE.MathUtils.randInt(0, 3); i++) path.advance();
+    const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
+    return triangles.map(pt => pt.map(i => polygon[i]));
+}
 
-        // if (debug) {
+function bestCandidate(current_positions, triangulated_zone) {
 
-        //     const position = [];
-        //     for (let i = 0; i < path._waypoints.length; i ++) {
+    let best;
+    let maxDist = -Infinity;
+    for (let i = 0; i < CANDIDATE_NB; i++) {
 
-        //         const waypoint = path._waypoints[i];
-        //         position.push(waypoint.x, waypoint.y, waypoint.z);
+        const {x, y} = randomPointInTriangulated(triangulated_zone);
 
-        //     }
+        const pos = new YUKA.Vector3(x, 0, y);
+        const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
 
-        //     const lineGeometry = new THREE.BufferGeometry();
-        //     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-        //     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
-        //     const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
+        if (minDist > maxDist) {
 
-        //     this.scene.add(lines);
+            maxDist = minDist;
+            best = pos;
 
-        // }
-        //Behaviors
-        const followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
-        this.vehicle.steering.add(followPathBehavior);
+        }
 
     }
 
-    update(delta) {
-        super.update(delta);
-        this.stateMachine.update();
-    }
+    return best;
+}
 
+function randomPointInTriangulated(triangles) {
+    //Get random triangle
+    const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
+
+    let r1 = Math.random();
+    let r2 = Math.random();
+    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;};
+
+    return {
+        x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
+        y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
+    };
 }
 
 export class CrowdManager {
 
-    constructor(scene) {
+    constructor(scene, loadingManager) {
 
         this.scene = scene;
 
@@ -79,7 +74,7 @@ export class CrowdManager {
         this.triangulated_spawn = triangulate(polygon);
         //Create instanced geo
         let geo;
-        const loader = new FBXLoader();
+        const loader = new FBXLoader(loadingManager);
         loader.load('models/pictogram.fbx', (fbx) => {
 
             fbx.traverse((child) => {
@@ -88,38 +83,41 @@ export class CrowdManager {
 
             this.material = new THREE.ShaderMaterial({
                 vertexShader: `
-                    attribute vec3 instanceOffset;
-                    attribute float instanceTimeOffset;
                     uniform float time;
+                    attribute float instanceTimeOffset;
 
                     void main() {
-                        vec3 pos = position + instanceOffset;
-                        pos.y += sin(time + instanceTimeOffset);
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+
+                        vec3 pos = position;
+                        pos.y += sin((time * 5.0) + instanceTimeOffset) * 0.5;
+
+                        vec4 worldPosition = instanceMatrix * vec4(pos, 1.0);
+                        vec4 viewPosition = viewMatrix * worldPosition;
+
+                        gl_Position = projectionMatrix * viewPosition;
+
                     }
                 `,
                 fragmentShader: `
                     void main() {
+                        //Black for now TO-DO variations
                         gl_FragColor = vec4(0, 0, 0, 1.0);
+
                     }
                 `,
                 uniforms: {
-                    time: { value: 0 }
-                }
+                    time: {value: 0}
+                },
+                side: THREE.DoubleSide,
             });
-
-            const instanceOffsets = new Float32Array(MAX_AGENTS * 3);
-            geo.setAttribute('instanceOffset', new THREE.InstancedBufferAttribute(instanceOffsets, 3));
+            
             const instanceTimeOffsets = new Float32Array(MAX_AGENTS);
             geo.setAttribute('instanceTimeOffset', new THREE.InstancedBufferAttribute(instanceTimeOffsets, 1));
-
-            this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
-
             for (let i = 0; i < MAX_AGENTS; i++) {
-                instanceOffsets.set([Math.random() * 100, 0, Math.random() * 20], i * 3);
                 instanceTimeOffsets[i] = Math.random() * 10;
             }
 
+            this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
             this.scene.add(this.instanced_mesh);
             //Link each instance to individual agents and active the right amount
             for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
@@ -178,47 +176,4 @@ export class CrowdManager {
 
     }
 
-}
-
-function triangulate(polygon) {
-
-    const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
-    return triangles.map(pt => pt.map(i => polygon[i]));
-}
-
-function bestCandidate(current_positions, triangulated_zone) {
-
-    let best;
-    let maxDist = -Infinity;
-    for (let i = 0; i < CANDIDATE_NB; i++) {
-
-        const {x, y} = randomPointInTriangulated(triangulated_zone);
-
-        const pos = new YUKA.Vector3(x, 0, y);
-        const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
-
-        if (minDist > maxDist) {
-
-            maxDist = minDist;
-            best = pos;
-
-        }
-
-    }
-
-    return best;
-}
-
-function randomPointInTriangulated(triangles) {
-    //Get random triangle
-    const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
-
-    let r1 = Math.random();
-    let r2 = Math.random();
-    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;};
-
-    return {
-        x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
-        y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
-    };
 }

@@ -31,11 +31,24 @@ const DAY_EVENTS = [
     },
 ];
 
+function lerpColor(c1, c2, t) {
+    return {
+        r: Math.round(c1.r + (c2.r - c1.r) * t),
+        g: Math.round(c1.g + (c2.g - c1.g) * t),
+        b: Math.round(c1.b + (c2.b - c1.b) * t)
+    };
+}
+
+function colorToString(color) {
+    return `rgb(${color.r}, ${color.g}, ${color.b})`;
+}
+
 export class DayNight {
 
-    constructor(scene, canvas, debug=false) {
+    constructor(scene, canvas, emissives, debug=false) {
 
         this.canvas = canvas;
+        this.emissives = emissives;
         this.debug = debug;
         //Lights
         this.sun = new THREE.DirectionalLight(0xffffff, 20);
@@ -51,6 +64,15 @@ export class DayNight {
         scene.add(this.ambient);
 
         this.current_event = 0;
+
+    }
+
+    getDayPortion(t) {
+
+        const day_full = 360 / Math.abs(SUN_SPEED);
+        const day_portion = (t % day_full) / day_full;
+
+        return day_portion;
 
     }
 
@@ -71,14 +93,14 @@ export class DayNight {
 
     colorChange(t) {
 
-        const day_full = 360 / Math.abs(SUN_SPEED);
-        const day_portion = (t % day_full) / day_full;
+        const day_portion = this.getDayPortion(t);
 
         let current_event;
         let current_time;
         let next_event;
         let next_time;
         for (let i = 0; i < DAY_EVENTS.length; i++) {
+            
             current_time = DAY_EVENTS[i].time;
 
             const next_idx = (i + 1) % DAY_EVENTS.length;
@@ -106,29 +128,37 @@ export class DayNight {
         ];
     }
 
+    cityLights(t) {
+
+        const day_portion = this.getDayPortion(t);
+
+        let emissive_intensity;
+        if (day_portion >= 0.5) {
+
+            emissive_intensity = 1;
+
+        } else {
+
+            emissive_intensity = 0;
+
+        }
+
+        return emissive_intensity;
+    }
+
     update() {
 
         const time_in_secs = (performance.now() / 1000) + START_TIME_SECS;
         //Sun
         this.sun.position.copy(this.sunOrbit(time_in_secs));
         this.helper.update();
-        //Ambient
+        //Sky color
         const [top_color, bot_color, ambient_color] = this.colorChange(time_in_secs);
         this.canvas.style.background = `linear-gradient(to bottom, ${top_color}, ${bot_color})`;
         this.ambient.color.set(ambient_color);
+        //City lights
+        this.emissives.material.emissiveIntensity = this.cityLights(time_in_secs);
 
     }
 
-}
-
-function lerpColor(c1, c2, t) {
-    return {
-        r: Math.round(c1.r + (c2.r - c1.r) * t),
-        g: Math.round(c1.g + (c2.g - c1.g) * t),
-        b: Math.round(c1.b + (c2.b - c1.b) * t)
-    };
-}
-
-function colorToString(color) {
-    return `rgb(${color.r}, ${color.g}, ${color.b})`;
 }

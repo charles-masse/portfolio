@@ -1,22 +1,25 @@
 
-import * as YUKA from 'yuka';
+import {AgentState} from '../superClasses/Agent.js';
 
-class Walk extends YUKA.State {
+class Walk extends AgentState {
 
-    enter(char) {
-        console.log(`enter: Walk`)
+    constructor() {
+        super();
+
     }
 
-    execute(char) {
-        console.log(`Walk`)
-    }
+}
 
-    exit(char) {
-        console.log(`exit: Walk`)
+class Idle extends AgentState {
+
+    constructor() {
+        super();
+
     }
 
 }
 
 export {
-    Walk
+    Walk,
+    Idle,
 };

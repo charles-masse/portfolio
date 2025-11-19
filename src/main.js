@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
-import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 //Custom modules
+import {City} from './modules/City.js';
 import {DayNight} from './modules/DayNight.js';
 import {CrowdManager} from './modules/CrowdManager.js';
 //Scene
@@ -22,44 +22,27 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
-renderer.gammaOutput = true;
 renderer.setAnimationLoop(animate);
-
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', onWindowResize, false);
-//Test city
-const textureLoader = new THREE.TextureLoader();
-const material = new THREE.MeshStandardMaterial({
-    color: 0x808080,
-    // emissive: 0xffffff,
-    // emissiveIntensity: 1,
-    // emissiveMap: textureLoader.load('textures/cityEmission.jpg'),
-    side: THREE.DoubleSide,
-});
+//Loading -- https://jsfiddle.net/gex9km1j
+const loadingManager = new THREE.LoadingManager((onProgress=test()) => {
+    
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.classList.add('fade-out');
+    loadingScreen.addEventListener('transitionend', onTransitionEnd);
+    
+} );
 
-const objLoader = new OBJLoader();
-objLoader.load('models/city.obj', (object) => {
-    object.traverse((child) => {
+const city = new City(scene, loadingManager);
+const crowdManager = new CrowdManager(scene, loadingManager);
 
-        if (child.isMesh) {
-            child.material = material;
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-
-    });
-
-    scene.add(object);
-});
-
-const dayNight = new DayNight(scene, canvas);
-const crowdManager = new CrowdManager(scene);
+const dayNight = new DayNight(scene, canvas, city);
 
 let frames = 0;
 let prevTime = performance.now();
-
 function animate() {
-    //FPS -- https://jsfiddle.net/z2c19qab/1/
+    //FPS -- https://jsfiddle.net/z2c19qab
     const time = performance.now();
     frames++;
 
@@ -85,4 +68,15 @@ function onWindowResize() {
     
     renderer.setSize(window.innerWidth, window.innerHeight);
 
+}
+
+function onTransitionEnd(event) {
+
+    const element = event.target;
+    element.remove();
+    
+}
+
+function test() {
+    console.log('Loading progress...')
 }

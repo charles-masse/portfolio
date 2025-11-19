@@ -8,6 +8,8 @@ class Agent extends YUKA.GameEntity {
         //Vehicle
         this.vehicle = new YUKA.Vehicle();
         this.vehicle.maxSpeed = (Math.random() + 0.5) * 3;
+        //State machine
+        this.stateMachine = new AgentStateMachine(this);
 
         this.setActive(false);
 
@@ -16,12 +18,10 @@ class Agent extends YUKA.GameEntity {
     setActive(bool) {
 
         if (bool) {
-
             this.active = true;
 
         } else {
-
-            this.setPosition(0, -9999, 0); //ShadowRealm
+            this.setPosition(0, -9999, 0); //Shadow Realm
             this.active = false;
 
         }
@@ -50,14 +50,53 @@ class Agent extends YUKA.GameEntity {
     }
 
     update(delta) {
+        super.update(delta);
 
         if (this.active) {
 
             this.currentTime += delta;
+            //Vehicle
             this.vehicle.update(delta);
             this.sync();
+            //State MAchine
+            this.stateMachine.update();
             
-            super.update(delta);
+        }
+
+    }
+
+}
+
+class AgentStateMachine extends YUKA.StateMachine {
+
+    constructor(owner) {
+        super(owner);
+
+        this.transition_frames = 0;
+
+    }
+
+    changeTo(id) {
+        super.changeTo(id);
+
+        this.transition_frames = 1;
+
+    }
+
+    update(){
+        super.update();
+        //Transition
+        if (this.transition_frames && this.previousState) {
+
+            if (this.transition_frames <= this.previousState.clip_blend) {
+
+                console.log(`Transition : ${this.transition_frames}`);
+
+                this.transition_frames++;
+
+            } else {
+                this.transition_frames = 0;
+            }
 
         }
 
@@ -65,4 +104,26 @@ class Agent extends YUKA.GameEntity {
 
 }
 
-export {Agent};
+class AgentState extends YUKA.State {
+
+    constructor(clip_blend=3) {
+        super();
+        
+        this.current_frame = 0; //The current frame of the clip
+        this.clip_length = 1; //When to loopback the clip
+        this.clip_blend = clip_blend; //How many transition frames to the clip
+        
+        this.transform_magnitude = 1; //How much to multiply the transformations
+        
+        this.clip_atlasOffset = 0; //Offset of the texture
+
+    }
+
+}
+
+
+export {
+    Agent,
+    AgentStateMachine,
+    AgentState,
+};
