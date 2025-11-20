@@ -12,9 +12,6 @@ class Pictogram extends Agent {
         //States
         this.stateMachine.add('walk', new Walk());
         this.stateMachine.add('idle', new Idle());
-        this.stateMachine.changeTo('walk');
-        this.stateMachine.changeTo('idle');
-        this.stateMachine.changeTo('walk'); //testing the transitions
         //Path [TO-DO] find nearest waypoint and set the path direction per agent based on global path
         const path = new YUKA.Path();
         path.add(new YUKA.Vector3(0, 0, 0));

@@ -53,13 +53,11 @@ class Agent extends YUKA.GameEntity {
         super.update(delta);
 
         if (this.active) {
-
-            this.currentTime += delta;
             //Vehicle
             this.vehicle.update(delta);
             this.sync();
-            //State MAchine
-            this.stateMachine.update();
+            //State Machine
+            this.stateMachine.update(delta);
             
         }
 
@@ -72,30 +70,43 @@ class AgentStateMachine extends YUKA.StateMachine {
     constructor(owner) {
         super(owner);
 
-        this.transition_frames = 0;
+        this.animation_clock = 0;
+
+        this.transition = false;
+        this.transition_startFrame = 0;
+        this.blend_weight = 0;
 
     }
 
     changeTo(id) {
         super.changeTo(id);
 
-        this.transition_frames = 1;
+        this.transition = true;
+        this.transition_startFrame = this.animation_clock;
 
     }
 
-    update(){
+    update(delta){
         super.update();
-        //Transition
-        if (this.transition_frames && this.previousState) {
 
-            if (this.transition_frames <= this.previousState.clip_blend) {
+        this.animation_clock += delta * 24; //24 frames per seconds
+        //Clip transition--To use with `previousState` and `currentState`
+        if (this.transition && this.previousState) {
 
-                console.log(`Transition : ${this.transition_frames}`);
+            const state_blend = this.currentState.clip_blend;
+            const transition_duration = this.animation_clock - this.transition_startFrame;
 
-                this.transition_frames++;
+            console.log(this.animation_clock);
+            console.log(this.transition_startFrame);
+
+            if (transition_duration <= state_blend) {
+
+                this.blend_weight = transition_duration / (state_blend + 1);
 
             } else {
-                this.transition_frames = 0;
+
+                this.transition = false;
+
             }
 
         }
@@ -108,10 +119,10 @@ class AgentState extends YUKA.State {
 
     constructor(clip_blend=3) {
         super();
-        
-        this.current_frame = 0; //The current frame of the clip
-        this.clip_length = 1; //When to loopback the clip
-        this.clip_blend = clip_blend; //How many transition frames to the clip
+
+        this.clip_startFrame = 0; //Randomize
+        this.clip_length = 30; //When to loopback the clip
+        this.clip_blend = clip_blend; //How many transition frames
         
         this.transform_magnitude = 1; //How much to multiply the transformations
         
@@ -119,8 +130,16 @@ class AgentState extends YUKA.State {
 
     }
 
-}
+    execute(owner) {
+        super.execute(owner);
 
+        const current_frame = (owner.stateMachine.animation_clock + this.clip_startFrame) % this.clip_length;
+
+        //This would return the transform per vertex * transform_magnitude
+
+    }
+
+}
 
 export {
     Agent,

@@ -154,12 +154,14 @@ export class CrowdManager {
 
     update() {
 
-
         if (this.instanced_mesh) {
 
-            this.material.uniforms.time.value = performance.now() * 0.001;
-
-            this.entity_manager.update(this.time.update().getDelta());
+            const updated_time = this.time.update();
+            //Shader
+            this.material.uniforms.time.value = updated_time.getElapsed();
+            //Entities
+            this.entity_manager.update(updated_time.getDelta());
+            //Instanced
             const tempMatrix = new THREE.Matrix4();
             this.entity_manager.entities.forEach((entity, i) => {
 
@@ -167,9 +169,8 @@ export class CrowdManager {
                 this.instanced_mesh.setMatrixAt(i, tempMatrix);
 
             });
-
             this.instanced_mesh.instanceMatrix.needsUpdate = true;
-            
+            //UI
             document.getElementById('population').textContent = `Population: ${this.entity_manager.entities.filter(entity => entity.active).length}`;
 
         }
