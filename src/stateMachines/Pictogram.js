@@ -1,21 +1,9 @@
 
 import {AgentState} from '../superClasses/Agent.js';
 
-class Walk extends AgentState {
+class Walk extends AgentState {}
 
-    constructor() {
-        super();
-    }
-
-}
-
-class Idle extends AgentState {
-
-    constructor() {
-        super();
-    }
-
-}
+class Idle extends AgentState {}
 
 export {
     Walk,

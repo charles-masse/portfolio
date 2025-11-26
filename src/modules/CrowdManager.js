@@ -81,45 +81,49 @@ export class CrowdManager {
                 geo = child.geometry;
             });
 
+            const textureLoader = new THREE.TextureLoader(loadingManager);
+            const animTexture = textureLoader.load('./textures/animations.png')
+
             this.material = new THREE.ShaderMaterial({
                 vertexShader: `
-                    uniform float time;
-                    attribute float instanceTimeOffset;
+                    precision highp float;
+                    //Animations
+                    uniform sampler2D animationAtlas;
+                    //State info
+                    attribute float instance_frame;
 
                     void main() {
+                        //Vertice ID
+                        int vertex_id = gl_VertexID;
+                        float vertex_id_f = float(vertex_id);
 
-                        vec3 pos = position;
-                        pos.y += sin((time * 5.0) + instanceTimeOffset) * 0.5;
+                        vec3 anim_data = texture2D(animationAtlas, vec2(mod(instance_frame + 0.5, 512.0) / 512.0, (vertex_id_f + 0.5) / 512.0)).rgb; //mix for blending two clips
+                        vec3 pos = position + anim_data;
 
-                        vec4 worldPosition = instanceMatrix * vec4(pos, 1.0);
-                        vec4 viewPosition = viewMatrix * worldPosition;
-
-                        gl_Position = projectionMatrix * viewPosition;
+                        vec4 world_position = instanceMatrix * vec4(pos, 1.0);
+                        vec4 view_position = viewMatrix * world_position;
+                        gl_Position = projectionMatrix * view_position;
 
                     }
                 `,
                 fragmentShader: `
                     void main() {
-                        //Black for now TO-DO variations
+                        //TO-DO variations
                         gl_FragColor = vec4(0, 0, 0, 1.0);
 
                     }
                 `,
                 uniforms: {
-                    time: {value: 0}
+                    animationAtlas: {value: animTexture},
                 },
                 side: THREE.DoubleSide,
             });
-            
-            const instanceTimeOffsets = new Float32Array(MAX_AGENTS);
-            geo.setAttribute('instanceTimeOffset', new THREE.InstancedBufferAttribute(instanceTimeOffsets, 1));
-            for (let i = 0; i < MAX_AGENTS; i++) {
-                instanceTimeOffsets[i] = Math.random() * 10;
-            }
-
+            //Instance info
+            this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
+            geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
             this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
             this.scene.add(this.instanced_mesh);
-            //Link each instance to individual agents and active the right amount
+            //Link each instance to individual agents and activate the right amount
             for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
             this.updateAgents(slider.value);
 
@@ -155,13 +159,10 @@ export class CrowdManager {
     update() {
 
         if (this.instanced_mesh) {
-
-            const updated_time = this.time.update();
-            //Shader
-            this.material.uniforms.time.value = updated_time.getElapsed();
             //Entities
+            const updated_time = this.time.update();
             this.entity_manager.update(updated_time.getDelta());
-            //Instanced
+            //World matrices
             const tempMatrix = new THREE.Matrix4();
             this.entity_manager.entities.forEach((entity, i) => {
 
@@ -170,6 +171,13 @@ export class CrowdManager {
 
             });
             this.instanced_mesh.instanceMatrix.needsUpdate = true;
+            //Shader
+            const instance_frame_attribute = this.instanced_mesh.geometry.getAttribute('instance_frame');
+            const instance_frame_array = instance_frame_attribute.array;
+            for (let i = 0; i < MAX_AGENTS; i++) {
+                instance_frame_array[i] = Math.round(updated_time.getElapsed() * 24); //Math.round(Math.random() * 512);
+            }
+            instance_frame_attribute.needsUpdate = true;
             //UI
             document.getElementById('population').textContent = `Population: ${this.entity_manager.entities.filter(entity => entity.active).length}`;
 
