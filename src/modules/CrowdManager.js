@@ -87,20 +87,17 @@ export class CrowdManager {
             this.material = new THREE.ShaderMaterial({
                 vertexShader: `
                     precision highp float;
-                    //Animations
-                    uniform sampler2D animationAtlas;
                     //State info
                     attribute float instance_frame;
+                    //Animations
+                    uniform sampler2D animationAtlas;
 
                     void main() {
-                        //Vertice ID
-                        int vertex_id = gl_VertexID;
-                        float vertex_id_f = float(vertex_id);
+                
+                        vec3 anim_data = texture2D(animationAtlas, vec2((vertex_id) / 175.0, (mod(48.0 - instance_frame, 48.0)) / 48.0)).rgb; //1,1 UV is top-right
+                        vec3 anim_data_magnitude = 0.0 + anim_data * (1.8632011413574219 - 0.0);
 
-                        vec3 anim_data = texture2D(animationAtlas, vec2(mod(instance_frame + 0.5, 512.0) / 512.0, (vertex_id_f + 0.5) / 512.0)).rgb; //mix for blending two clips
-                        vec3 pos = position + anim_data;
-
-                        vec4 world_position = instanceMatrix * vec4(pos, 1.0);
+                        vec4 world_position = instanceMatrix * vec4(position + anim_data_magnitude, 1.0);
                         vec4 view_position = viewMatrix * world_position;
                         gl_Position = projectionMatrix * view_position;
 
@@ -175,7 +172,7 @@ export class CrowdManager {
             const instance_frame_attribute = this.instanced_mesh.geometry.getAttribute('instance_frame');
             const instance_frame_array = instance_frame_attribute.array;
             for (let i = 0; i < MAX_AGENTS; i++) {
-                instance_frame_array[i] = Math.round(updated_time.getElapsed() * 24); //Math.round(Math.random() * 512);
+                instance_frame_array[i] = Math.round(updated_time.getElapsed() * 24);
             }
             instance_frame_attribute.needsUpdate = true;
             //UI

@@ -1,9 +1,6 @@
 # Node.js dependencies
 node_modules/
-# 3d
-public/
+# My Maya scenes
 scenes/
-# Build output directories
-dist/
-build/
-out/
+
+public/
