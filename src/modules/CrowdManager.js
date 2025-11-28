@@ -93,6 +93,9 @@ export class CrowdManager {
                     uniform sampler2D animationAtlas;
 
                     void main() {
+
+                        int test = gl_VertexID;
+                        float vertex_id = float(test);
                 
                         vec3 anim_data = texture2D(animationAtlas, vec2((vertex_id) / 175.0, (mod(48.0 - instance_frame, 48.0)) / 48.0)).rgb; //1,1 UV is top-right
                         vec3 anim_data_magnitude = 0.0 + anim_data * (1.8632011413574219 - 0.0);
