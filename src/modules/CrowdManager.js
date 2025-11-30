@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
-import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 import {Pictogram} from '../Agents/Pictogram.js';
 
@@ -73,59 +73,64 @@ export class CrowdManager {
         ];
         this.triangulated_spawn = triangulate(polygon);
         //Create instanced geo
-        let geo;
-        const loader = new FBXLoader(loadingManager);
-        loader.load('models/pictogram.fbx', (fbx) => {
+        let mesh;
+        const loader = new GLTFLoader(loadingManager);
+        loader.load('models/pictogram.gltf', (gltf) => {
 
-            fbx.traverse((child) => {
-                geo = child.geometry;
+            gltf.scene.traverse((child) => {
+                if (child.isMesh) mesh = child;
             });
+
+            const geo = mesh.geometry;
 
             const textureLoader = new THREE.TextureLoader(loadingManager);
-            const animTexture = textureLoader.load('./textures/animations.png')
+            const animTexture = new THREE.TextureLoader(loadingManager).load('./textures/animations.png', (texture) => {
+                this.material = new THREE.ShaderMaterial({
+                    vertexShader: `
+                        //State info
+                        attribute float instance_frame;
 
-            this.material = new THREE.ShaderMaterial({
-                vertexShader: `
-                    precision highp float;
-                    //State info
-                    attribute float instance_frame;
-                    //Animations
-                    uniform sampler2D animationAtlas;
+                        //Animation texture
+                        uniform sampler2D animationAtlas;
+                        uniform vec2 atlasSize;
 
-                    void main() {
+                        void main() {
 
-                        int test = gl_VertexID;
-                        float vertex_id = float(test);
-                
-                        vec3 anim_data = texture2D(animationAtlas, vec2((vertex_id) / 175.0, (mod(48.0 - instance_frame, 48.0)) / 48.0)).rgb; //1,1 UV is top-right
-                        vec3 anim_data_magnitude = 0.0 + anim_data * (1.8632011413574219 - 0.0);
+                            int test = gl_VertexID;
+                            float vertex_id = float(test);
+                    
+                            vec3 anim_data = texture2D(animationAtlas, vec2((vertex_id + 0.5) / atlasSize.x, (mod(48.0 - instance_frame + 0.5, atlasSize.y)) / atlasSize.y)).rgb;
+                            vec3 anim_data_scaled = 0.0 + anim_data * (3.6485204696655273 - 0.0); // Get scale from State
 
-                        vec4 world_position = instanceMatrix * vec4(position + anim_data_magnitude, 1.0);
-                        vec4 view_position = viewMatrix * world_position;
-                        gl_Position = projectionMatrix * view_position;
+                            vec4 world_position = instanceMatrix * vec4(position + anim_data_scaled, 1.0);
+                            vec4 view_position = viewMatrix * world_position;
+                            gl_Position = projectionMatrix * view_position;
 
-                    }
-                `,
-                fragmentShader: `
-                    void main() {
-                        //TO-DO variations
-                        gl_FragColor = vec4(0, 0, 0, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        void main() {
+                            //TO-DO variations
+                            gl_FragColor = vec4(0, 0, 0, 1.0);
 
-                    }
-                `,
-                uniforms: {
-                    animationAtlas: {value: animTexture},
-                },
-                side: THREE.DoubleSide,
+                        }
+                    `,
+                    uniforms: {
+                        animationAtlas: {value: animTexture},
+                        atlasSize: {value: new THREE.Vector2(animTexture.image.width, animTexture.image.height)}
+                    },
+                    side: THREE.DoubleSide,
+                });
+                //Instance info
+                this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
+                geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
+                this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
+                this.scene.add(this.instanced_mesh);
+                //Link each instance to individual agents and activate the right amount
+                for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
+                this.updateAgents(slider.value);
+
             });
-            //Instance info
-            this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
-            geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
-            this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
-            this.scene.add(this.instanced_mesh);
-            //Link each instance to individual agents and activate the right amount
-            for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
-            this.updateAgents(slider.value);
 
         });
 
