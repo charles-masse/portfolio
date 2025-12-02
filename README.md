@@ -15,5 +15,13 @@ Obviously, it's Crowd, you need a lot of characters--it's also the scariest part
 ### Stylized over realistic
 
 ### Instanced characters
-
+A more technical way to handle a large number of objects in a scene is to use a single InstancedMesh with X instances, instead of cloning the same object X times.
+Here's the results of a test I did with 10 000 cloned Suzannes (Blender monkey) vs 10 000 instanced Suzannes :
+|                     | Cloned (min-max)  | Instanced (min-max) |
+|---------------------|-------------------|---------------------|
+| **FPS**             | 13-23             | 39-43               |
+| **Frame Time** (ms) | 3-776             | 2-81                |
+| **Memory** (mb)     | 130-282           | 9-20                |
+As you can see, fps is nearly doubled on the instances, loading 10x faster and uses less than 10% of the cloned memory.
+The only problem we have with instances, is that every characters must be doing the exact same thing...
 ### GL Shaders
