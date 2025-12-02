@@ -10,8 +10,10 @@ html, body {
 
 #info {
     top: 0;
+    right: 0;
     padding: 0.5em;
-    background-color: #282828;
+    margin: 5px;
+    background-color: #181717;
     position: absolute;
     display: flex;
     font-size: 28px;
@@ -20,9 +22,17 @@ html, body {
 }
 
 #info>div {
-    width: 100%;
+    width: 200px;
 }
 
+#about {
+    bottom: 0;
+    left: 0;
+    margin: 5px;
+    position: absolute;
+    display: flex;
+}
+/* Loading Screen */
 #loading-screen {
     position: absolute;
     z-index: 2;

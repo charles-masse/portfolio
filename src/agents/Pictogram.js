@@ -11,8 +11,8 @@ class Pictogram extends Agent {
         super();
         //States
         this.stateMachine.add('walk', new Walk());
-        this.stateMachine.add('idle', new Idle());
-        //Path [TO-DO] find nearest waypoint and set the path direction per agent based on global path
+        // this.stateMachine.add('idle', new Idle());
+        //Path [TO-DO] change to NavMesh
         const path = new YUKA.Path();
         path.add(new YUKA.Vector3(0, 0, 0));
         path.add(new YUKA.Vector3(50, 0, 30));
@@ -40,8 +40,12 @@ class Pictogram extends Agent {
 
         // }
         //Behaviors
-        const followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
+        let followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
         this.vehicle.steering.add(followPathBehavior);
+
+        let test = new YUKA.SeparationBehavior();
+        console.log(test.active);
+        this.vehicle.steering.add(test);
 
     }
 

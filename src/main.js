@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import {City} from './modules/City.js';
 import {DayNight} from './modules/DayNight.js';
 import {CrowdManager} from './modules/CrowdManager.js';
+
+import Stats from 'three/addons/libs/stats.module.js';
 //Scene
 const scene = new THREE.Scene();
 //Camera
@@ -39,23 +41,15 @@ const crowdManager = new CrowdManager(scene, loadingManager);
 
 const dayNight = new DayNight(scene, canvas, city);
 
-let frames = 0;
-let prevTime = performance.now();
+const stats = new Stats();
+document.body.appendChild(stats.dom);
+
 function animate() {
-    //FPS -- https://jsfiddle.net/z2c19qab
-    const time = performance.now();
-    frames++;
-
-    if (time >= prevTime + 1000) {
-        document.getElementById('fps').textContent = `FPS: ${Math.round((frames * 1000) / (time - prevTime))}`;
-      
-        frames = 0;
-        prevTime = time;
-
-    }
     //Update modules
     dayNight.update();
     crowdManager.update();
+
+    stats.update();
 
     renderer.render(scene, camera);
 
