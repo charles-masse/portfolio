@@ -36,14 +36,17 @@ function loadModels() {
 
     const loader = new GLTFLoader();
 
-    loader.load('IridescenceSuzanne.glb', (gltf) => {
+    loader.load('models/suzanne.glb', (gltf) => {
 
         gltf.scene.traverse((child) => {
             if (child.isMesh) originalMesh = child;
         });
         
-        for (let i = 0; i < 1000; i++) {
+        const whiteMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
+
+        for (let i = 0; i < 10000; i++) {
             const clone = originalMesh.clone(true);
+            clone.material = whiteMaterial.clone();
             scene.add(clone);
         }
     });
@@ -53,12 +56,15 @@ function loadInstance() {
 
     let mesh;
     const loader = new GLTFLoader(loadingManager);
-    loader.load('IridescenceSuzanne.glb', (gltf) => {
+    loader.load('models/suzanne.glb', (gltf) => {
 
         gltf.scene.traverse((child) => {
             if (child.isMesh) mesh = child;
         });
-        const instanced_mesh = new THREE.InstancedMesh(mesh.geometry, mesh.material, 1000);
+
+        const whiteMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
+        const instanced_mesh = new THREE.InstancedMesh(mesh.geometry, whiteMaterial, 10000);
+
         scene.add(instanced_mesh)
     });
 
