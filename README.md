@@ -6,7 +6,7 @@ I always wanted an interactive Crowd portfolio where, instead of being just a fe
 - Create an interesting environment for these characters to interact with that showcase the typical crowd behaviors.
 
 ## How to manage lots of characters on screen
-Obviously, it's Crowd, you need a lot of characters--it's also the scariest part. I want my website to run well on most computers and smartphones. The last thing I want is to lose an opportunity because my website was lagging on a recruiters' phone. Here's what I did to surmount these hurdles :
+Obviously, it's Crowd, you need a lot of characters--it's also the scariest part. I want my website to run well on most computers and smartphones. The last thing I want is to lose an opportunity because my website was lagging on a recruiters' phone. Here's what I did to overcome these hurdles :
 
 - Stylized over realistic
 - Instanced characters
