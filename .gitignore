@@ -6,3 +6,4 @@ scenes/
 public/
 # Build
 dist/
+.vite/
