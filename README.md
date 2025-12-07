@@ -10,10 +10,6 @@ Obviously, it's Crowd—you need lots of characters, but it's also the scariest 
 My website needs to run well on most computers and smartphones and the last thing I want is to lose an opportunity because my website was lagging on a recruiters' phone.
 Here's what I did to overcome these hurdles :
 
-- [Stylized over realistic](#Stylized-over-realistic)
-- [Instanced characters](#Instanced-characters)
-- [GL Shaders](#GL-Shaders)
-
 ### Stylized over Realistic
 
 
@@ -31,9 +27,10 @@ As you can see, the max FPS is nearly doubled with the instances, they load 10x 
 The only problem, every instanced characters must look the same and play the same animation...
 
 ### GL Shaders
-Like I said before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same, but what if there was a way to add a layer of variation on top. This is where custom shaders come into play.
+Like mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same, but what if there was a way to add a layer of variation on top. This is where custom shaders come into play.
 
 ## An interesting environment
 
-- Showcase the typical crowd behaviors.
-- Be interesting on a phone and a computer
+### Showcase the typical crowd behaviors.
+
+### Be interesting on a phone and a computer

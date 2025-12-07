@@ -12,14 +12,14 @@ class Pictogram extends Agent {
         //States
         this.stateMachine.add('walk', new Walk());
         // this.stateMachine.add('idle', new Idle());
-        //Path [TO-DO] change to NavMesh
-        const path = new YUKA.Path();
-        path.add(new YUKA.Vector3(0, 0, 0));
-        path.add(new YUKA.Vector3(50, 0, 30));
-        path.add(new YUKA.Vector3(50, 0, -30));
-        path.add(new YUKA.Vector3(0, 0, -30));
-        path.loop = true; //At end of line, deactivate agent (.finished())
-        for (let i = 0; i < THREE.MathUtils.randInt(0, 3); i++) path.advance();
+        // //Path [TO-DO] change to NavMesh
+        // const path = new YUKA.Path();
+        // path.add(new YUKA.Vector3(-10, 0, 10));
+        // path.add(new YUKA.Vector3(10, 0, 10));
+        // path.add(new YUKA.Vector3(10, 0, -10));
+        // path.add(new YUKA.Vector3(-10, 0, -10));
+        // path.loop = true; //At end of line, deactivate agent (.finished())
+        // for (let i = 0; i < THREE.MathUtils.randInt(0, 3); i++) path.advance();
 
         // if (debug) {
 
@@ -39,13 +39,13 @@ class Pictogram extends Agent {
         //     this.scene.add(lines);
 
         // }
-        //Behaviors
-        let followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
-        this.vehicle.steering.add(followPathBehavior);
+        // //Behaviors
+        // let followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
+        // this.vehicle.steering.add(followPathBehavior);
 
-        let test = new YUKA.SeparationBehavior();
-        console.log(test.active);
-        this.vehicle.steering.add(test);
+        // let test = new YUKA.SeparationBehavior();
+        // console.log(test.active);
+        // this.vehicle.steering.add(test);
 
     }
 

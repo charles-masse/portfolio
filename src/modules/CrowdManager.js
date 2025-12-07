@@ -1,11 +1,14 @@
 
 import * as THREE from 'three';
-import * as YUKA from 'yuka';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+
+import * as YUKA from 'yuka';
+import {createGraphHelper} from '../helpers/GraphHelper.js'
+import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
 import {Pictogram} from '../Agents/Pictogram.js';
 
-const MAX_AGENTS = 1000;
+const MAX_AGENTS = 1;
 const CANDIDATE_NB = 7;
 
 function triangulate(polygon) {
@@ -66,12 +69,28 @@ export class CrowdManager {
         slider.addEventListener('input', () => {this.updateAgents(slider.value)});
         //Spawn Zone
         const polygon = [
-            new THREE.Vector2(0, 10),
-            new THREE.Vector2(75, 15),
-            new THREE.Vector2(50, -20),
-            new THREE.Vector2(0, -5)
+            new THREE.Vector2(-10, 10),
+            new THREE.Vector2(10, 10),
+            new THREE.Vector2(10, 0),
+            new THREE.Vector2(-10, 0)
         ];
         this.triangulated_spawn = triangulate(polygon);
+        //NavMesh
+        const navMeshLoader = new YUKA.NavMeshLoader();
+        navMeshLoader.load('models/navMesh.glb').then((navMesh) => {
+
+            const test = createConvexRegionHelper(navMesh);
+            this.scene.add(test);
+
+            const graphHelper = createGraphHelper(navMesh.graph, 0.2);
+            this.scene.add(graphHelper);
+
+        });
+        // //debug path
+        // const pathMaterial = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+        // const pathHelper = new THREE.Line( new THREE.BufferGeometry(), pathMaterial );
+        // pathHelper.visible = false;
+        // scene.add( pathHelper );
         //Create instanced geo
         let mesh;
         const loader = new GLTFLoader(loadingManager);

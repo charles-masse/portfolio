@@ -12,7 +12,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(14.872)
 camera.position.set(22.436, 30.551, 67.458);
-camera.lookAt(53.598, 23.026, 12.505);
+camera.lookAt(0, 0, 0);
 //Canvas
 const canvas = document.querySelector('#canvas');
 //Renderer
@@ -28,7 +28,7 @@ renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', onWindowResize, false);
 //Loading -- https://jsfiddle.net/gex9km1j
-const loadingManager = new THREE.LoadingManager((onProgress=test()) => {
+const loadingManager = new THREE.LoadingManager(() => {
     
     const loadingScreen = document.getElementById('loading-screen');
     loadingScreen.classList.add('fade-out');
@@ -69,8 +69,4 @@ function onTransitionEnd(event) {
     const element = event.target;
     element.remove();
     
-}
-
-function test() {
-    console.log('Loading progress...')
 }
