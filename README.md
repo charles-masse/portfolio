@@ -15,7 +15,7 @@ Here's what I did to overcome these hurdles :
 
 ### Instanced characters
 A more technical way to handle a large number of objects in *Three.js* is to use a single [instanced mesh](https://threejs.org/docs/?q=instancedMes#InstancedMesh) with X instances, instead of cloning the same object X times.
-Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://en.wikipedia.org/wiki/Blender_(software)#Suzanne) vs 10 000 instances of [Suzanne](https://en.wikipedia.org/wiki/Blender_(software)#Suzanne) :
+Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl) vs 10 000 instances of [Suzanne](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl):
 
 |                     | Cloned (min-max)  | Instanced (min-max) |
 |---------------------|-------------------|---------------------|

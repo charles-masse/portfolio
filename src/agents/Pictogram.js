@@ -1,51 +1,24 @@
 
 import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+
 import * as YUKA from 'yuka';
 
-import {Agent} from '../superClasses/Agent.js';
-import {Walk, Idle} from '../stateMachines/Pictogram.js';
+import {Agent, AgentState} from '../superClasses/Agent.js';
+
+// class Walk extends AgentState {}
+// class Idle extends AgentState {}
 
 class Pictogram extends Agent {
 
     constructor() {
         super();
         //States
-        this.stateMachine.add('walk', new Walk());
+        // this.stateMachine.add('walk', new Walk());
         // this.stateMachine.add('idle', new Idle());
-        // //Path [TO-DO] change to NavMesh
-        // const path = new YUKA.Path();
-        // path.add(new YUKA.Vector3(-10, 0, 10));
-        // path.add(new YUKA.Vector3(10, 0, 10));
-        // path.add(new YUKA.Vector3(10, 0, -10));
-        // path.add(new YUKA.Vector3(-10, 0, -10));
-        // path.loop = true; //At end of line, deactivate agent (.finished())
-        // for (let i = 0; i < THREE.MathUtils.randInt(0, 3); i++) path.advance();
-
-        // if (debug) {
-
-        //     const position = [];
-        //     for (let i = 0; i < path._waypoints.length; i ++) {
-
-        //         const waypoint = path._waypoints[i];
-        //         position.push(waypoint.x, waypoint.y, waypoint.z);
-
-        //     }
-
-        //     const lineGeometry = new THREE.BufferGeometry();
-        //     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-        //     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
-        //     const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
-
-        //     this.scene.add(lines);
-
-        // }
         // //Behaviors
-        // let followPathBehavior = new YUKA.FollowPathBehavior(path, THREE.MathUtils.randInt(1, 10));
+        // let followPathBehavior = new YUKA.FollowPathBehavior();
         // this.vehicle.steering.add(followPathBehavior);
-
-        // let test = new YUKA.SeparationBehavior();
-        // console.log(test.active);
-        // this.vehicle.steering.add(test);
 
     }
 
@@ -55,3 +28,65 @@ export {
     Pictogram,
 };
 
+export const Pictogram_geo = new Promise((resolve) => {
+
+    const loader = new GLTFLoader();
+    loader.load('models/pictogram.gltf', (gltf) => {
+
+            let mesh = null;
+
+            gltf.scene.traverse((child) => {
+                if (child.isMesh) mesh = child;
+            });
+
+            resolve(mesh.geometry);
+        },
+
+    );
+});
+
+export const Pictogram_shader = new Promise((resolve) => {
+
+    const loader = new THREE.TextureLoader();
+    loader.load('./textures/animations.png', (animation_texture) => {
+
+        const shader = new THREE.ShaderMaterial({
+            vertexShader: `
+                attribute float instance_frame;
+
+                uniform sampler2D animationAtlas;
+                uniform vec2 atlasSize;
+
+                void main() {
+                    float vertex_id = float(gl_VertexID);
+                    vec3 anim_data = texture2D(
+                        animationAtlas,
+                        vec2(
+                            (vertex_id + 0.5) / atlasSize.x,
+                            (mod(48.0 - instance_frame + 0.5, atlasSize.y)) / atlasSize.y
+                        )
+                    ).rgb;
+
+                    vec3 anim_data_scaled = anim_data * 3.6485204696655273;
+                    vec4 world_position = instanceMatrix * vec4(position + anim_data_scaled, 1.0);
+                    gl_Position = projectionMatrix * modelViewMatrix * world_position;
+                }
+            `,
+            fragmentShader: `
+                void main() {
+                    gl_FragColor = vec4(0., 0., 0., 1.0);
+                }
+            `,
+            uniforms: {
+                animationAtlas: {value: animation_texture},
+                atlasSize: {value: new THREE.Vector2(
+                    animation_texture.image.width,
+                    animation_texture.image.height
+                )}
+            },
+            side: THREE.DoubleSide,
+        });
+
+        resolve(shader);
+    });
+});

@@ -1,29 +1,21 @@
 
 import * as THREE from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 import * as YUKA from 'yuka';
-import {createGraphHelper} from '../helpers/GraphHelper.js'
-import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
-import {Pictogram} from '../Agents/Pictogram.js';
+import {NavMesh} from '../modules/NavMesh.js';
+import {Pictogram, Pictogram_geo, Pictogram_shader} from '../Agents/Pictogram.js';
 
-const MAX_AGENTS = 1;
+const MAX_AGENTS = 100;
 const CANDIDATE_NB = 7;
 
-function triangulate(polygon) {
-
-    const triangles = THREE.ShapeUtils.triangulateShape(polygon, []);
-    return triangles.map(pt => pt.map(i => polygon[i]));
-}
-
-function bestCandidate(current_positions, triangulated_zone) {
+function bestCandidate(current_positions, navMesh) {
 
     let best;
     let maxDist = -Infinity;
     for (let i = 0; i < CANDIDATE_NB; i++) {
 
-        const {x, y} = randomPointInTriangulated(triangulated_zone);
+        const {x, y} = navMesh.randomPoint();
 
         const pos = new YUKA.Vector3(x, 0, y);
         const minDist = Math.min(...current_positions.map(p => pos.distanceTo(p)));
@@ -40,20 +32,6 @@ function bestCandidate(current_positions, triangulated_zone) {
     return best;
 }
 
-function randomPointInTriangulated(triangles) {
-    //Get random triangle
-    const triangle = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)]; 
-
-    let r1 = Math.random();
-    let r2 = Math.random();
-    if (r1 + r2 > 1) {r1 = 1 - r1; r2 = 1 - r2;};
-
-    return {
-        x: triangle[0].x + r1 * (triangle[1].x - triangle[0].x) + r2 * (triangle[2].x - triangle[0].x),
-        y: triangle[0].y + r1 * (triangle[1].y - triangle[0].y) + r2 * (triangle[2].y - triangle[0].y)
-    };
-}
-
 export class CrowdManager {
 
     constructor(scene, loadingManager) {
@@ -63,99 +41,48 @@ export class CrowdManager {
         this.time = new YUKA.Time();
         this.entity_manager = new YUKA.EntityManager();
         //UI
-        const slider = document.getElementById('mySlider');
-        slider.max = MAX_AGENTS;
-        slider.value = Math.round(MAX_AGENTS / 2);
-        slider.addEventListener('input', () => {this.updateAgents(slider.value)});
-        //Spawn Zone
-        const polygon = [
-            new THREE.Vector2(-10, 10),
-            new THREE.Vector2(10, 10),
-            new THREE.Vector2(10, 0),
-            new THREE.Vector2(-10, 0)
-        ];
-        this.triangulated_spawn = triangulate(polygon);
-        //NavMesh
-        const navMeshLoader = new YUKA.NavMeshLoader();
-        navMeshLoader.load('models/navMesh.glb').then((navMesh) => {
+        this.slider = document.getElementById('mySlider');
+        this.slider.max = MAX_AGENTS;
+        this.slider.value = Math.round(MAX_AGENTS / 2);
+        this.slider.addEventListener('input', () => {this.updateAgentNumber(this.slider.value)});
 
-            const test = createConvexRegionHelper(navMesh);
-            this.scene.add(test);
+        // const from = new YUKA.Vector3(0, 0, -10);
+        // const to = new YUKA.Vector3(-20, 0, 10);
 
-            const graphHelper = createGraphHelper(navMesh.graph, 0.2);
-            this.scene.add(graphHelper);
+        // const path = navMesh.findPath(from, to);
+        // pathHelper.geometry = new THREE.BufferGeometry().setFromPoints(path);
 
-        });
-        // //debug path
-        // const pathMaterial = new THREE.LineBasicMaterial( { color: 0xff0000 } );
-        // const pathHelper = new THREE.Line( new THREE.BufferGeometry(), pathMaterial );
-        // pathHelper.visible = false;
-        // scene.add( pathHelper );
-        //Create instanced geo
-        let mesh;
-        const loader = new GLTFLoader(loadingManager);
-        loader.load('models/pictogram.gltf', (gltf) => {
-
-            gltf.scene.traverse((child) => {
-                if (child.isMesh) mesh = child;
-            });
-
-            const geo = mesh.geometry;
-
-            const textureLoader = new THREE.TextureLoader(loadingManager);
-            const animTexture = new THREE.TextureLoader(loadingManager).load('./textures/animations.png', (texture) => {
-                this.material = new THREE.ShaderMaterial({
-                    vertexShader: `
-                        //State info
-                        attribute float instance_frame;
-
-                        //Animation texture
-                        uniform sampler2D animationAtlas;
-                        uniform vec2 atlasSize;
-
-                        void main() {
-
-                            int test = gl_VertexID;
-                            float vertex_id = float(test);
-                    
-                            vec3 anim_data = texture2D(animationAtlas, vec2((vertex_id + 0.5) / atlasSize.x, (mod(48.0 - instance_frame + 0.5, atlasSize.y)) / atlasSize.y)).rgb;
-                            vec3 anim_data_scaled = 0.0 + anim_data * (3.6485204696655273 - 0.0); // Get scale from State
-
-                            vec4 world_position = instanceMatrix * vec4(position + anim_data_scaled, 1.0);
-                            vec4 view_position = viewMatrix * world_position;
-                            gl_Position = projectionMatrix * view_position;
-
-                        }
-                    `,
-                    fragmentShader: `
-                        void main() {
-                            //TO-DO variations
-                            gl_FragColor = vec4(0, 0, 0, 1.0);
-
-                        }
-                    `,
-                    uniforms: {
-                        animationAtlas: {value: animTexture},
-                        atlasSize: {value: new THREE.Vector2(animTexture.image.width, animTexture.image.height)}
-                    },
-                    side: THREE.DoubleSide,
-                });
-                //Instance info
-                this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
-                geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
-                this.instanced_mesh = new THREE.InstancedMesh(geo, this.material, MAX_AGENTS);
-                this.scene.add(this.instanced_mesh);
-                //Link each instance to individual agents and activate the right amount
-                for (let i = 0; i < MAX_AGENTS; i++) this.entity_manager.add(new Pictogram());
-                this.updateAgents(slider.value);
-
-            });
-
-        });
+        // const pathMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+        // const pathHelper = new THREE.Line(new THREE.BufferGeometry(), pathMaterial);
+        // scene.add(pathHelper);
+        
+        this.init();
 
     }
 
-    updateAgents(nb) {
+    async init() {
+        //Navigation mesh
+        this.navMesh = new NavMesh(this.scene);
+        await this.navMesh.load()
+        //Agents
+        const geo = await Pictogram_geo;
+        const shader = await Pictogram_shader;
+        //Instance attributes
+        this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
+        geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
+
+        this.instanced_mesh = new THREE.InstancedMesh(geo, shader, MAX_AGENTS);
+        this.scene.add(this.instanced_mesh);
+        //Link each instance to individual agent
+        for (let i = 0; i < MAX_AGENTS; i++) {
+            this.entity_manager.add(new Pictogram())
+        };
+
+        this.updateAgentNumber(this.slider.value);
+
+    }
+
+    async updateAgentNumber(nb) {
 
         let active_agents = this.entity_manager.entities.filter(agent => agent.active);
         while (active_agents.length != nb) {
@@ -163,7 +90,7 @@ export class CrowdManager {
             if (active_agents.length < nb) {
 
                 const positions = this.entity_manager.entities.map(agent => agent.position);
-                const spawn_position = bestCandidate(positions, this.triangulated_spawn);
+                const spawn_position = bestCandidate(positions, this.navMesh);
 
                 this.entity_manager.entities[active_agents.length].setActive(true);
                 this.entity_manager.entities[active_agents.length].setPosition(spawn_position);
@@ -178,15 +105,18 @@ export class CrowdManager {
 
         }
 
+        document.getElementById('population').textContent = `Population: ${this.entity_manager.entities.filter(entity => entity.active).length}`;
+
     }
 
     update() {
 
         if (this.instanced_mesh) {
-            //Entities
+
             const updated_time = this.time.update();
+
             this.entity_manager.update(updated_time.getDelta());
-            //World matrices
+            //Update instances position
             const tempMatrix = new THREE.Matrix4();
             this.entity_manager.entities.forEach((entity, i) => {
 
@@ -198,12 +128,12 @@ export class CrowdManager {
             //Shader
             const instance_frame_attribute = this.instanced_mesh.geometry.getAttribute('instance_frame');
             const instance_frame_array = instance_frame_attribute.array;
+
             for (let i = 0; i < MAX_AGENTS; i++) {
                 instance_frame_array[i] = Math.round(updated_time.getElapsed() * 24);
             }
+
             instance_frame_attribute.needsUpdate = true;
-            //UI
-            document.getElementById('population').textContent = `Population: ${this.entity_manager.entities.filter(entity => entity.active).length}`;
 
         }
 
