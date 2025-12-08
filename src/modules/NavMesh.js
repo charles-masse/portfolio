@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import * as YUKA from 'yuka';
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
-export class NavMesh {
+export default class {
 
     constructor(scene) {
 
@@ -28,8 +28,8 @@ export class NavMesh {
 
         this.mesh = await navMesh;
 
-        const test = createConvexRegionHelper(this.mesh);
-        this.scene.add(test);
+        const helper = createConvexRegionHelper(this.mesh);
+        this.scene.add(helper);
 
         this.#triangulate();
 

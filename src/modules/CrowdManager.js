@@ -3,13 +3,13 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {NavMesh} from '../modules/NavMesh.js';
-import {Pictogram, Pictogram_geo, Pictogram_shader} from '../Agents/Pictogram.js';
+import NavMesh from '../modules/NavMesh.js';
+import {Pictogram_agent, Pictogram_geo, Pictogram_shader} from '../Agents/Pictogram.js';
 
-const MAX_AGENTS = 100;
+const MAX_AGENTS = 250;
 const CANDIDATE_NB = 7;
 
-function bestCandidate(current_positions, navMesh) {
+export function bestCandidate(current_positions, navMesh) {
 
     let best;
     let maxDist = -Infinity;
@@ -32,7 +32,7 @@ function bestCandidate(current_positions, navMesh) {
     return best;
 }
 
-export class CrowdManager {
+export default class {
 
     constructor(scene, loadingManager) {
 
@@ -61,10 +61,10 @@ export class CrowdManager {
     }
 
     async init() {
-        //Navigation mesh
+
         this.navMesh = new NavMesh(this.scene);
-        await this.navMesh.load()
-        //Agents
+        await this.navMesh.load();
+
         const geo = await Pictogram_geo;
         const shader = await Pictogram_shader;
         //Instance attributes
@@ -75,8 +75,8 @@ export class CrowdManager {
         this.scene.add(this.instanced_mesh);
         //Link each instance to individual agent
         for (let i = 0; i < MAX_AGENTS; i++) {
-            this.entity_manager.add(new Pictogram())
-        };
+            this.entity_manager.add(new Pictogram_agent());
+        }
 
         this.updateAgentNumber(this.slider.value);
 
@@ -89,10 +89,10 @@ export class CrowdManager {
 
             if (active_agents.length < nb) {
 
+                this.entity_manager.entities[active_agents.length].setActive(true);
+
                 const positions = this.entity_manager.entities.map(agent => agent.position);
                 const spawn_position = bestCandidate(positions, this.navMesh);
-
-                this.entity_manager.entities[active_agents.length].setActive(true);
                 this.entity_manager.entities[active_agents.length].setPosition(spawn_position);
 
             } else {
@@ -124,8 +124,9 @@ export class CrowdManager {
                 this.instanced_mesh.setMatrixAt(i, tempMatrix);
 
             });
+
             this.instanced_mesh.instanceMatrix.needsUpdate = true;
-            //Shader
+            //Update Shader attributes
             const instance_frame_attribute = this.instanced_mesh.geometry.getAttribute('instance_frame');
             const instance_frame_array = instance_frame_attribute.array;
 

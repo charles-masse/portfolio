@@ -7,9 +7,10 @@ import * as YUKA from 'yuka';
 import {Agent, AgentState} from '../superClasses/Agent.js';
 
 // class Walk extends AgentState {}
+
 // class Idle extends AgentState {}
 
-class Pictogram extends Agent {
+class Pictogram_agent extends Agent {
 
     constructor() {
         super();
@@ -24,11 +25,7 @@ class Pictogram extends Agent {
 
 }
 
-export {
-    Pictogram,
-};
-
-export const Pictogram_geo = new Promise((resolve) => {
+const Pictogram_geo = new Promise((resolve) => {
 
     const loader = new GLTFLoader();
     loader.load('models/pictogram.gltf', (gltf) => {
@@ -45,7 +42,7 @@ export const Pictogram_geo = new Promise((resolve) => {
     );
 });
 
-export const Pictogram_shader = new Promise((resolve) => {
+const Pictogram_shader = new Promise((resolve) => {
 
     const loader = new THREE.TextureLoader();
     loader.load('./textures/animations.png', (animation_texture) => {
@@ -90,3 +87,6 @@ export const Pictogram_shader = new Promise((resolve) => {
         resolve(shader);
     });
 });
+
+
+export {Pictogram_agent, Pictogram_geo, Pictogram_shader};

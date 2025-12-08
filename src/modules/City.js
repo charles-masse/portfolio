@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 
-export class City {
+export default class {
 
     constructor(scene, loadingManager) {
 

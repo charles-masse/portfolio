@@ -1,9 +1,9 @@
 
 import * as THREE from 'three';
 //Custom modules
-import {City} from './modules/City.js';
-import {DayNight} from './modules/DayNight.js';
-import {CrowdManager} from './modules/CrowdManager.js';
+import City from './modules/City.js';
+import DayNight from './modules/DayNight.js';
+import CrowdManager from './modules/CrowdManager.js';
 
 import Stats from 'three/addons/libs/stats.module.js';
 //Scene

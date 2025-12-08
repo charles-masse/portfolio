@@ -31,7 +31,7 @@ const DAY_EVENTS = [
     },
 ];
 
-function lerpColor(c1, c2, t) {
+export function lerpColor(c1, c2, t) {
     return {
         r: Math.round(c1.r + (c2.r - c1.r) * t),
         g: Math.round(c1.g + (c2.g - c1.g) * t),
@@ -39,11 +39,11 @@ function lerpColor(c1, c2, t) {
     };
 }
 
-function colorToString(color) {
+export function colorToString(color) {
     return `rgb(${color.r}, ${color.g}, ${color.b})`;
 }
 
-export class DayNight {
+export default class {
 
     constructor(scene, canvas, emissives, debug=false) {
 
