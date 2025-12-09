@@ -3,7 +3,6 @@ import * as THREE from 'three';
 
 const START_TIME_SECS = 5;
 const SUN_SPEED = -20;
-
 const DAY_EVENTS = [
     {   //Sunrise
         time:0,
@@ -45,23 +44,24 @@ export function colorToString(color) {
 
 export default class {
 
-    constructor(scene, canvas, emissives, debug=false) {
+    constructor(canvas, emissives, debug=false) {
 
         this.canvas = canvas;
         this.emissives = emissives;
-        this.debug = debug;
-        //Lights
+
         this.sun = new THREE.DirectionalLight(0xffffff, 20);
         this.sun.castShadow = true;
         this.sun.shadow.radius = 2;
         this.sun.shadow.bias = -0.001;
         this.sun.shadow.mapSize.set(2048, 2048);
-        scene.add(this.sun);
 
-        this.helper = new THREE.DirectionalLightHelper(this.sun, 1);
-        if (this.debug) scene.add(this.helper);
+        this.sun_helper = new THREE.DirectionalLightHelper(this.sun, 1);
+        this.sun_helper.visible = false; // debug
+
         this.ambient = new THREE.AmbientLight(0xffffff, 10);
-        scene.add(this.ambient);
+
+        this.objects = new THREE.Group();
+        this.objects.add(this.sun, this.sun_helper, this.ambient);
 
         this.current_event = 0;
 
@@ -78,7 +78,7 @@ export default class {
 
     sunOrbit(t) {
 
-        const radius = 7.5;
+        const radius = 75;
         const inclination = 100;
         const azimuth = 0;
 
@@ -121,11 +121,11 @@ export default class {
         const bot_color = lerpColor(DAY_EVENTS[current_event].bot_color, DAY_EVENTS[next_event].bot_color, blend_factor);
         const ambient_color = lerpColor(DAY_EVENTS[current_event].ambient_color, DAY_EVENTS[next_event].ambient_color, blend_factor);
 
-        return [
-            colorToString(top_color),
-            colorToString(bot_color),
-            colorToString(ambient_color),
-        ];
+        return {
+            top_color : colorToString(top_color),
+            bot_color : colorToString(bot_color),
+            ambient_color : colorToString(ambient_color),
+        };
     }
 
     cityLights(t) {
@@ -146,18 +146,18 @@ export default class {
         return emissive_intensity;
     }
 
-    update() {
+    update(time) {
 
-        const time_in_secs = (performance.now() / 1000) + START_TIME_SECS;
+        const time_offset = time + START_TIME_SECS;
         //Sun
-        this.sun.position.copy(this.sunOrbit(time_in_secs));
-        this.helper.update();
+        this.sun.position.copy(this.sunOrbit(time_offset));
+        this.sun_helper.update();
         //Sky color
-        const [top_color, bot_color, ambient_color] = this.colorChange(time_in_secs);
+        const {top_color, bot_color, ambient_color} = this.colorChange(time_offset);
         this.canvas.style.background = `linear-gradient(to bottom, ${top_color}, ${bot_color})`;
         this.ambient.color.set(ambient_color);
-        //City lights
-        this.emissives.material.emissiveIntensity = this.cityLights(time_in_secs);
+        //Emissives--TODO From array
+        this.emissives.children[0].material.emissiveIntensity = this.cityLights(time_offset);
 
     }
 

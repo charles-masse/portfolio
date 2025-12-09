@@ -2,34 +2,40 @@
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 
-export default class {
+export default function (
+    loadingManager,
+    texture_path='./textures/cityEmission.jpg',
+    model_path='./models/city.obj',
+) {
 
-    constructor(scene, loadingManager) {
+    const city = new Promise((resolve) => {
 
         const textureLoader = new THREE.TextureLoader(loadingManager);
-
-        this.material = new THREE.MeshStandardMaterial({
+        const material = new THREE.MeshStandardMaterial({
             color: 0x808080,
             emissive: 0xffffff,
             emissiveIntensity: 1,
-            emissiveMap: textureLoader.load('./textures/cityEmission.jpg'),
+            emissiveMap: textureLoader.load(texture_path),
             side: THREE.DoubleSide,
         });
 
         const objLoader = new OBJLoader(loadingManager);
-        objLoader.load('./models/city.obj', (mesh) => {
+        objLoader.load(model_path, (mesh) => {
             mesh.traverse((child) => {
+
                 if (child.isMesh) {
-                    child.material = this.material;
+                    child.material = material;
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
+
             });
 
-            scene.add(mesh);
-
+            resolve(mesh);
         });
 
-    }
+    });
+
+    return city;
 
 }

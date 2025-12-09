@@ -6,20 +6,18 @@ import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
 export default class {
 
-    constructor(scene) {
-
-        this.scene = scene;
+    constructor() {
 
         this.mesh = null;
         this.mesh_triangulated = null;
 
     }
 
-    async load(path='models/navMesh.glb') {
+    async load(loadingManager, path='models/navMesh.glb') {
 
         const navMesh = new Promise((resolve) => {
 
-            const loader = new YUKA.NavMeshLoader();
+            const loader = new YUKA.NavMeshLoader(loadingManager);
             loader.load(path).then((gltf) => {
                 resolve(gltf)
             });
@@ -27,9 +25,7 @@ export default class {
         });
 
         this.mesh = await navMesh;
-
-        const helper = createConvexRegionHelper(this.mesh);
-        this.scene.add(helper);
+        this.helper = createConvexRegionHelper(this.mesh);
 
         this.#triangulate();
 

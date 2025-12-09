@@ -4,7 +4,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 import * as YUKA from 'yuka';
 
-import {Agent, AgentState} from '../superClasses/Agent.js';
+import {Agent, AgentState} from '../customs/Agent.js';
 
 // class Walk extends AgentState {}
 
