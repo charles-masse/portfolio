@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {Pictogram_agent, Pictogram_geo, Pictogram_shader} from '../agents/Pictogram.js';
+import {Agent} from '../customs/Agent.js';
 
 const MAX_AGENTS = 250;
 const CANDIDATE_NB = 7;
@@ -33,38 +33,28 @@ export function bestCandidate(current_positions, navMesh) {
 
 export default class {
 
-    constructor(navMesh, entityManager) {
+    constructor(agent_geo, agent_shader, navMesh, entityManager) {
 
         this.navMesh = navMesh;
         this.entityManager = entityManager;
-
-        this.objects = new THREE.Group();
         //UI
         this.slider = document.getElementById('mySlider');
         this.slider.max = MAX_AGENTS;
         this.slider.value = Math.round(MAX_AGENTS / 2);
         this.slider.addEventListener('input', () => {this.updateAgentNumber(this.slider.value)});
-
-        this.init();
-
-    }
-
-    async init() {
-
-        const geo = await Pictogram_geo;
-        const shader = await Pictogram_shader;
         //Instance attributes
         this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
-        geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
+        agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
 
-        this.instancedMesh = new THREE.InstancedMesh(geo, shader, MAX_AGENTS);
+        this.instancedMesh = new THREE.InstancedMesh(agent_geo, agent_shader, MAX_AGENTS);
         //Link each instance to individual agent
         for (let i = 0; i < MAX_AGENTS; i++) {
-            this.entityManager.add(new Pictogram_agent());
+            this.entityManager.add(new Agent());
         }
 
         this.updateAgentNumber(this.slider.value);
 
+        this.objects = new THREE.Group();
         this.objects.add(this.instancedMesh);
 
     }

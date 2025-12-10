@@ -6,47 +6,65 @@ import * as YUKA from 'yuka';
 
 import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
+import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 
 import DayNight from './modules/DayNight.js';
+
 import CrowdSpawner from './modules/CrowdSpawner.js';
+import TaskMaster from './modules/taskMaster.js'
+
 //Loading -- https://jsfiddle.net/gex9km1j
 async function main() {
 
-    const loadingManager = new THREE.LoadingManager(() => {
-        
-        const loadingScreen = document.getElementById('loading-screen');
-        loadingScreen.classList.add('fade-out');
-        loadingScreen.addEventListener('transitionend', onTransitionEnd);
-        
-    } );
+    const time = new YUKA.Time();
 
     const stats = new Stats();
     document.body.appendChild(stats.dom);
 
     const canvas = document.querySelector('#canvas');
+    //Load assets
+    const loadingManager = new THREE.LoadingManager(
+        () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.classList.add('fade-out');
+            loadingScreen.addEventListener('transitionend', onTransitionEnd);
+        },
+        (itemUrl, itemsLoaded, itemsTotal) => {
+            console.log(`Loading "${itemUrl}" (${itemsLoaded}/${itemsTotal})`);
+        },
+        (url) => {
+            console.error('Error loading', url);
+        }
+    );
+
+    const city = await City(loadingManager);
+
+    const pictogramGeo = await PictogramGeo(loadingManager);
+    const pictogramShader = await PictogramShader(loadingManager);
+
+    const navMesh = new NavMesh();
+    await navMesh.load(loadingManager);
+    //Crowd Spawner
+    const entityManager = new YUKA.EntityManager();
+    const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
+    const taskMaster = new TaskMaster(navMesh, entityManager);
+    //Day/Night Cycle
+    const dayNight = new DayNight(canvas, city);
     //Scene
     const scene = new THREE.Scene();
-
-    const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // scene.add(city);
+    scene.add(navMesh.helper);
+    scene.add(crowdSpawner.objects)
+    scene.add(taskMaster.objects)
+    scene.add(dayNight.objects);
+    //Cameraman
+    const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
     camera.position.set(22.436, 30.551, 67.458);
     camera.lookAt(0, 0, 0);
-    //Loading assets
-    const city = await City(loadingManager);
-    scene.add(city);
 
-    const navMesh = new NavMesh(loadingManager);
-    await navMesh.load();
-    scene.add(navMesh.helper);
-    //Modules
-    const dayNight = new DayNight(canvas, city);
-    scene.add(dayNight.objects);
-
-    const entityManager = new YUKA.EntityManager();
-
-    const crowdSpawner = new CrowdSpawner(navMesh, entityManager);
-    scene.add(crowdSpawner.objects)
-    //Render
+    window.addEventListener('resize', onWindowResize, false);
+    //Renderer
     const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
@@ -56,10 +74,6 @@ async function main() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.setAnimationLoop(animate);
-    document.body.appendChild(renderer.domElement);
-    window.addEventListener('resize', onWindowResize, false);
-
-    const time = new YUKA.Time();
 
     function animate() {
 
@@ -68,9 +82,8 @@ async function main() {
         const updated_time = time.update();
 
         entityManager.update(updated_time.getDelta());
-
-        dayNight.update(updated_time.getElapsed());
         crowdSpawner.update(updated_time.getElapsed());
+        dayNight.update(updated_time.getElapsed());
 
         renderer.render(scene, camera);
 
@@ -86,15 +99,9 @@ async function main() {
     }
 
     function onTransitionEnd(event) {
-
-        const element = event.target;
-        element.remove();
-        
+        event.target.remove();
     }
 
-    // const pathMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
-    // const pathHelper = new THREE.Line(new THREE.BufferGeometry(), pathMaterial);
-    // scene.add(pathHelper);
 }
 
 main()

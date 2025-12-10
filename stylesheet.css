@@ -1,11 +1,12 @@
 
-html, body {
-    margin: 0;
-}
-
 #canvas {
-    float: left;
-    background: linear-gradient(to bottom, #87CEEB, #FFFFFF);
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #000000;
 }
 
 #info {
