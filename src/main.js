@@ -13,7 +13,7 @@ import DayNight from './modules/DayNight.js';
 import CrowdSpawner from './modules/CrowdSpawner.js';
 import TaskMaster from './modules/taskMaster.js'
 
-//Loading -- https://jsfiddle.net/gex9km1j
+
 async function main() {
 
     const time = new YUKA.Time();
@@ -42,8 +42,7 @@ async function main() {
     const pictogramGeo = await PictogramGeo(loadingManager);
     const pictogramShader = await PictogramShader(loadingManager);
 
-    const navMesh = new NavMesh();
-    await navMesh.load(loadingManager);
+    const navMesh = await NavMesh(loadingManager);
     //Crowd Spawner
     const entityManager = new YUKA.EntityManager();
     const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
@@ -52,8 +51,7 @@ async function main() {
     const dayNight = new DayNight(canvas, city);
     //Scene
     const scene = new THREE.Scene();
-    // scene.add(city);
-    scene.add(navMesh.helper);
+    scene.add(city);
     scene.add(crowdSpawner.objects)
     scene.add(taskMaster.objects)
     scene.add(dayNight.objects);
