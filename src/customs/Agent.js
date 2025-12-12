@@ -1,15 +1,16 @@
 
+import * as THREE from 'three';
 import * as YUKA from 'yuka';
 
-class Agent extends YUKA.GameEntity {
+class Agent extends YUKA.Vehicle {
 
     constructor() {
         super();
-        //Vehicle
-        this.vehicle = new YUKA.Vehicle();
-        this.vehicle.maxSpeed = (Math.random() + 0.5) * 3;
+
+        this.maxTurnRate = 360;
+        this.neighborhoodRadius = 2;
         //State machine
-        this.stateMachine = new AgentStateMachine(this);
+        // this.stateMachine = new AgentStateMachine(this);
 
         this.setActive(false);
 
@@ -18,48 +19,29 @@ class Agent extends YUKA.GameEntity {
     setActive(bool) {
 
         if (bool) {
+            this.updateNeighborhood = true;
+
             this.active = true;
 
+
         } else {
-            this.setPosition(0, -9999, 0); //Shadow Realm
+            this.position.set(0, -9999, 0); //Shadow Realm
+            this.updateNeighborhood = false;
+
             this.active = false;
 
         }
 
     }
 
-    setPosition(...position) {
-
-        if (position.length === 1 && position[0] instanceof YUKA.Vector3) {
-            this.vehicle.position.copy(position[0]);
-        } 
-
-        else if (position.length === 3 && position.every(a => typeof a === 'number')) {
-            this.vehicle.position.set(position[0], position[1], position[2]);
-        } 
-
-        this.sync();
-
-    }
-
-    sync() {
-
-        this.position.copy(this.vehicle.position);
-        this.rotation.copy(this.vehicle.rotation);
-
-    }
-
     update(delta) {
-        super.update(delta);
 
-        if (this.active) {
-            //Vehicle
-            this.vehicle.update(delta);
-            this.sync();
-            //State Machine
-            this.stateMachine.update(delta);
-            
-        }
+        super.update(delta);
+        //no banking
+        this.rotation.x = 0;
+        this.rotation.z = 0;
+
+        this.position.y = 0;
 
     }
 

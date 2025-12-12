@@ -6,6 +6,8 @@ import * as YUKA from 'yuka';
 import {createGraphHelper} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
+import NavSeparation from '../behaviors/NavSeparation.js'
+
 export default class {
 
     constructor(navMesh, entityManager) {
@@ -31,12 +33,15 @@ export default class {
 
                 const navMeshHelper = createConvexRegionHelper(this.navMesh);
                 const pathHelper = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({color: 0xff0000}));
-                const graphHelper = createGraphHelper(this.navMesh.graph, 0.2);
+                const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
 
                 this.objects.add(navMeshHelper, pathHelper, graphHelper);
 
-                const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.5);
-                entity.vehicle.steering.add(followPathBehavior);
+                const followPathBehavior = new YUKA.FollowPathBehavior(path);
+                entity.steering.add(followPathBehavior);
+
+                const separationBehavior = new NavSeparation();
+                entity.steering.add(separationBehavior);
 
             }
 

@@ -1,5 +1,5 @@
 # Portfolio [WIP]
-I always wanted an interactive Crowd portfolio where, instead of being just a few seconds of curated footage, visitors could actually stress-test the behaviors I usually use in my crowds. I feel it would let visitors see, firsthand, the intricacy in the work I'm producing.
+I always wanted an interactive Crowd portfolio where, instead of being just a few seconds of curated footage, visitors could actually *stress-test* the behaviors I usually use in my crowds. I feel it would let visitors see, firsthand, the intricacy in the work I'm producing.
 
 ## Goals
 - [Display a decent amount of visually distinct characters on screen](#How-to-manage-lots-of-characters-on-screen)
@@ -11,10 +11,12 @@ My website needs to run well on most computers and smartphones and the last thin
 Here's what I did to overcome these hurdles :
 
 ### Stylized over Realistic
+The *Uncanny Valley* is a though hill to climb and the results often age badly. Instead, I decided to go with a stylized look as I feel, if done right, doesn't age as fast and doesn't require as much work (and ressources) to make it look realistic. I got really inspired by **Valve**'s promotional material for their game <ins>Portal 2</ins>.
 
+![A pictogram character from the game Portal 2](/gh-images/portal2.gif)
 
 ### Instanced characters
-A more technical way to handle a large number of objects in *Three.js* is to use a single [instanced mesh](https://threejs.org/docs/?q=instancedMes#InstancedMesh) with X instances, instead of cloning the same object X times.
+A more technical way to handle a large number of objects in **Three.js** is to use a single [instanced mesh](https://threejs.org/docs/?q=instancedMes#InstancedMesh) with X instances, instead of cloning the same object X times.
 Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl) vs 10 000 instances of [Suzanne](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl):
 
 |                     | Cloned (min-max)  | Instanced (min-max) |

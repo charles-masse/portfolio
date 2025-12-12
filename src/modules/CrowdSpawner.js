@@ -70,7 +70,7 @@ export default class {
 
                 const positions = this.entityManager.entities.map(agent => agent.position);
                 const spawn_position = bestCandidate(positions, this.navMesh);
-                this.entityManager.entities[active_agents.length].setPosition(spawn_position);
+                this.entityManager.entities[active_agents.length].position.copy(spawn_position);
 
             } else {
 
@@ -91,7 +91,7 @@ export default class {
         if (this.instancedMesh) {
             //Update instances' position
             this.entityManager.entities.forEach((entity, i) => {
-                this.instancedMesh.setMatrixAt(i, entity.vehicle.worldMatrix);
+                this.instancedMesh.setMatrixAt(i, entity.worldMatrix);
             });
             this.instancedMesh.instanceMatrix.needsUpdate = true;
             //Update Shader attribute
