@@ -58,7 +58,7 @@ async function main() {
     //Cameraman
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
-    camera.position.set(22.436, 30.551, 67.458);
+    camera.position.set(20, 30, 40);
     camera.lookAt(0, 0, 0);
 
     window.addEventListener('resize', onWindowResize, false);

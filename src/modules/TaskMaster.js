@@ -1,12 +1,11 @@
 
 import * as THREE from 'three';
-
 import * as YUKA from 'yuka';
 
 import {createGraphHelper} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
-import NavSeparation from '../behaviors/NavSeparation.js'
+import CityNavigation from '../behaviors/CityNavigation.js'
 
 export default class {
 
@@ -16,6 +15,12 @@ export default class {
         this.entityManager = entityManager;
 
         this.objects = new THREE.Group();
+
+        const navMeshHelper = createConvexRegionHelper(this.navMesh);
+        navMeshHelper.visible = false;
+        const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
+        
+        this.objects.add(navMeshHelper, graphHelper);
 
         this.entityManager.entities.forEach((entity, i) => {
 
@@ -31,17 +36,10 @@ export default class {
                     path.add(point);
                 }
 
-                const navMeshHelper = createConvexRegionHelper(this.navMesh);
                 const pathHelper = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({color: 0xff0000}));
-                const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
+                this.objects.add(pathHelper);
 
-                this.objects.add(navMeshHelper, pathHelper, graphHelper);
-
-                const followPathBehavior = new YUKA.FollowPathBehavior(path);
-                entity.steering.add(followPathBehavior);
-
-                const separationBehavior = new NavSeparation();
-                entity.steering.add(separationBehavior);
+                entity.steering.add(new CityNavigation(path));
 
             }
 

@@ -8,7 +8,7 @@ class Agent extends YUKA.Vehicle {
         super();
 
         this.maxTurnRate = 360;
-        this.neighborhoodRadius = 2;
+        this.neighborhoodRadius = 5;
         //State machine
         // this.stateMachine = new AgentStateMachine(this);
 
@@ -19,14 +19,16 @@ class Agent extends YUKA.Vehicle {
     setActive(bool) {
 
         if (bool) {
+            
             this.updateNeighborhood = true;
 
             this.active = true;
 
 
         } else {
-            this.position.set(0, -9999, 0); //Shadow Realm
+
             this.updateNeighborhood = false;
+            this.position.set(0, -9999, 0); //Shadow Realm
 
             this.active = false;
 
@@ -35,13 +37,11 @@ class Agent extends YUKA.Vehicle {
     }
 
     update(delta) {
-
         super.update(delta);
-        //no banking
-        this.rotation.x = 0;
-        this.rotation.z = 0;
 
         this.position.y = 0;
+        this.rotation.x = 0;
+        this.rotation.z = 0;
 
     }
 
