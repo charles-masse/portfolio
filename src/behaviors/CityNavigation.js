@@ -3,21 +3,34 @@ import * as YUKA from 'yuka';
 
 export default class extends YUKA.SteeringBehavior {
 
-    constructor(path) {
+    constructor(path, navMesh) {
         super();
 
         this.path = path;
+        this.navMesh = navMesh;
 
-        // this.fuzzy = new YUKA.FuzzyModule();
+        this.fuzzy = new YUKA.FuzzyModule();
 
-        // const distance = new YUKA.FuzzyVariable();
+        const distance = new YUKA.FuzzyVariable();
 
-        // const near = distance.add(new YUKA.LeftShoulderFuzzySet(0, 0, 1));
-        // const far = distance.add(new YUKA.TriangularFuzzySet(0, 0.9, 1));
+        const near = new YUKA.LeftShoulderFuzzySet(0, 0.1, 1);
+        const far = new YUKA.RightShoulderFuzzySet(0, 0.5, 99);
+        distance.add(near);
+        distance.add(far);
 
-        // this.fuzzy.addRule(new YUKA.FuzzyRule(near, far));
+        this.fuzzy.addFLV('distance', distance);
 
-        // this.fuzzy.addFLV('distance', distance);
+        const separationWeight = new YUKA.FuzzyVariable();
+
+        const highPrio = new YUKA.LeftShoulderFuzzySet(0, 0.25, 1);
+        const lowPrio = new YUKA.RightShoulderFuzzySet(0, 0.75, 1);
+        separationWeight.add(highPrio);
+        separationWeight.add(lowPrio);
+
+        this.fuzzy.addFLV('result', separationWeight);
+
+        this.fuzzy.addRule(new YUKA.FuzzyRule(near, highPrio));
+        this.fuzzy.addRule(new YUKA.FuzzyRule(far, lowPrio));
 
         this._followPath = new YUKA.FollowPathBehavior(this.path);
         this._separation = new YUKA.SeparationBehavior();
@@ -29,12 +42,12 @@ export default class extends YUKA.SteeringBehavior {
         const path = this._followPath.calculate(vehicle, force);
         const separation = this._separation.calculate(vehicle, force);
 
-        // const test = this.fuzzy.fuzzify('distance', separation.length());
+        this.fuzzy.fuzzify('distance', separation.length());
+        const result = this.fuzzy.defuzzify('result')
 
         // console.log(separation.length());
-        // console.log(this.fuzzy.defuzzify('distance'));
 
-        return path.multiplyScalar(separation.length() + 0.1) + separation;
+        return path.multiplyScalar(result) + separation.multiplyScalar(1 - result);
  
     }
 

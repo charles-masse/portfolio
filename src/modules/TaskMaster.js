@@ -17,7 +17,6 @@ export default class {
         this.objects = new THREE.Group();
 
         const navMeshHelper = createConvexRegionHelper(this.navMesh);
-        navMeshHelper.visible = false;
         const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
         
         this.objects.add(navMeshHelper, graphHelper);
@@ -37,9 +36,9 @@ export default class {
                 }
 
                 const pathHelper = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({color: 0xff0000}));
-                this.objects.add(pathHelper);
+                // this.objects.add(pathHelper);
 
-                entity.steering.add(new CityNavigation(path));
+                entity.steering.add(new CityNavigation(path, this.navMesh));
 
             }
 
