@@ -37,11 +37,6 @@ export default class {
 
         this.navMesh = navMesh;
         this.entityManager = entityManager;
-        //UI
-        this.slider = document.getElementById('mySlider');
-        this.slider.max = MAX_AGENTS;
-        this.slider.value = Math.round(MAX_AGENTS / 2);
-        this.slider.addEventListener('input', () => {this.updateAgentNumber(this.slider.value)});
         //Instance attributes
         this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
@@ -52,7 +47,8 @@ export default class {
             this.entityManager.add(new Agent());
         }
 
-        this.updateAgentNumber(this.slider.value);
+        /*this.updateAgentNumber(this.slider.value);*/
+        this.updateAgentNumber(10);
 
         this.objects = new THREE.Group();
         this.objects.add(this.instancedMesh);
@@ -82,7 +78,7 @@ export default class {
 
         }
 
-        document.getElementById('population').textContent = `Population: ${this.entityManager.entities.filter(entity => entity.active).length}`;
+        // document.getElementById('population').textContent = `Population: ${this.entityManager.entities.filter(entity => entity.active).length}`;
 
     }
 

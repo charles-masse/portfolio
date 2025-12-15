@@ -8,17 +8,18 @@ import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 
+import GUI from './modules/GUI.js';
 import DayNight from './modules/DayNight.js';
-
 import CrowdSpawner from './modules/CrowdSpawner.js';
 import TaskMaster from './modules/taskMaster.js'
-
 
 async function main() {
 
     const time = new YUKA.Time();
 
     const stats = new Stats();
+    stats.dom.style.top = '2px';
+    stats.dom.style.left = '2px';
     document.body.appendChild(stats.dom);
 
     const canvas = document.querySelector('#canvas');
@@ -72,6 +73,8 @@ async function main() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.setAnimationLoop(animate);
+
+    const gui = new GUI();
 
     function animate() {
 

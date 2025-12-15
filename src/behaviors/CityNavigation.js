@@ -8,7 +8,7 @@ export default class extends YUKA.SteeringBehavior {
 
         this.path = path;
         this.navMesh = navMesh;
-
+        //Fuzzy
         this.fuzzy = new YUKA.FuzzyModule();
 
         const distance = new YUKA.FuzzyVariable();

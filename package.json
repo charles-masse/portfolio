@@ -3,6 +3,8 @@
     "vite": "^7.1.12"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
+    "lil-gui": "^0.21.0",
     "three": "^0.180.0",
     "yuka": "^0.7.8"
   }

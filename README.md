@@ -13,7 +13,9 @@ My website needs to run well on most computers and smartphones and the last thin
 Here's what I did to overcome these hurdles :
 
 ### Stylized over Realistic
-The *Uncanny Valley* is a though hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much ressources to make it look nice. I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
+The *Uncanny Valley* is a though hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much ressources to make it look nice. 
+
+I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
 
 ![A pictogram character from the Portal 2 trailers waving to the camera](/gh-images/portal2.gif)
 
@@ -35,10 +37,10 @@ As you can see, the max FPS is nearly doubled with the instances, they load 10x 
 The only problem, every instanced characters must look the same and play the same animation...
 
 ### GL Shaders
-Like mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same, but what if there was a way to add a layer of variation on top. This is where custom shaders come into play.
+Like mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where custom shaders come into play.
 
 ## An interesting environment
 
-### Showcase the typical crowd behaviors.
+### Showcase the typical crowd behaviors
 
-### Be interesting on a phone and a computer
+### Be interesting on phones and computers
