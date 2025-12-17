@@ -8,32 +8,34 @@ export default class extends YUKA.SteeringBehavior {
 
         this.path = path;
         this.navMesh = navMesh;
+
+        this._followPath = new YUKA.FollowPathBehavior(this.path, 2.5);
+        this._separation = new YUKA.SeparationBehavior();
         //Fuzzy
         this.fuzzy = new YUKA.FuzzyModule();
-
+        //IN
         const distance = new YUKA.FuzzyVariable();
 
         const near = new YUKA.LeftShoulderFuzzySet(0, 0.1, 1);
-        const far = new YUKA.RightShoulderFuzzySet(0, 0.5, 99);
         distance.add(near);
+
+        const far = new YUKA.RightShoulderFuzzySet(0, 0.5, 1);
         distance.add(far);
 
         this.fuzzy.addFLV('distance', distance);
-
+        //OUT
         const separationWeight = new YUKA.FuzzyVariable();
 
-        const highPrio = new YUKA.LeftShoulderFuzzySet(0, 0.25, 1);
-        const lowPrio = new YUKA.RightShoulderFuzzySet(0, 0.75, 1);
+        const highPrio = new YUKA.TriangularFuzzySet(0, 0.25, 1);
         separationWeight.add(highPrio);
+
+        const lowPrio = new YUKA.TriangularFuzzySet(0, 0.75, 1);
         separationWeight.add(lowPrio);
 
         this.fuzzy.addFLV('result', separationWeight);
-
+        
         this.fuzzy.addRule(new YUKA.FuzzyRule(near, highPrio));
         this.fuzzy.addRule(new YUKA.FuzzyRule(far, lowPrio));
-
-        this._followPath = new YUKA.FollowPathBehavior(this.path);
-        this._separation = new YUKA.SeparationBehavior();
 
     }
 
@@ -42,10 +44,10 @@ export default class extends YUKA.SteeringBehavior {
         const path = this._followPath.calculate(vehicle, force);
         const separation = this._separation.calculate(vehicle, force);
 
+        this.test = separation.length(); //KILL ME
+
         this.fuzzy.fuzzify('distance', separation.length());
         const result = this.fuzzy.defuzzify('result')
-
-        // console.log(separation.length());
 
         return path.multiplyScalar(result) + separation.multiplyScalar(1 - result);
  

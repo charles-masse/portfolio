@@ -8,7 +8,7 @@ class Agent extends YUKA.Vehicle {
         super();
 
         this.maxTurnRate = 360;
-        this.neighborhoodRadius = 5;
+        this.neighborhoodRadius = 4;
         //State machine
         // this.stateMachine = new AgentStateMachine(this);
 
@@ -39,7 +39,7 @@ class Agent extends YUKA.Vehicle {
     update(delta) {
         super.update(delta);
 
-        this.position.y = 0;
+        this.position.y = 0.1;
         this.rotation.x = 0;
         this.rotation.z = 0;
 

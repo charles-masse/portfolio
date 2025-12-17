@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
 
-import {createGraphHelper} from '../helpers/GraphHelper.js'
+// import {createGraphHelper} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
 
 import CityNavigation from '../behaviors/CityNavigation.js'
@@ -17,9 +17,9 @@ export default class {
         this.objects = new THREE.Group();
 
         const navMeshHelper = createConvexRegionHelper(this.navMesh);
-        const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
+        // const graphHelper = createGraphHelper(this.navMesh.graph, 0.75);
         
-        this.objects.add(navMeshHelper, graphHelper);
+        this.objects.add(navMeshHelper, /*graphHelper*/);
 
         this.entityManager.entities.forEach((entity, i) => {
 

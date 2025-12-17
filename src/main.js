@@ -8,7 +8,7 @@ import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 
-import GUI from './modules/GUI.js';
+import AgentInfo from './modules/AgentInfo.js';
 import DayNight from './modules/DayNight.js';
 import CrowdSpawner from './modules/CrowdSpawner.js';
 import TaskMaster from './modules/taskMaster.js'
@@ -37,25 +37,26 @@ async function main() {
             console.error('Error loading', url);
         }
     );
-
+    //Loading
     const city = await City(loadingManager);
-
     const pictogramGeo = await PictogramGeo(loadingManager);
     const pictogramShader = await PictogramShader(loadingManager);
-
     const navMesh = await NavMesh(loadingManager);
-    //Crowd Spawner
+    //Modules
     const entityManager = new YUKA.EntityManager();
     const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
     const taskMaster = new TaskMaster(navMesh, entityManager);
-    //Day/Night Cycle
     const dayNight = new DayNight(canvas, city);
+
+    const debug = new AgentInfo(entityManager);
     //Scene
     const scene = new THREE.Scene();
     scene.add(city);
+
     scene.add(crowdSpawner.objects)
     scene.add(taskMaster.objects)
     scene.add(dayNight.objects);
+    scene.add(debug.objects);
     //Cameraman
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
@@ -74,8 +75,6 @@ async function main() {
     renderer.shadowMap.enabled = true;
     renderer.setAnimationLoop(animate);
 
-    const gui = new GUI();
-
     function animate() {
 
         stats.update();
@@ -85,6 +84,7 @@ async function main() {
         entityManager.update(updated_time.getDelta());
         crowdSpawner.update(updated_time.getElapsed());
         dayNight.update(updated_time.getElapsed());
+        debug.update(updated_time.getElapsed());
 
         renderer.render(scene, camera);
 
