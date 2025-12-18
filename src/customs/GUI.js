@@ -14,8 +14,11 @@ const COLORS = [
 class customGUI extends GUI {
 
     addFuzzy(object, property, fuzzyModule) {
-
         return new FuzzyController(this, object, property, fuzzyModule);
+    }
+
+    addText(property) {
+        return new Controller(this, {}, ` ${property}`).disable();
     }
 
     addFolder(title) {

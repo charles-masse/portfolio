@@ -48,7 +48,7 @@ async function main() {
     const taskMaster = new TaskMaster(navMesh, entityManager);
     const dayNight = new DayNight(canvas, city);
 
-    const debug = new AgentInfo(entityManager);
+    const agentInfo = new AgentInfo(entityManager);
     //Scene
     const scene = new THREE.Scene();
     scene.add(city);
@@ -56,14 +56,12 @@ async function main() {
     scene.add(crowdSpawner.objects)
     scene.add(taskMaster.objects)
     scene.add(dayNight.objects);
-    scene.add(debug.objects);
+    scene.add(agentInfo.objects);
     //Cameraman
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
     camera.position.set(20, 30, 40);
     camera.lookAt(0, 0, 0);
-
-    window.addEventListener('resize', onWindowResize, false);
     //Renderer
     const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -74,6 +72,15 @@ async function main() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.setAnimationLoop(animate);
+    //Listeners
+    window.addEventListener('pointerdown', (event) => {
+
+        const click = getClick(event);
+        if (click) agentInfo.selectAgent(click.point);
+
+    });
+
+    window.addEventListener('resize', onWindowResize, false);
 
     function animate() {
 
@@ -84,10 +91,23 @@ async function main() {
         entityManager.update(updated_time.getDelta());
         crowdSpawner.update(updated_time.getElapsed());
         dayNight.update(updated_time.getElapsed());
-        debug.update(updated_time.getElapsed());
+        agentInfo.update(updated_time.getElapsed());
 
         renderer.render(scene, camera);
 
+    }
+
+    function getClick(event) {
+
+        const mouse = new THREE.Vector2();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        const intersection = raycaster.intersectObject(city.children[0], false)[0];
+
+        return intersection;
     }
 
     function onWindowResize() {
