@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 
-import {customGUI} from '../customs/GUI.js';
+import {GUI} from '../customs/GUI.js';
 
 export default class {
 
@@ -11,7 +11,7 @@ export default class {
 
         this.selected_agent = null;
         //UI
-        this.gui = new customGUI({title: 'Agent Info'});
+        this.gui = new GUI({title: 'Agent Info'});
         this.gui.domElement.style.position = 'static';
         document.getElementById('gui-container').appendChild(this.gui.domElement);
 
@@ -44,11 +44,12 @@ export default class {
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
 
-        const fuzzy = this.gui.addFolder('City Navigation').hide();
+        const fuzzy = this.gui.addFolder('Separation').hide();
 
         const flvs = this.entities[0].steering.behaviors[0].fuzzy.flvs;
-        this.distance = fuzzy.addFuzzy(controller_values, 'Distance [In]', flvs.get('distance')).disable();
-        this.result = fuzzy.addFuzzy(controller_values, 'Separation [Out]', flvs.get('result')).disable();
+        this.direction = fuzzy.addFuzzy(controller_values, 'Neighbor Dir [In]', flvs.get('direction'), -180, 180).disable();
+        // this.distance = fuzzy.addFuzzy(controller_values, 'Neighbor Dist [In]', flvs.get('distance'), 0, 4).disable();
+        this.result = fuzzy.addFuzzy(controller_values, 'Weight [Out]', flvs.get('strength'), 0, 2).disable();
         //For scene objects
         this.objects = new THREE.Group();
 
@@ -76,7 +77,6 @@ export default class {
 
         } else {
             this.selected_agent = null;
-
         }
         
         this.id.setValue(nearest);
@@ -122,22 +122,24 @@ export default class {
 
             const agent = this.entities[this.selected_agent];
 
-            for (const n of agent.neighbors) {
+            // for (const n of agent.neighbors) {
 
-                const points = [
-                    agent.position,
-                    n.position
-                ];
+            const test = agent.steering._steeringForce.clone();
+            const pos = agent.position.clone();
 
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const material = new THREE.LineBasicMaterial({color: 0x000000});
+            const points = [
+                pos,
+                pos.add(test)
+            ];
 
-                const line = new THREE.Line(geometry, material);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({color: 0x000000});
+            const line = new THREE.Line(geometry, material);
 
-                this.objects.add(line);
+            this.objects.add(line);
 
-            }
-
+            // }
+            //Update UI
             this.posX.setValue(agent.position.x.toFixed(4));
             this.posY.setValue(agent.position.y.toFixed(4));
             this.posZ.setValue(agent.position.z.toFixed(4));
@@ -146,10 +148,9 @@ export default class {
             this.rotY.setValue(agent.position.y.toFixed(4));
             this.rotZ.setValue(agent.position.z.toFixed(4));
 
-            this.distance.setValue([agent.steering.behaviors[0].in]);
-            this.result.setValue([agent.steering.behaviors[0].out]);
-
-            console.log(agent.steering.behaviors[0].out);
+            this.direction.setValue(agent.steering.behaviors[0].angles);
+            // this.distance.setValue(agent.steering.behaviors[0].lengths);
+            this.result.setValue(agent.steering.behaviors[0].results);
 
         }
 

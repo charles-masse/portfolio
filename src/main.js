@@ -73,14 +73,14 @@ async function main() {
     renderer.shadowMap.enabled = true;
     renderer.setAnimationLoop(animate);
     //Listeners
-    window.addEventListener('pointerdown', (event) => {
+    window.addEventListener('resize', onWindowResize, false);
+    
+    canvas.addEventListener('pointerdown', (event) => {
 
         const click = getClick(event);
         if (click) agentInfo.selectAgent(click.point);
 
     });
-
-    window.addEventListener('resize', onWindowResize, false);
 
     function animate() {
 

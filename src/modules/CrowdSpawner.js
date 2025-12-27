@@ -3,8 +3,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import GUI from 'lil-gui';
-
+import {GUI} from '../customs/GUI.js';
 import {Agent} from '../customs/Agent.js';
 
 const MAX_AGENTS = 250;
@@ -61,8 +60,8 @@ export default class {
 
         this.updateAgentNumber(settings.Population);
         //Objects for scene
-        this.objects = new THREE.Group();
-        this.objects.add(this.instancedMesh);
+        this.objects = new THREE.Group()
+            .add(this.instancedMesh);
 
     }
 
@@ -80,9 +79,7 @@ export default class {
                 this.entityManager.entities[active_agents.length].position.copy(spawn_position);
 
             } else {
-
                 this.entityManager.entities[active_agents.length - 1].setActive(false);
-
             }
 
             active_agents = this.entityManager.entities.filter(agent => agent.active);

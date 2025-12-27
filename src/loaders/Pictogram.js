@@ -6,8 +6,8 @@ async function PictogramGeo(loadingManager) {
 
     const loaded = new Promise((resolve) => {
 
-        const loader = new GLTFLoader(loadingManager);
-        loader.load('models/pictogram.gltf', (gltf) => {
+        const loader = new GLTFLoader(loadingManager)
+            .load('models/pictogram.gltf', (gltf) => {
 
                 let mesh = null;
 
@@ -22,15 +22,14 @@ async function PictogramGeo(loadingManager) {
     });
 
     return loaded;
-
 }
 
 async function PictogramShader(loadingManager) {
 
     const loaded = new Promise((resolve) => {
 
-        const loader = new THREE.TextureLoader(loadingManager);
-        loader.load('./textures/animations.png', (animation_texture) => {
+        const loader = new THREE.TextureLoader(loadingManager)
+            .load('./textures/animations.png', (animation_texture) => {
 
             const shader = new THREE.ShaderMaterial({
                 vertexShader: `
@@ -71,10 +70,10 @@ async function PictogramShader(loadingManager) {
 
             resolve(shader);
         });
+
     });
 
     return loaded;
-
 }
 
 export {PictogramGeo, PictogramShader};

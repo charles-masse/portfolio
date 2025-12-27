@@ -31,6 +31,7 @@ const DAY_EVENTS = [
 ];
 
 export function lerpColor(c1, c2, t) {
+
     return {
         r: Math.round(c1.r + (c2.r - c1.r) * t),
         g: Math.round(c1.g + (c2.g - c1.g) * t),
@@ -49,10 +50,10 @@ export default class {
         this.canvas = canvas;
         this.emissives = emissives;
 
-        this.sun = new THREE.DirectionalLight(0xffffff, 20);
-        this.sun.castShadow = true;
-        this.sun.shadow.radius = 2;
-        this.sun.shadow.bias = -0.001;
+        this.sun = new THREE.DirectionalLight(0xffffff, 20)
+        this.sun.castShadow = true
+        this.sun.shadow.radius = 2
+        this.sun.shadow.bias = -0.001
         this.sun.shadow.mapSize.set(2048, 2048);
 
         this.sun_helper = new THREE.DirectionalLightHelper(this.sun, 1);
@@ -73,7 +74,6 @@ export default class {
         const day_portion = (t % day_full) / day_full;
 
         return day_portion;
-
     }
 
     sunOrbit(t) {

@@ -1,29 +1,23 @@
 
 import * as YUKA from 'yuka';
 
-import {GUI, Controller} from 'lil-gui';
+import * as LIL from 'lil-gui';
 
 import Chart from 'chart.js/auto';
 
-const COLORS = [
-    {r:255, g:0,  b:0},
-    {r:0, g:255,  b:0},
-    {r:0, g:0,  b:255},
-];
+class GUI extends LIL.GUI {
 
-class customGUI extends GUI {
-
-    addFuzzy(object, property, fuzzyModule) {
-        return new FuzzyController(this, object, property, fuzzyModule);
+    addFuzzy(object, property, fuzzyModule, min=0, max=1) {
+        return new FuzzyController(this, object, property, fuzzyModule, min, max);
     }
 
     addText(property) {
-        return new Controller(this, {}, ` ${property}`).disable();
+        return new LIL.Controller(this, {}, ` ${property}`).disable();
     }
 
     addFolder(title) {
 
-        const folder = new customGUI({parent: this, title});
+        const folder = new GUI({parent: this, title});
         if (this.root._closeFolders) folder.close();
 
         return folder;
@@ -31,9 +25,9 @@ class customGUI extends GUI {
 
 }
 
-class FuzzyController extends Controller {
+class FuzzyController extends LIL.Controller {
 
-    constructor(parent, object, property, fuzzyVariable) {
+    constructor(parent, object, property, fuzzyVariable, min, max) {
         super(parent, object, property, 'lil-color');
         //Create the html element
         this.$display = document.createElement('canvas');
@@ -50,6 +44,8 @@ class FuzzyController extends Controller {
                     x: {
                         type: 'linear',
                         display: false,
+                        min: min,
+                        max: max,
                     },
                     y: {
                         display: false,
@@ -93,8 +89,8 @@ class FuzzyController extends Controller {
                 y_value = {left: 0, midpoint: 1, right: 0};
 
             }
-
-            const color = COLORS[set_id];
+            
+            const color = set_data.color;
 
             sets_array.push(
 
@@ -120,11 +116,11 @@ class FuzzyController extends Controller {
 
         const current_values = this.getValue();
 
-        let test = []
+        let inputs = []
 
         for (const value_id in current_values) {
 
-            test.push(
+            inputs.push(
                 {
                     data: [
                         {x: current_values[value_id], y: 0},
@@ -137,17 +133,15 @@ class FuzzyController extends Controller {
 
         }
 
-        this.chart_settings.data.datasets = [...test, ...this.sets];
-
+        this.chart_settings.data.datasets = [...inputs, ...this.sets];
         this.chart.update();
 
         return this;
-
     }
 
 }
 
 export {
-    customGUI,
+    GUI,
     FuzzyController,
 };

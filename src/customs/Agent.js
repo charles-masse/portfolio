@@ -40,8 +40,6 @@ class Agent extends YUKA.Vehicle {
         super.update(delta);
 
         this.position.y = 0.1;
-        this.rotation.x = 0;
-        this.rotation.z = 0;
 
     }
 
@@ -82,13 +80,11 @@ class AgentStateMachine extends YUKA.StateMachine {
             console.log(this.transition_startFrame);
 
             if (transition_duration <= state_blend) {
-
                 this.blend_weight = transition_duration / (state_blend + 1);
 
             } else {
-
                 this.transition = false;
-
+                
             }
 
         }
