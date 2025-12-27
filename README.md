@@ -17,11 +17,11 @@ The *Uncanny Valley* is a though hill to climb and the results often age badly. 
 
 I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
 
-![A pictogram character from the Portal 2 trailers waving to the camera](/gh-images/portal2.gif)
+![A pictogram character from the Portal 2 trailers waving to the camera](/../gh-images/portal2.gif)
 
 For the environment, I went with something similar. Super minimalistic shapes to keep it low poly and white textures not to distract too much from the crowd. The only compromise I opted for is enabling shadows to create depth and contrast.
 
-![A minimalist city with hard shadows](/gh-images/city.jpg)
+![A minimalist city with hard shadows](/../gh-images/city.jpg)
 
 ### Instanced characters
 A more technical way to handle a large number of objects in **Three.js** is to use a single [instanced mesh](https://threejs.org/docs/?q=instancedMes#InstancedMesh) with X instances, instead of cloning the same object X times.
