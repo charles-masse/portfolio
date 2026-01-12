@@ -11,7 +11,7 @@ import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 import AgentInfo from './modules/AgentInfo.js';
 import DayNight from './modules/DayNight.js';
 import CrowdSpawner from './modules/CrowdSpawner.js';
-import TaskMaster from './modules/taskMaster.js'
+import TaskMaster from './modules/taskMaster.js';
 
 async function main() {
 

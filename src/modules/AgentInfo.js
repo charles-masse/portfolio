@@ -22,7 +22,8 @@ export default class {
             'Pos z': 0,
             'Rot x': 0,
             'Rot y': 0,
-            'Rot z': 0, 
+            'Rot z': 0,
+            'Rot w': 0,
             Variation:'skirt',
             Distance:[],
             Result:[]
@@ -41,6 +42,7 @@ export default class {
         this.rotX = rot.add(controller_values, 'Rot x').disable();
         this.rotY = rot.add(controller_values, 'Rot y').disable();
         this.rotZ = rot.add(controller_values, 'Rot z').disable();
+        this.rotW = rot.add(controller_values, 'Rot w').disable();
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
 
@@ -104,39 +106,35 @@ export default class {
 
     update(time) {
 
+        //TODO--Cheat for now, but has a hit on the framerate
+        this.objects.traverse(child => {
+
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+
+            if (child.material) {
+                child.material.dispose();
+            }
+            
+        });
+
+        this.objects.clear()
+
         if (this.selected_agent) {
-            //TODO--Cheat for now, but has a hit on the framerate
-            this.objects.traverse(child => {
-
-                if (child.geometry) {
-                    child.geometry.dispose();
-                }
-
-                if (child.material) {
-                    child.material.dispose();
-                }
-                
-            });
-
-            this.objects.clear()
 
             const agent = this.entities[this.selected_agent];
 
-            // for (const n of agent.neighbors) {
-
-            const test = agent.steering._steeringForce.clone();
-            const pos = agent.position.clone();
-
-            const points = [
-                pos,
-                pos.add(test)
-            ];
-
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const pos = agent.position;
             const material = new THREE.LineBasicMaterial({color: 0x000000});
-            const line = new THREE.Line(geometry, material);
 
-            this.objects.add(line);
+            const geometryR = new THREE.BufferGeometry().setFromPoints([pos, agent.steering.behaviors[1].hitR]);
+            const lineR = new THREE.Line(geometryR, material);
+            this.objects.add(lineR);
+
+            const geometryL = new THREE.BufferGeometry().setFromPoints([pos, agent.steering.behaviors[1].hitL]);
+            const lineL = new THREE.Line(geometryL, material);
+            this.objects.add(lineL);
 
             // }
             //Update UI
@@ -144,9 +142,10 @@ export default class {
             this.posY.setValue(agent.position.y.toFixed(4));
             this.posZ.setValue(agent.position.z.toFixed(4));
 
-            this.rotX.setValue(agent.position.x.toFixed(4));
-            this.rotY.setValue(agent.position.y.toFixed(4));
-            this.rotZ.setValue(agent.position.z.toFixed(4));
+            this.rotX.setValue(agent.rotation.x.toFixed(4));
+            this.rotY.setValue(agent.rotation.y.toFixed(4));
+            this.rotZ.setValue(agent.rotation.z.toFixed(4));
+            this.rotW.setValue(agent.rotation.w.toFixed(4));
 
             this.direction.setValue(agent.steering.behaviors[0].angles);
             // this.distance.setValue(agent.steering.behaviors[0].lengths);

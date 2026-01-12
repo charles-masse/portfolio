@@ -1,5 +1,6 @@
 
 import * as THREE from 'three';
+
 import * as YUKA from 'yuka';
 
 function extractUrlBase( url = '' ) {
@@ -116,7 +117,7 @@ class Parser {
 
             // create and config navMesh
 
-            const navMesh = new CustomNavMesh();
+            const navMesh = new NavMesh();
 
             if ( options ) {
 
@@ -397,7 +398,7 @@ class Parser {
 
 }
 
-class CustomNavMesh extends YUKA.NavMesh {
+class NavMesh extends YUKA.NavMesh {
 
     constructor() {
         super();
@@ -417,11 +418,10 @@ class CustomNavMesh extends YUKA.NavMesh {
     triangulate() {
 
         const regions = this.regions;
-        const region_number = regions.length;
 
         this.triangles = [];
 
-        for (let i = 0; i < region_number; i++) {
+        for (let i = 0; i < regions.length; i++) {
 
             const contour = [];
             regions[i].getContour(contour);

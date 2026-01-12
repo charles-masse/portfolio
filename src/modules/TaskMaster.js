@@ -5,8 +5,7 @@ import * as YUKA from 'yuka';
 
 // import {createGraphHelper} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
-
-import CityNavigation from '../behaviors/CityNavigation.js'
+import {FuzzyBehavior, FlockingBehavior} from '../customs/Steering.js'
 
 export default class {
 
@@ -38,8 +37,9 @@ export default class {
 
                 const pathHelper = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({color: 0xff0000}));
                 // this.objects.add(pathHelper);
-
-                entity.steering.add(new CityNavigation(path, this.navMesh));
+                entity.steering.add(new FuzzyBehavior(path, this.navMesh));
+                entity.steering.add(new FlockingBehavior(this.navMesh));
+                entity.steering.add(new YUKA.FollowPathBehavior(path));
 
             }
 

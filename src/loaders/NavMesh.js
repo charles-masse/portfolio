@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 import {NavMeshLoader} from '../customs/NavMesh.js'
 
-export default function(loadingManager, path='models/navMesh.glb') {
+export default function(loadingManager, path='models/navmesh.gltf') {
 
     const navMesh = new Promise((resolve) => {
 

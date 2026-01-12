@@ -39,8 +39,14 @@ The only problem, every instanced characters must look the same and play the sam
 ### GL Shaders
 Like mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where custom shaders come into play.
 
+### Fuzzy Logic
+
 ## An interesting environment
 
 ### Showcase the typical crowd behaviors
 
 ### Be interesting on phones and computers
+
+## Special Thanks
+- @Mugen87 for the [Yuka game AI library](https://github.com/Mugen87/yuka)
+- @isaac-mason for their [NavMesh Generator](https://navmesh.isaacmason.com)

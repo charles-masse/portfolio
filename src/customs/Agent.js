@@ -1,5 +1,6 @@
 
 import * as THREE from 'three';
+
 import * as YUKA from 'yuka';
 
 class Agent extends YUKA.Vehicle {
@@ -7,8 +8,9 @@ class Agent extends YUKA.Vehicle {
     constructor() {
         super();
 
-        this.maxTurnRate = 360;
+        this.maxTurnRate = Math.PI * 2;
         this.neighborhoodRadius = 4;
+        // this.maxSpeed = 2;
         //State machine
         // this.stateMachine = new AgentStateMachine(this);
 
