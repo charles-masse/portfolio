@@ -1,6 +1,8 @@
 
 import * as THREE from 'three';
 
+import * as YUKA from 'yuka';
+
 import {GUI} from '../customs/GUI.js';
 
 export default class {
@@ -46,12 +48,11 @@ export default class {
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
 
-        const fuzzy = this.gui.addFolder('Separation').hide();
+        // const fuzzy = this.gui.addFolder('Cohesion').hide();
 
-        const flvs = this.entities[0].steering.behaviors[0].fuzzy.flvs;
-        this.direction = fuzzy.addFuzzy(controller_values, 'Neighbor Dir [In]', flvs.get('direction'), -180, 180).disable();
-        // this.distance = fuzzy.addFuzzy(controller_values, 'Neighbor Dist [In]', flvs.get('distance'), 0, 4).disable();
-        this.result = fuzzy.addFuzzy(controller_values, 'Weight [Out]', flvs.get('strength'), 0, 2).disable();
+        // const flvs = this.entities[0].steering.behaviors[0].fuzzy.flvs;
+        // this.facingAngle = fuzzy.addFuzzy(controller_values, '[In] facing angle', flvs.get('facingAngle'), -180, 180).disable();
+        // this.result = fuzzy.addFuzzy(controller_values, 'Weight [Out]', flvs.get('weight')).disable();
         //For scene objects
         this.objects = new THREE.Group();
 
@@ -105,7 +106,6 @@ export default class {
     }
 
     update(time) {
-
         //TODO--Cheat for now, but has a hit on the framerate
         this.objects.traverse(child => {
 
@@ -126,15 +126,15 @@ export default class {
             const agent = this.entities[this.selected_agent];
 
             const pos = agent.position;
-            const material = new THREE.LineBasicMaterial({color: 0x000000});
 
-            const geometryR = new THREE.BufferGeometry().setFromPoints([pos, agent.steering.behaviors[1].hitR]);
-            const lineR = new THREE.Line(geometryR, material);
-            this.objects.add(lineR);
+            if (agent.steering.behaviors[0].hit) {
 
-            const geometryL = new THREE.BufferGeometry().setFromPoints([pos, agent.steering.behaviors[1].hitL]);
-            const lineL = new THREE.Line(geometryL, material);
-            this.objects.add(lineL);
+                const material = new THREE.LineBasicMaterial({color: 0x000000});
+                const geometry = new THREE.BufferGeometry().setFromPoints([pos.clone().add(new YUKA.Vector3(0, 0.1, 0)), pos.clone().add(agent.steering.behaviors[0].force).add(new YUKA.Vector3(0, 0.1, 0))]);
+                const line = new THREE.Line(geometry, material);
+                this.objects.add(line);
+
+            }
 
             // }
             //Update UI
@@ -147,9 +147,8 @@ export default class {
             this.rotZ.setValue(agent.rotation.z.toFixed(4));
             this.rotW.setValue(agent.rotation.w.toFixed(4));
 
-            this.direction.setValue(agent.steering.behaviors[0].angles);
-            // this.distance.setValue(agent.steering.behaviors[0].lengths);
-            this.result.setValue(agent.steering.behaviors[0].results);
+            // this.facingAngle.setValue(agent.steering.behaviors[0].facingAngle);
+            // this.result.setValue(agent.steering.behaviors[0]._separation.outputs);
 
         }
 

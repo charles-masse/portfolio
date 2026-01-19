@@ -3,6 +3,126 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
+class NavMesh extends YUKA.NavMesh {
+
+    constructor() {
+        super();
+
+        this.triangles = null;
+        this.perimeter = null;
+        
+        this.debug = new THREE.Group(); //DELETE ME
+
+    }
+
+    fromPolygons(polygons) {
+        super.fromPolygons(polygons);
+
+        this.triangulate();
+        this.calculatePerimeter();
+
+        return this;
+    }
+
+    triangulate() {
+
+        const triangulated = [];
+
+        const regions = this.regions;
+        for (let i = 0; i < regions.length; i++) {
+
+            const contour = [];
+            regions[i].getContour(contour);
+
+            const contour_2d = contour.map(p => new THREE.Vector2(p.x, p.z));
+
+            const triangles = THREE.ShapeUtils.triangulateShape(contour_2d, [])
+            const triangles_points = triangles.map(tri => tri.map(idx => contour_2d[idx]));
+
+            triangulated.push(...triangles_points);
+
+        }
+
+        this.triangles = triangulated;
+
+    }
+
+    calculatePerimeter() {
+
+        const perimeter = [];
+
+        const regions = this.regions;
+        for (let r = 0; r < regions.length; r++) {
+
+            const contour = [];
+            regions[r].getContour(contour);
+
+            for (let i=0; i < contour.length; i++) {
+
+                const wall = new YUKA.LineSegment(contour[i], contour[(i + 1) % contour.length]);
+                wall.normal = wall.to.clone().sub(wall.from).cross(new YUKA.Vector3(0, 1, 0)).multiplyScalar(-1.0).normalize();
+
+                 perimeter.push(wall);
+                //DEBUG
+                const edgeMid = wall.from.clone().add(wall.to).multiplyScalar(0.5);
+
+                const material = new THREE.LineBasicMaterial({color: 0x000000});
+                const geometry = new THREE.BufferGeometry().setFromPoints([edgeMid, edgeMid.clone().add(wall.normal)]);
+                const line = new THREE.Line(geometry, material);
+                this.debug.add(line);
+
+            }
+
+        }
+
+        let final_perimeter = perimeter.slice();
+
+        for (let e=0; e < perimeter.length; e++) {
+            for (let i=0; i < perimeter.length; i++) {
+
+                if (i != e) {
+
+                    const distances = [
+                        perimeter[e].from.clone().sub(perimeter[i].from).length(),
+                        perimeter[e].from.clone().sub(perimeter[i].to).length(),
+                        perimeter[e].to.clone().sub(perimeter[i].to).length(),
+                        perimeter[e].to.clone().sub(perimeter[i].from).length(),
+                    ]
+
+                    if (distances.filter(v => v === 0).length == 2) {
+                        final_perimeter.splice(final_perimeter.indexOf(perimeter[i]), 1);
+                    }
+                    
+                }
+
+            }
+
+        }
+
+        this.perimeter = final_perimeter;
+
+    }
+
+    randomPoint() {
+        //TODO add underscan to prevent agents from spawning inside walls
+        const triangles = this.triangles;
+        const tri = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)];
+
+        let r1 = Math.random();
+        let r2 = Math.random();
+
+        if (r1 + r2 > 1) {
+            r1 = 1 - r1; r2 = 1 - r2;
+        };
+
+        return {
+            x: tri[0].x + r1 * (tri[1].x - tri[0].x) + r2 * (tri[2].x - tri[0].x),
+            y: tri[0].y + r1 * (tri[1].y - tri[0].y) + r2 * (tri[2].y - tri[0].y)
+        };
+    }
+
+}
+
 function extractUrlBase( url = '' ) {
 
     const index = url.lastIndexOf( '/' );
@@ -394,65 +514,6 @@ class Parser {
 
         this.extensions.set( 'BINARY', { content: content, body: body } );
 
-    }
-
-}
-
-class NavMesh extends YUKA.NavMesh {
-
-    constructor() {
-        super();
-
-        this.triangles = null;
-
-    }
-
-    fromPolygons(polygons) {
-        super.fromPolygons(polygons);
-
-        this.triangulate();
-
-        return this;
-    }
-
-    triangulate() {
-
-        const regions = this.regions;
-
-        this.triangles = [];
-
-        for (let i = 0; i < regions.length; i++) {
-
-            const contour = [];
-            regions[i].getContour(contour);
-
-            const contour_2d = contour.map(p => new THREE.Vector2(p.x, p.z));
-
-            const triangles = THREE.ShapeUtils.triangulateShape(contour_2d, [])
-            const triangles_points = triangles.map(tri => tri.map(idx => contour_2d[idx]));
-
-            this.triangles.push(...triangles_points);
-
-        }
-
-    }
-
-    randomPoint() {
-
-        const triangles = this.triangles;
-        const tri = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)];
-
-        let r1 = Math.random();
-        let r2 = Math.random();
-
-        if (r1 + r2 > 1) {
-            r1 = 1 - r1; r2 = 1 - r2;
-        };
-
-        return {
-            x: tri[0].x + r1 * (tri[1].x - tri[0].x) + r2 * (tri[2].x - tri[0].x),
-            y: tri[0].y + r1 * (tri[1].y - tri[0].y) + r2 * (tri[2].y - tri[0].y)
-        };
     }
 
 }
