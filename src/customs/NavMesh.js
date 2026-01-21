@@ -10,8 +10,6 @@ class NavMesh extends YUKA.NavMesh {
 
         this.triangles = null;
         this.perimeter = null;
-        
-        this.debug = new THREE.Group(); //DELETE ME
 
     }
 
@@ -63,13 +61,6 @@ class NavMesh extends YUKA.NavMesh {
                 wall.normal = wall.to.clone().sub(wall.from).cross(new YUKA.Vector3(0, 1, 0)).multiplyScalar(-1.0).normalize();
 
                  perimeter.push(wall);
-                //DEBUG
-                const edgeMid = wall.from.clone().add(wall.to).multiplyScalar(0.5);
-
-                const material = new THREE.LineBasicMaterial({color: 0x000000});
-                const geometry = new THREE.BufferGeometry().setFromPoints([edgeMid, edgeMid.clone().add(wall.normal)]);
-                const line = new THREE.Line(geometry, material);
-                this.debug.add(line);
 
             }
 

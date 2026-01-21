@@ -45,7 +45,7 @@ export default class {
         this.instancedMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.25, 3) /*agent_geo*/, new THREE.MeshBasicMaterial({color: 0x555555}) /*agent_shader*/, MAX_AGENTS);
         //Link each instance to individual agent
         for (let i = 0; i < MAX_AGENTS; i++) {
-            this.entityManager.add(new Agent());
+            this.entityManager.add(new Agent(this.navMesh));
         }
         //UI
         const gui = new GUI({title:'Crowd Spawner'});

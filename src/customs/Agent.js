@@ -5,12 +5,15 @@ import * as YUKA from 'yuka';
 
 class Agent extends YUKA.Vehicle {
 
-    constructor() {
+    constructor(navMesh) {
         super();
 
-        this.maxTurnRate = Math.PI * 2;
+        this.navMesh = navMesh;
+        //Settings
+        this.maxSpeed = 1;
+        this.maxForce = 1.05;
+        this.boundingRadius = 0.25;
         this.neighborhoodRadius = 4;
-        // this.maxSpeed = 2;
         //State machine
         // this.stateMachine = new AgentStateMachine(this);
 
@@ -26,7 +29,6 @@ class Agent extends YUKA.Vehicle {
 
             this.active = true;
 
-
         } else {
 
             this.updateNeighborhood = false;
@@ -39,9 +41,19 @@ class Agent extends YUKA.Vehicle {
     }
 
     update(delta) {
-        super.update(delta);
 
-        this.position.y = 0.1;
+        if (this.active) {
+
+            const start_position = this.position.clone();
+
+            super.update(delta);
+            //Prevent vehicle from going off the navMesh
+            const closest_region = this.navMesh.getClosestRegion(this.position);
+            const end_position = this.position.clone();
+            this.navMesh.clampMovement(closest_region, start_position, end_position, this.position);
+            this.position.y = 0;
+
+        }
 
     }
 

@@ -124,19 +124,17 @@ export default class {
         if (this.selected_agent) {
 
             const agent = this.entities[this.selected_agent];
-
             const pos = agent.position;
 
             if (agent.steering.behaviors[0].hit) {
 
-                const material = new THREE.LineBasicMaterial({color: 0x000000});
-                const geometry = new THREE.BufferGeometry().setFromPoints([pos.clone().add(new YUKA.Vector3(0, 0.1, 0)), pos.clone().add(agent.steering.behaviors[0].force).add(new YUKA.Vector3(0, 0.1, 0))]);
+                const material = new THREE.LineBasicMaterial({color: 0xff0000});
+                const geometry = new THREE.BufferGeometry().setFromPoints([new YUKA.Vector3(0, 0.1, 0).add(pos), new YUKA.Vector3(0, 0.1, 0).addVectors(pos, agent.steering.behaviors[0].force)]);
                 const line = new THREE.Line(geometry, material);
+
                 this.objects.add(line);
 
             }
-
-            // }
             //Update UI
             this.posX.setValue(agent.position.x.toFixed(4));
             this.posY.setValue(agent.position.y.toFixed(4));

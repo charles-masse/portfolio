@@ -58,7 +58,6 @@ async function main() {
     scene.add(taskMaster.objects)
     scene.add(dayNight.objects);
     scene.add(agentInfo.objects);
-    scene.add(navMesh.debug); //DELETE ME
     //Cameraman
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
