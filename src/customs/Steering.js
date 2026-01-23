@@ -89,7 +89,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to left
         temp = direction.clone()
             .applyRotation(LEFT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -97,7 +97,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to right
         temp = direction.clone()
             .applyRotation(RIGHT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -159,7 +159,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
 
 }
 
-class FuzzySeparationBehavior extends YUKA.SteeringBehavior {
+class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
 
     constructor() {
         super();
@@ -216,6 +216,7 @@ class FuzzySeparationBehavior extends YUKA.SteeringBehavior {
 
             const angle = angleTo(direction, toAgent);
             const length = toAgent.length();
+            console.log(length);
             //IN
             this.fuzzy.fuzzify('direction', angle);
             this.fuzzy.fuzzify('distance', length);
@@ -232,7 +233,7 @@ class FuzzySeparationBehavior extends YUKA.SteeringBehavior {
 
 }
 
-class FuzzyCohesionBehavior extends YUKA.SteeringBehavior {
+class FuzzyCohesionBehavior extends YUKA.CohesionBehavior {
 
     constructor() {
         super();
@@ -319,7 +320,7 @@ class FuzzyCohesionBehavior extends YUKA.SteeringBehavior {
                 .normalize()
                 .multiplyScalar(vehicle.maxSpeed);
 
-            force.add(steering_force);
+             force.subVectors(steering_force, vehicle.velocity);
 
         }
 
@@ -327,38 +328,6 @@ class FuzzyCohesionBehavior extends YUKA.SteeringBehavior {
     }
 
 }
-
-// class NonPenetrationBehavior extends YUKA.SteeringBehavior {
-
-//     calculate(vehicle, force) {
-//         //Iterate over all neighbors checking for any overlap of bounding radii
-//         const neighbors = vehicle.neighbors;
-//         for ( let i = 0, l = neighbors.length; i < l; i ++ ) {
-
-//             const neighbor = neighbors[i];
-//             //Calculate the distance between the positions of the entities
-//             const toAgent = new YUKA.Vector3()
-//                 .subVectors(vehicle.position, neighbor.position);
-//             const length = toAgent.length();
-//             //If this distance is smaller than the sum of their radii then this entity must be moved
-//             //away in the direction parallel to the toAgent vector
-//             const amount_of_overlap = vehicle.boundingRadius + neighbor.boundingRadius - length;
-
-//             if (amount_of_overlap >= 0) {
-
-//                 const away = toAgent.clone()
-//                     .divideScalar(length)
-//                     .multiplyScalar(amount_of_overlap);
-
-//                 force.add(away);
-
-//             }
-//         }
-
-//         return force;
-//     }
-
-// }
 
 export {
     WallAvoidanceBehavior,

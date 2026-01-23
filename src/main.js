@@ -8,6 +8,8 @@ import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 
+import {EntityManager} from './customs/RVO2.js';
+
 import AgentInfo from './modules/AgentInfo.js';
 import DayNight from './modules/DayNight.js';
 import CrowdSpawner from './modules/CrowdSpawner.js';
@@ -31,7 +33,7 @@ async function main() {
             loadingScreen.addEventListener('transitionend', onTransitionEnd);
         },
         (itemUrl, itemsLoaded, itemsTotal) => {
-            console.log(`Loading "${itemUrl}" (${itemsLoaded}/${itemsTotal})`);
+            // console.log(`Loading "${itemUrl}" (${itemsLoaded}/${itemsTotal})`);
         },
         (url) => {
             console.error('Error loading', url);
@@ -42,12 +44,13 @@ async function main() {
     const pictogramGeo = await PictogramGeo(loadingManager);
     const pictogramShader = await PictogramShader(loadingManager);
     const navMesh = await NavMesh(loadingManager);
+
+    const entityManager = new EntityManager();
     //Modules
-    const entityManager = new YUKA.EntityManager();
     const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
+    entityManager.buildAgentTree() //DELETE ME
     const taskMaster = new TaskMaster(navMesh, entityManager);
     const dayNight = new DayNight(canvas, city);
-
     const agentInfo = new AgentInfo(entityManager);
     //Scene
     const scene = new THREE.Scene();
@@ -61,7 +64,7 @@ async function main() {
     //Cameraman
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
-    camera.position.set(20, 30, 40);
+    camera.position.set(20, 30, 30);
     camera.lookAt(0, 0, 0);
     //Renderer
     const renderer = new THREE.WebGLRenderer({

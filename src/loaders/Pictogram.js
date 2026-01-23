@@ -4,7 +4,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 async function PictogramGeo(loadingManager) {
 
-    const loaded = new Promise((resolve) => {
+    const geo = new Promise((resolve) => {
 
         const loader = new GLTFLoader(loadingManager)
             .load('models/pictogram.gltf', (gltf) => {
@@ -21,7 +21,7 @@ async function PictogramGeo(loadingManager) {
         );
     });
 
-    return loaded;
+    return geo;
 }
 
 async function PictogramShader(loadingManager) {

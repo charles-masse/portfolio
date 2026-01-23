@@ -33,23 +33,31 @@ export default class {
                 //Behaviors
                 const obstacle = new YUKA.ObstacleAvoidanceBehavior(entityManager.entities);
                 obstacle.weight = 1.0;
-                obstacle.brakingWeight = entity.maxForce * 0.9;
-                obstacle.dBoxMinLength = entity.boundingRadius * 3;
+                obstacle.brakingWeight = entity.maxForce * 0.95;
+                obstacle.dBoxMinLength = entity.boundingRadius * 2;
                 entity.steering.add(obstacle);
 
-                const wall = new WallAvoidanceBehavior(navMesh);
-                wall.weight = 1.0;
-                entity.steering.add(wall);
+                // const separation = new FuzzySeparationBehavior();
+                // separation.weight = 0.3;
+                // entity.steering.add(separation);
 
-                const separation = new FuzzySeparationBehavior();
-                separation.weight = 0.4;
+                const separation = new YUKA.SeparationBehavior();
+                separation.weight = 0.1;
                 entity.steering.add(separation);
 
-                const cohesion = new FuzzyCohesionBehavior();
-                cohesion.weight = 0.3;
+                // const cohesion = new FuzzyCohesionBehavior();
+                // cohesion.weight = 0.25;
+                // entity.steering.add(cohesion);
+
+                const cohesion = new YUKA.CohesionBehavior();
+                cohesion.weight = 0.05;
                 entity.steering.add(cohesion);
 
-                const follow = new YUKA.FollowPathBehavior(path, 1.5);
+                const wall = new WallAvoidanceBehavior(navMesh);
+                wall.weight = 0.65;
+                entity.steering.add(wall);
+
+                const follow = new YUKA.FollowPathBehavior(path);
                 follow.weight = 1.0;
                 entity.steering.add(follow);
 

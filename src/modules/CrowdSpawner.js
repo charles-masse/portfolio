@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import * as YUKA from 'yuka';
 
 import {GUI} from '../customs/GUI.js';
-import {Agent} from '../customs/Agent.js';
+import {Agent} from '../customs/RVO2.js';
 
 const MAX_AGENTS = 250;
 const CANDIDATE_NB = 7;
@@ -42,7 +42,7 @@ export default class {
         this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
 
-        this.instancedMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.25, 3) /*agent_geo*/, new THREE.MeshBasicMaterial({color: 0x555555}) /*agent_shader*/, MAX_AGENTS);
+        this.instancedMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.25, 3) /*agent_geo*/, new THREE.MeshBasicMaterial({color: 0x000000}) /*agent_shader*/, MAX_AGENTS);
         //Link each instance to individual agent
         for (let i = 0; i < MAX_AGENTS; i++) {
             this.entityManager.add(new Agent(this.navMesh));
@@ -53,19 +53,19 @@ export default class {
 
         const settings = {Population: MAX_AGENTS / 2.0};
         this.populationController = gui.add(settings, 'Population', 1, MAX_AGENTS, 1) .onChange( value => {
-            this.updateAgentNumber(value);
+            this.updateAgentAmount(value);
         });
 
         document.getElementById('gui-container').appendChild(gui.domElement);
 
-        this.updateAgentNumber(settings.Population);
+        this.updateAgentAmount(settings.Population);
         //Objects for scene
         this.objects = new THREE.Group()
             .add(this.instancedMesh);
 
     }
 
-   updateAgentNumber(nb) {
+    updateAgentAmount(nb) {
 
         let active_agents = this.entityManager.entities.filter(agent => agent.active);
         while (active_agents.length != nb) {
