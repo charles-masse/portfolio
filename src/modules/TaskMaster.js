@@ -42,7 +42,7 @@ export default class {
                 // entity.steering.add(separation);
 
                 const separation = new YUKA.SeparationBehavior();
-                separation.weight = 0.1;
+                separation.weight = 1;
                 entity.steering.add(separation);
 
                 // const cohesion = new FuzzyCohesionBehavior();
@@ -50,11 +50,11 @@ export default class {
                 // entity.steering.add(cohesion);
 
                 const cohesion = new YUKA.CohesionBehavior();
-                cohesion.weight = 0.05;
+                cohesion.weight = 0.9;
                 entity.steering.add(cohesion);
 
                 const wall = new WallAvoidanceBehavior(navMesh);
-                wall.weight = 0.65;
+                wall.weight = 0.25;
                 entity.steering.add(wall);
 
                 const follow = new YUKA.FollowPathBehavior(path);

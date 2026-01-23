@@ -16,9 +16,9 @@ class Agent extends YUKA.Vehicle {
     constructor(navMesh) {
         super();
 
-        this.dist_neighbor = [];
-
         this.navMesh = navMesh;
+        //RVO2
+        this._dist_neighbors = [];
         //Settings
         // this.maxSpeed = 1;
         this.maxForce = 1.25;
@@ -26,7 +26,6 @@ class Agent extends YUKA.Vehicle {
         this.neighborhoodRadius = 4;
         //State machine
         // this.stateMachine = new AgentStateMachine(this);
-
         this.active = false;
 
     }
@@ -44,32 +43,30 @@ class Agent extends YUKA.Vehicle {
 
     }
 
-    insertAgentNeighbor(agent, rangeSq) {
+    insertAgentNeighbor(agent) {
 
         if (this != agent) {
 
             const distSq = absSq(this.position.clone().sub(agent.position));
+            if (distSq < this._rangeSq) {
 
-            if (distSq < rangeSq) {
-
-                if (this.dist_neighbor.length < MAX_NEIGHBORS) {
-                    this.dist_neighbor.push([distSq, agent]);
+                if (this._dist_neighbors.length < MAX_NEIGHBORS) {
+                    this._dist_neighbors.push([distSq, agent]);
                 }
 
-                let i = this.dist_neighbor.length - 1;
-
-                while (i != 0 && distSq < this.dist_neighbor[i - 1][0]) {
-                    this.dist_neighbor[i] = this.dist_neighbor[i - 1];
+                let i = this._dist_neighbors.length - 1;
+                while (i != 0 && distSq < this._dist_neighbors[i - 1][0]) {
+                    this._dist_neighbors[i] = this._dist_neighbors[i - 1];
                     --i;
                 }
 
-                if (this.dist_neighbor.length == MAX_NEIGHBORS) {
-                    rangeSq = this.dist_neighbor[this.dist_neighbor.length - 1][0];
+                this._dist_neighbors[i] = [distSq, agent];
+
+                if (this._dist_neighbors.length == MAX_NEIGHBORS) {
+                    this._rangeSq = this._dist_neighbors[this._dist_neighbors.length - 1][0];
                 }
 
             }
-
-            this.neighbors = this.dist_neighbor.map(neighbor => neighbor[1]);
 
         }
 
@@ -177,38 +174,44 @@ class EntityManager  extends YUKA.EntityManager {
     }
 
     updateNeighborhood(entity) {
-        this.queryAgentTreeRecursive(entity, entity.neighborhoodRadius, 0);
+        //Agent::computeNeighbors()
+        entity._dist_neighbors = [];
+        entity._rangeSq = sqr(entity.neighborhoodRadius);
+        //KdTree::computeAgentNeighbors
+        this.queryAgentTreeRecursive(entity, 0);
+        //Converting neighbors to Yuka
+        entity.neighbors = entity._dist_neighbors.map(neighbor => neighbor[1]);
+
     }
 
-    queryAgentTreeRecursive(agent, rangeSq, node) {
+    queryAgentTreeRecursive(agent, node) {
 
-        const nodeAgent = this.agentTree[node]
+        const nodeAgent = this.agentTree[node];
 
         if (nodeAgent.end - nodeAgent.begin <= MAX_LEAF_SIZE) {
 
             for (let i = nodeAgent.begin; i < nodeAgent.end; ++ i) {
-                agent.insertAgentNeighbor(this.agents[i], rangeSq);
+                agent.insertAgentNeighbor(this.agents[i]);
             }
 
         } else {
 
-            const distSqLeft = sqr(Math.max(0, this.agentTree[this.agentTree[node].left].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[this.agentTree[node].left].maxX)) + sqr(Math.max(0, this.agentTree[this.agentTree[node].left].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[this.agentTree[node].left].maxZ));
-            const distSqRight = sqr(Math.max(0, this.agentTree[this.agentTree[node].right].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[this.agentTree[node].right].maxX)) + sqr(Math.max(0, this.agentTree[this.agentTree[node].right].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[this.agentTree[node].right].maxZ));
+            const distSqLeft = sqr(Math.max(0, this.agentTree[nodeAgent.left].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.left].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.left].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.left].maxZ));
+            const distSqRight = sqr(Math.max(0, this.agentTree[nodeAgent.right].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.right].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.right].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.right].maxZ));
 
-            if (distSqLeft < distSqRight && distSqLeft < rangeSq) {
+            if (distSqLeft < distSqRight && distSqLeft < agent._rangeSq) {
 
-                this.queryAgentTreeRecursive(agent, rangeSq, this.agentTree[node].left);
+                this.queryAgentTreeRecursive(agent, nodeAgent.left);
 
-                if (distSqRight < rangeSq) {
-                    this.queryAgentTreeRecursive(agent, rangeSq, this.agentTree[node].right);
+                if (distSqRight < agent._rangeSq) {
+                    this.queryAgentTreeRecursive(agent, nodeAgent.right);
                 }
 
-            } else if (distSqRight < rangeSq) {
+            } else if (distSqRight < agent._rangeSq) {
+                this.queryAgentTreeRecursive(agent, nodeAgent.right);
 
-                this.queryAgentTreeRecursive(agent, rangeSq, this.agentTree[node].right);
-
-                if (distSqLeft < rangeSq) {
-                    this.queryAgentTreeRecursive(agent, rangeSq, this.agentTree[node].left);
+                if (distSqLeft < agent._rangeSq) {
+                    this.queryAgentTreeRecursive(agent, nodeAgent.left);
                 }
 
             }
