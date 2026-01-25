@@ -16,6 +16,8 @@
  * limitations under the License.
  *
  */
+import * as THREE from 'three';
+
 import * as YUKA from 'yuka';
 /*
  * \brief      Computes the square of a float.
@@ -53,6 +55,24 @@ function leftOf(a, b, c) {
     return det(a.clone().sub(c), b.clone().sub(a));
 }
 
+function distSqPointLineSegment(a, b, c) {
+
+    const ab = b.clone().sub(a);
+    const ac = c.clone().sub(a);
+    const bc = c.clone().sub(b);
+
+    const r = (ac).dot(ab) / absSq(ab);
+
+    if (r < 0) {
+        return absSq(ac);
+    } else if (r > 1) {
+        return absSq(bc);
+    } else {
+        return absSq(c.clone().sub(a.clone().add(ab.clone().multiplyScalar(r))));
+    }
+
+}
+
 function getPointsFromMesh(mesh) {
 
     mesh.updateMatrixWorld(true);
@@ -88,23 +108,25 @@ class Obstacle {
 
 }
 
-const MAX_NEIGHBORS = 10;
-
 class Agent extends YUKA.Vehicle {
 
     constructor(navMesh) {
         super();
 
         this.navMesh = navMesh;
-        //Settings
+
         this.active = false;
-        // this.maxSpeed = 1;
+
         this.maxForce = 1.25;
+        //RVO2
+        this._agentNeighbors = [];
+        this._obstacleNeighbors = [];
+
+        this.maxNeighbors = 10;
+        // this.maxSpeed = 1; //might need one for RVO
         this.boundingRadius = 0.25;
         this.neighborhoodRadius = 4;
-        //RVO2
-        this._dist_neighbors = [];
-        this._timeHorizonObst = 5;
+        this.timeHorizonObst = 5;
         // // State machine
         // this.stateMachine = new AgentStateMachine(this);
 
@@ -124,23 +146,47 @@ class Agent extends YUKA.Vehicle {
             const distSq = absSq(this.position.clone().sub(agent.position));
             if (distSq < this._rangeSq) {
 
-                if (this._dist_neighbors.length < MAX_NEIGHBORS) {
-                    this._dist_neighbors.push([distSq, agent]);
+                if (this._agentNeighbors.length < agent.maxNeighbors) {
+                    this._agentNeighbors.push([distSq, agent]);
                 }
 
-                let i = this._dist_neighbors.length - 1;
-                while (i != 0 && distSq < this._dist_neighbors[i - 1][0]) {
-                    this._dist_neighbors[i] = this._dist_neighbors[i - 1];
+                let i = this._agentNeighbors.length - 1;
+                while (i != 0 && distSq < this._agentNeighbors[i - 1][0]) {
+                    this._agentNeighbors[i] = this._agentNeighbors[i - 1];
                     --i;
                 }
 
-                this._dist_neighbors[i] = [distSq, agent];
+                this._agentNeighbors[i] = [distSq, agent];
 
-                if (this._dist_neighbors.length == MAX_NEIGHBORS) {
-                    this._rangeSq = this._dist_neighbors[this._dist_neighbors.length - 1][0];
+                if (this._agentNeighbors.length == agent.maxNeighbors) {
+                    this._rangeSq = this._agentNeighbors[this._agentNeighbors.length - 1][0];
                 }
 
             }
+
+        }
+
+    }
+
+    insertObstacleNeighbor(obstacle) {
+
+        const nextObstacle = obstacle.nextObstacle;
+
+        const distSq = distSqPointLineSegment(obstacle.point, nextObstacle.point, new THREE.Vector2(this.position.x, this.position.z));
+
+        if (distSq < this._rangeSq) {
+            this._obstacleNeighbors.push([distSq, obstacle]);
+
+            let i = this._obstacleNeighbors.length - 1;
+
+            while (i != 0 && distSq < this._obstacleNeighbors[i - 1][0]) {
+
+                this._obstacleNeighbors[i] = this._obstacleNeighbors[i - 1];
+                --i;
+
+            }
+
+            this._obstacleNeighbors[i] = [distSq, obstacle];
 
         }
 
@@ -195,8 +241,7 @@ class Agent extends YUKA.Vehicle {
 
         //Prevent vehicle from going off the navMesh
         const closest_region = this.navMesh.getClosestRegion(this.position);
-        const end_position = this.position.clone();
-        this.navMesh.clampMovement(closest_region, start_position, end_position, this.position);
+        this.navMesh.clampMovement(closest_region, start_position, this.position, this.position);
         
         this.position.y = 0;
 
@@ -308,7 +353,7 @@ class EntityManager  extends YUKA.EntityManager {
 
     buildAgentTreeRecursive(begin, end, node) {
 
-        const agent = this.agentTree[node] = new AgentTreeNode(
+        const agentTreeNode = this.agentTree[node] = new AgentTreeNode(
             begin,
             end,
             this.agents[begin].position.x,
@@ -316,16 +361,16 @@ class EntityManager  extends YUKA.EntityManager {
         );
 
         for (let i = begin + 1; i < end; ++ i) {
-            agent.maxX = Math.max(agent.maxX, this.agents[i].position.x);
-            agent.minX = Math.min(agent.minX, this.agents[i].position.x);
-            agent.maxZ = Math.max(agent.maxZ, this.agents[i].position.z);
-            agent.minZ = Math.min(agent.minZ, this.agents[i].position.z);
+            agentTreeNode.maxX = Math.max(agentTreeNode.maxX, this.agents[i].position.x);
+            agentTreeNode.minX = Math.min(agentTreeNode.minX, this.agents[i].position.x);
+            agentTreeNode.maxZ = Math.max(agentTreeNode.maxZ, this.agents[i].position.z);
+            agentTreeNode.minZ = Math.min(agentTreeNode.minZ, this.agents[i].position.z);
         }
 
         if (end - begin > MAX_LEAF_SIZE) {
             //No leaf node.
-            const isVertical = (agent.maxX - agent.minX > agent.maxZ - agent.minZ);
-            const splitValue = isVertical ? 0.5 * (agent.maxX + agent.minX) : 0.5 * (agent.maxZ + agent.minZ);
+            const isVertical = (agentTreeNode.maxX - agentTreeNode.minX > agentTreeNode.maxZ - agentTreeNode.minZ);
+            const splitValue = isVertical ? 0.5 * (agentTreeNode.maxX + agentTreeNode.minX) : 0.5 * (agentTreeNode.maxZ + agentTreeNode.minZ);
             
             let left = begin;
             let right = end;
@@ -355,11 +400,11 @@ class EntityManager  extends YUKA.EntityManager {
                 ++ right;
             }
 
-            agent.left = node + 1;
-            agent.right = node + 2 * (left - begin);
+            agentTreeNode.left = node + 1;
+            agentTreeNode.right = node + 2 * (left - begin);
 
-            this.buildAgentTreeRecursive(begin, left, agent.left);
-            this.buildAgentTreeRecursive(left, end, agent.right);
+            this.buildAgentTreeRecursive(begin, left, agentTreeNode.left);
+            this.buildAgentTreeRecursive(left, end, agentTreeNode.right);
 
         }
 
@@ -437,8 +482,6 @@ class EntityManager  extends YUKA.EntityManager {
             const j1LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ1.point);
             const j2LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ2.point);
 
-            console.log(obstacleI1);
-
             if (j1LeftOfI >= -RVO_EPSILON && j2LeftOfI >= -RVO_EPSILON) {
                 leftObstacles.push(obstacles[j]);
             } else if (j1LeftOfI <= RVO_EPSILON && j2LeftOfI <= RVO_EPSILON) {
@@ -485,22 +528,16 @@ class EntityManager  extends YUKA.EntityManager {
 
     updateNeighborhood(entity) {
         //Agent::computeNeighbors
-        this._obstacles = [];
-        entity._rangeSq = sqr(entity._timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
-        this.queryObstacleTreeRecursive(entity);
+        entity._obstacleNeighbors = [];
+        entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
+        this.queryObstacleTreeRecursive(entity, this.obstacleTree);
 
-        entity._dist_neighbors = [];
+        entity._agentNeighbors = [];
         entity._rangeSq = sqr(entity.neighborhoodRadius);
         //KdTree::computeAgentNeighbors
         this.queryAgentTreeRecursive(entity, 0);
         //Converting neighbors to Yuka
-        entity.neighbors = entity._dist_neighbors.map(neighbor => neighbor[1]);
-
-    }
-
-    queryObstacleTreeRecursive(agent) {
-
-
+        entity.neighbors = entity._agentNeighbors.map(neighbor => neighbor[1]);
 
     }
 
@@ -536,6 +573,33 @@ class EntityManager  extends YUKA.EntityManager {
                 }
 
             }
+
+        }
+
+    }
+
+    queryObstacleTreeRecursive(agent, node) {
+
+        if (node === null) return;
+
+        const obstacle1 = node.obstacle;
+        const obstacle2 = obstacle1.nextObstacle;
+
+        const pos = agent.position;
+
+        const agentLeftOfLine = leftOf(obstacle1.point, obstacle2.point, new THREE.Vector2(pos.x, pos.z));
+
+        this.queryObstacleTreeRecursive(agent, (agentLeftOfLine >= 0 ? node.left : node.right));
+
+        const distSqLine = sqr(agentLeftOfLine) / absSq(obstacle2.point.clone().sub(obstacle1.point))
+
+        if (distSqLine < agent._rangeSq) {
+            //Try obstacle at this node only if agent is on right side of obstacle (and can see obstacle).
+            if (agentLeftOfLine < 0) {
+                agent.insertObstacleNeighbor(node.obstacle);
+            }
+
+            this.queryObstacleTreeRecursive(agent, (agentLeftOfLine >= 0 ? node.right : node.left))
 
         }
 
