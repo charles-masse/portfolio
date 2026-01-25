@@ -31,39 +31,31 @@ export default class {
                     path.add(point);
                 }
                 //Behaviors
-                const obstacle = new YUKA.ObstacleAvoidanceBehavior(entityManager.entities);
-                obstacle.weight = 1.0;
-                obstacle.brakingWeight = entity.maxForce * 0.95;
-                obstacle.dBoxMinLength = entity.boundingRadius * 2;
-                entity.steering.add(obstacle);
+                // const obstacle = new YUKA.ObstacleAvoidanceBehavior(entityManager.entities);
+                // obstacle.weight = 1.0;
+                // obstacle.brakingWeight = entity.maxForce * 0.95;
+                // obstacle.dBoxMinLength = entity.boundingRadius * 2;
+                // entity.steering.add(obstacle);
 
-                // const separation = new FuzzySeparationBehavior();
-                // separation.weight = 0.3;
-                // entity.steering.add(separation);
+                const wall = new WallAvoidanceBehavior(navMesh);
+                wall.weight = 0.5;
+                entity.steering.add(wall);
 
-                const separation = new YUKA.SeparationBehavior();
-                separation.weight = 1;
+                const separation = new FuzzySeparationBehavior();
+                separation.weight = 0.2;
                 entity.steering.add(separation);
 
                 // const cohesion = new FuzzyCohesionBehavior();
-                // cohesion.weight = 0.25;
+                // cohesion.weight = 0.15;
                 // entity.steering.add(cohesion);
 
                 const cohesion = new YUKA.CohesionBehavior();
-                cohesion.weight = 0.9;
+                cohesion.weight = 0.45;
                 entity.steering.add(cohesion);
-
-                const wall = new WallAvoidanceBehavior(navMesh);
-                wall.weight = 0.25;
-                entity.steering.add(wall);
 
                 const follow = new YUKA.FollowPathBehavior(path);
                 follow.weight = 1.0;
                 entity.steering.add(follow);
-
-                // const wander = new YUKA.WanderBehavior();
-                // wander.weight = 1.0;
-                // entity.steering.add(wander);
 
             }
 

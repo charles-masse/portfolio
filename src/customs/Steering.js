@@ -172,9 +172,9 @@ class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
 
         this.fuzzy = new YUKA.FuzzyModule();
         //Inputs
-        const center = new TriangularFuzzySet(-15, 0, 5);
-        const left = new LeftShoulderFuzzySet(-180, -15, 0, {r:0, g:255, b:0});
-        const right = new RightShoulderFuzzySet(0, 5, 180, {r:0, g:255, b:0});
+        const center = new TriangularFuzzySet(-10, 0, 10);
+        const left = new LeftShoulderFuzzySet(-180, -10, 0, {r:0, g:255, b:0});
+        const right = new RightShoulderFuzzySet(0, 10, 180, {r:0, g:255, b:0});
         const direction = new YUKA.FuzzyVariable()
             .add(center)
             .add(left)
@@ -216,7 +216,6 @@ class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
 
             const angle = angleTo(direction, toAgent);
             const length = toAgent.length();
-            console.log(length);
             //IN
             this.fuzzy.fuzzify('direction', angle);
             this.fuzzy.fuzzify('distance', length);
@@ -239,6 +238,8 @@ class FuzzyCohesionBehavior extends YUKA.CohesionBehavior {
         super();
 
         this.initFuzzy();
+
+        this._seek = new YUKA.SeekBehavior();
 
     }
 
@@ -305,7 +306,8 @@ class FuzzyCohesionBehavior extends YUKA.CohesionBehavior {
                 const factor = this.fuzzy.defuzzify('weight');
                 const scaled_target = vehicle.position.clone().add(neighbor.position.clone().sub(vehicle.position).multiplyScalar(factor));
 
-                center_of_mass.add(scaled_target);
+                this._seek.target = center_of_mass;
+                this._seek.calculate(vehicle, force);
 
             }
 

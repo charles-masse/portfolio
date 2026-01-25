@@ -48,15 +48,13 @@ async function main() {
     const entityManager = new EntityManager();
     //Modules
     const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
-    entityManager.buildAgentTree() //DELETE ME
     const taskMaster = new TaskMaster(navMesh, entityManager);
     const dayNight = new DayNight(canvas, city);
     const agentInfo = new AgentInfo(entityManager);
     //Scene
     const scene = new THREE.Scene();
 
-    scene.add(city);
-    
+    scene.add(city);    
     scene.add(crowdSpawner.objects)
     scene.add(taskMaster.objects)
     scene.add(dayNight.objects);
@@ -129,4 +127,4 @@ async function main() {
 
 }
 
-main()
+main();

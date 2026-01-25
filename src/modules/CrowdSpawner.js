@@ -9,7 +9,7 @@ import {Agent} from '../customs/RVO2.js';
 const MAX_AGENTS = 250;
 const CANDIDATE_NB = 7;
 
-export function bestCandidate(current_positions, navMesh) {
+function bestCandidate(current_positions, navMesh) {
 
     let best;
     let maxDist = -Infinity;
@@ -38,6 +38,8 @@ export default class {
 
         this.navMesh = navMesh;
         this.entityManager = entityManager;
+        //Objects for scene
+        this.objects = new THREE.Group()
         //Instance attributes
         this.instanceTimeOffsets = new Float32Array(MAX_AGENTS);
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(this.instanceTimeOffsets, 1));
@@ -45,8 +47,18 @@ export default class {
         this.instancedMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.25, 3) /*agent_geo*/, new THREE.MeshBasicMaterial({color: 0x000000}) /*agent_shader*/, MAX_AGENTS);
         //Link each instance to individual agent
         for (let i = 0; i < MAX_AGENTS; i++) {
-            this.entityManager.add(new Agent(this.navMesh));
+            this.entityManager.addAgent(new Agent(this.navMesh));
         }
+        this.objects.add(this.instancedMesh);
+        //Obstacles
+        const geometry = new THREE.BoxGeometry(10, 1, 10);
+        const material = new THREE.MeshBasicMaterial({color: 0xff0000});
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(15, 0, 15);
+        // getPointsFromMesh(cube); //TO-DO
+        this.objects.add(cube)
+
+        this.entityManager.addObstacle([new THREE.Vector2(10, 10), new THREE.Vector2(20, 10), new THREE.Vector2(20, 20), new THREE.Vector2(10, 20)]);
         //UI
         const gui = new GUI({title:'Crowd Spawner'});
         gui.domElement.style.position = 'static';
@@ -59,9 +71,6 @@ export default class {
         document.getElementById('gui-container').appendChild(gui.domElement);
 
         this.updateAgentAmount(settings.Population);
-        //Objects for scene
-        this.objects = new THREE.Group()
-            .add(this.instancedMesh);
 
     }
 
