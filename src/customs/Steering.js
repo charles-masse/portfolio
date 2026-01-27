@@ -89,7 +89,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to left
         temp = direction.clone()
             .applyRotation(LEFT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length /* * 2.0 */));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -97,7 +97,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to right
         temp = direction.clone()
             .applyRotation(RIGHT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length /* * 2.0 */));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -172,9 +172,9 @@ class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
 
         this.fuzzy = new YUKA.FuzzyModule();
         //Inputs
-        const center = new TriangularFuzzySet(-10, 0, 10);
-        const left = new LeftShoulderFuzzySet(-180, -10, 0, {r:0, g:255, b:0});
-        const right = new RightShoulderFuzzySet(0, 10, 180, {r:0, g:255, b:0});
+        const center = new TriangularFuzzySet(-15, 0, 0);
+        const left = new LeftShoulderFuzzySet(-180, -15, 0, {r:0, g:255, b:0});
+        const right = new RightShoulderFuzzySet(0, 0, 180, {r:0, g:255, b:0});
         const direction = new YUKA.FuzzyVariable()
             .add(center)
             .add(left)

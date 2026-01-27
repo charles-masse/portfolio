@@ -13,7 +13,7 @@ export default class {
 
         this.selected_agent = null;
         //UI
-        this.gui = new GUI({title: 'Agent Info'});
+        this.gui = new GUI({title:'Agent Info'});
         this.gui.domElement.style.position = 'static';
         document.getElementById('gui-container').appendChild(this.gui.domElement);
 
@@ -31,7 +31,7 @@ export default class {
             Result:[]
         };
 
-        this.gui.addText(' Click on an Agent for more info.')
+        this.gui.addText(' Click on an Agent for more info.');
 
         this.id = this.gui.add(controller_values, 'id').disable().hide();
 

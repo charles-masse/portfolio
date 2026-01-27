@@ -1,8 +1,10 @@
 
 import * as THREE from 'three';
-import Stats from 'three/addons/libs/stats.module.js';
+import Stats from './customs/stats.js';
 
 import * as YUKA from 'yuka';
+
+import {GUI} from './customs/GUI.js';
 
 import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
@@ -18,11 +20,6 @@ import TaskMaster from './modules/taskMaster.js';
 async function main() {
 
     const time = new YUKA.Time();
-
-    const stats = new Stats();
-    stats.dom.style.top = '2px';
-    stats.dom.style.left = '2px';
-    document.body.appendChild(stats.dom);
 
     const canvas = document.querySelector('#canvas');
     //Load assets
@@ -83,6 +80,16 @@ async function main() {
         if (click) agentInfo.selectAgent(click.point);
 
     });
+    //UI
+    const performance = new GUI({title:'Performance'});
+    performance.domElement.style.position = 'static';
+    performance.domElement.id = 'stats';
+    performance.addText('');
+    document.getElementById('gui-container').appendChild(performance.domElement);
+
+    const stats = new Stats();
+    stats.dom.style.position = 'relative';
+    document.getElementById('stats').querySelector('.undefined').replaceWith(stats.dom);
 
     function animate() {
 

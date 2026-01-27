@@ -9,6 +9,13 @@
     background-color: #000000;
 }
 
+#version {
+    position: fixed;
+    top: 2px;
+    left: 2px;
+    z-index: 1000;
+}
+
 #gui-container {
   position: fixed;
   top: 2px;
@@ -24,7 +31,6 @@
     left: 0;
     margin: 2px;
     position: absolute;
-    display: flex;
 }
 /* Loading Screen */
 #loading-screen {

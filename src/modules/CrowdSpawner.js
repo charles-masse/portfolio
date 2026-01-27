@@ -64,7 +64,7 @@ export default class {
         gui.domElement.style.position = 'static';
 
         const settings = {Population: MAX_AGENTS / 2.0};
-        this.populationController = gui.add(settings, 'Population', 1, MAX_AGENTS, 1) .onChange( value => {
+        this.populationController = gui.add(settings, 'Population', 1, MAX_AGENTS, 1).onChange( value => {
             this.updateAgentAmount(value);
         });
 

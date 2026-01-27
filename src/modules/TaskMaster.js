@@ -31,31 +31,35 @@ export default class {
                     path.add(point);
                 }
                 //Behaviors
-                // const obstacle = new YUKA.ObstacleAvoidanceBehavior(entityManager.entities);
-                // obstacle.weight = 1.0;
-                // obstacle.brakingWeight = entity.maxForce * 0.95;
-                // obstacle.dBoxMinLength = entity.boundingRadius * 2;
-                // entity.steering.add(obstacle);
+                const obstacle = new YUKA.ObstacleAvoidanceBehavior(entityManager.entities);
+                obstacle.weight = 1.0;
+                obstacle.brakingWeight = entity.maxForce;
+                obstacle.dBoxMinLength = entity.boundingRadius * 2;
+                entity.steering.add(obstacle);
 
                 const wall = new WallAvoidanceBehavior(navMesh);
-                wall.weight = 0.5;
+                wall.weight = 1;
                 entity.steering.add(wall);
 
                 const separation = new FuzzySeparationBehavior();
-                separation.weight = 0.2;
+                separation.weight = 1.0;
                 entity.steering.add(separation);
 
-                // const cohesion = new FuzzyCohesionBehavior();
-                // cohesion.weight = 0.15;
-                // entity.steering.add(cohesion);
-
-                const cohesion = new YUKA.CohesionBehavior();
-                cohesion.weight = 0.45;
+                const cohesion = new FuzzyCohesionBehavior();
+                cohesion.weight = 1.0;
                 entity.steering.add(cohesion);
+
+                // const cohesion = new YUKA.CohesionBehavior();
+                // cohesion.weight = 1;
+                // entity.steering.add(cohesion);
 
                 const follow = new YUKA.FollowPathBehavior(path);
                 follow.weight = 1.0;
                 entity.steering.add(follow);
+
+                // const wander = new YUKA.WanderBehavior();
+                // wander.weight = 1.0;
+                // entity.steering.add(wander);
 
             }
 
