@@ -134,13 +134,9 @@ export default class {
 
         let emissive_intensity;
         if (day_portion >= 0.5) {
-
             emissive_intensity = 1;
-
         } else {
-
             emissive_intensity = 0;
-
         }
 
         return emissive_intensity;

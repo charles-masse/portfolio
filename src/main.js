@@ -1,28 +1,26 @@
 
 import * as THREE from 'three';
-import Stats from './customs/stats.js';
 
 import * as YUKA from 'yuka';
-
-import {GUI} from './customs/GUI.js';
-
+//Loaders
 import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
 
-import {EntityManager} from './customs/RVO2.js';
-
-import AgentInfo from './modules/AgentInfo.js';
+import {EntityManager} from './customs/Agents.js';
+//Modules
 import DayNight from './modules/DayNight.js';
-import CrowdSpawner from './modules/CrowdSpawner.js';
-import TaskMaster from './modules/taskMaster.js';
+import Pedestrians from './modules/Pedestrians.js';
+//GUI
+import CrowdSpawner from './gui/CrowdSpawner.js';
+import AgentInfo from './gui/AgentInfo.js';
+import Stats from './gui/stats.js';
 
 async function main() {
 
     const time = new YUKA.Time();
-
     const canvas = document.querySelector('#canvas');
-    //Load assets
+    //Loading Screen
     const loadingManager = new THREE.LoadingManager(
         () => {
             const loadingScreen = document.getElementById('loading-screen');
@@ -30,33 +28,34 @@ async function main() {
             loadingScreen.addEventListener('transitionend', onTransitionEnd);
         },
         (itemUrl, itemsLoaded, itemsTotal) => {
-            // console.log(`Loading "${itemUrl}" (${itemsLoaded}/${itemsTotal})`);
+            console.log(`Loading asset (${itemsLoaded}/${itemsTotal}).`);
         },
         (url) => {
             console.error('Error loading', url);
         }
     );
-    //Loading
+    //Loaders
     const city = await City(loadingManager);
     const pictogramGeo = await PictogramGeo(loadingManager);
     const pictogramShader = await PictogramShader(loadingManager);
     const navMesh = await NavMesh(loadingManager);
-
-    const entityManager = new EntityManager();
     //Modules
-    const crowdSpawner = new CrowdSpawner(pictogramGeo, pictogramShader, navMesh, entityManager);
-    const taskMaster = new TaskMaster(navMesh, entityManager);
+    const entityManager = new EntityManager(navMesh);
+    const pedestrians = new Pedestrians(pictogramGeo, pictogramShader, entityManager, navMesh);
     const dayNight = new DayNight(canvas, city);
+    //GUI
+    const crowdSpawner = new CrowdSpawner(entityManager);
     const agentInfo = new AgentInfo(entityManager);
+    const stats = new Stats();
     //Scene
     const scene = new THREE.Scene();
 
-    scene.add(city);    
-    scene.add(crowdSpawner.objects)
-    scene.add(taskMaster.objects)
+    scene.add(city); //3D scene
+
+    scene.add(pedestrians.objects)
     scene.add(dayNight.objects);
     scene.add(agentInfo.objects);
-    //Cameraman
+    //Camera
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
     camera.position.set(20, 30, 30);
@@ -75,32 +74,21 @@ async function main() {
     window.addEventListener('resize', onWindowResize, false);
     
     canvas.addEventListener('pointerdown', (event) => {
-
         const click = getClick(event);
         if (click) agentInfo.selectAgent(click.point);
-
     });
-    //UI
-    const performance = new GUI({title:'Performance'});
-    performance.domElement.style.position = 'static';
-    performance.domElement.id = 'stats';
-    performance.addText('');
-    document.getElementById('gui-container').appendChild(performance.domElement);
-
-    const stats = new Stats();
-    stats.dom.style.position = 'relative';
-    document.getElementById('stats').querySelector('.undefined').replaceWith(stats.dom);
 
     function animate() {
-
-        stats.update();
 
         const updated_time = time.update();
 
         entityManager.update(updated_time.getDelta());
-        crowdSpawner.update(updated_time.getElapsed());
+        //Modules
+        pedestrians.update(updated_time.getElapsed());
         dayNight.update(updated_time.getElapsed());
+        //GUI
         agentInfo.update(updated_time.getElapsed());
+        stats.update();
 
         renderer.render(scene, camera);
 

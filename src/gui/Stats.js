@@ -1,4 +1,6 @@
 
+import {GUI} from '../customs/GUI.js';
+
 var Stats = function () {
 
     var mode = 0;
@@ -165,4 +167,26 @@ Stats.Panel = function ( name, fg, bg ) {
 
 };
 
-export default Stats;
+export default class {
+
+    constructor() {
+
+        const performance = new GUI({title:'Performance'});
+        performance.domElement.style.position = 'static';
+        performance.domElement.id = 'stats';
+        performance.addText('');
+        document.getElementById('gui-container').appendChild(performance.domElement);
+
+        this.stats = new Stats();
+        this.stats.dom.style.position = 'relative';
+        document.getElementById('stats').querySelector('.undefined').replaceWith(this.stats.dom);
+
+    }
+
+    update() {
+
+        this.stats.update();;
+
+    }
+
+}

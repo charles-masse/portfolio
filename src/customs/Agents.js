@@ -79,7 +79,7 @@ function distSqPointLineSegment(a, b, c) {
 
 }
 
-function v2abs(v) {
+function abs(v) {
     return Math.sqrt(v.x * v.x + v.y * v.y);
 }
 
@@ -131,26 +131,15 @@ class Obstacle {
 
 class Agent extends YUKA.Vehicle {
 
-    constructor(navMesh) {
+    constructor() {
         super();
-
-        this.navMesh = navMesh;
-
-        this.active = false;
-
-        this.maxSpeed = 1;
-        //Social forces
-        this.maxForce = 1.05;
         //RVO2
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
 
-        this.maxNeighbors = 10;
-        this.boundingRadius = 0.3;
-        this.timeHorizon = 5;
-        this.timeHorizonObst = 5;
-        // // State machine
-        // this.stateMachine = new AgentStateMachine(this);
+        this.active = false;
+
+        this.stateMachine = new YUKA.StateMachine(this);
 
     }
 
@@ -162,6 +151,8 @@ class Agent extends YUKA.Vehicle {
     }
 
     computeNewVelocity() {
+
+        const newVelocity = new THREE.Vector2();
 
         const position = new THREE.Vector2(this.position.x, this.position.z);
         const velocity = new THREE.Vector2(this.velocity.x, this.velocity.z);
@@ -426,7 +417,7 @@ class Agent extends YUKA.Vehicle {
                 //Vector from cutoff center to relative velocity.
                 const w = relativeVelocity.clone().sub(relativePosition.clone().multiplyScalar(invTimeStep));
 
-                const wLength = v2abs(w);
+                const wLength = abs(w);
                 const unitW = w.clone().divideScalar(wLength);
 
                 line.direction = new THREE.Vector2(unitW.y, -unitW.x);
@@ -439,16 +430,14 @@ class Agent extends YUKA.Vehicle {
 
         }
 
-        const newVelocity = new THREE.Vector2();
-
         const lineFail = this.linearProgram2(this.orcaLines, velocity, false, newVelocity);
 
         if (lineFail < this.orcaLines.length) {
             this.linearProgram3(this.orcaLines, numObstLines, lineFail, newVelocity)
         }
 
-        this.velocity.copy(new YUKA.Vector3(newVelocity.x, 0, newVelocity.y));
-
+        
+        return newVelocity
     }
 
     insertAgentNeighbor(agent) {
@@ -658,48 +647,51 @@ class Agent extends YUKA.Vehicle {
     }
 
     update(delta) {
-
+        //Calculate steering force
         const steeringForce = new YUKA.Vector3();
         const acceleration = new YUKA.Vector3();
 
-        const displacement = new YUKA.Vector3();
-        const target = new YUKA.Vector3();
-        // const velocitySmooth = new YUKA.Vector3();
-        //calculate steering force
         this.steering.calculate(delta, steeringForce);
-        //acceleration = force / mass
+        //Acceleration = force / mass
         acceleration.copy(steeringForce).divideScalar(this.mass);
-        //update velocity
+        //Update velocity
         this.velocity.add(acceleration.multiplyScalar(delta));
-        //make sure vehicle does not exceed maximum speed
+        //Make sure vehicle does not exceed maximum speed
         // if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
         //     this.velocity.normalize();
         //     this.velocity.multiplyScalar(this.maxSpeed);
         // }
-        //ORCA. Search for the best new velocity.
-        this.computeNewVelocity();
-        //calculate displacement
+        //Search for the best new velocity.
+        const optimal_velocity = this.computeNewVelocity();
+        this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
+        //Calculate displacement
+        const displacement = new YUKA.Vector3();
+
         displacement.copy(this.velocity).multiplyScalar(delta);
-        //calculate target position
+        //Calculate target position
+        const target = new YUKA.Vector3();
+
         target.copy(this.position).add(displacement);
-        //update the orientation if the vehicle has a non zero velocity
+        //Update the orientation if the vehicle has a non zero velocity
         if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
             this.lookAt(target);
         }
-        //update position
+        //Update position
         this.position.copy(target);
-        //if smoothing is enabled, the orientation (not the position!) of the vehicle is
+        //If smoothing is enabled, the orientation (not the position!) of the vehicle is
         //changed based on a post-processed velocity vector
-        // if (this.updateOrientation === true && this.smoother !== null) {
+        const velocitySmooth = new YUKA.Vector3();
 
-        //     this.smoother.calculate( this.velocity, velocitySmooth );
+        if (this.updateOrientation === true && this.smoother !== null) {
 
-        //     displacement.copy(velocitySmooth).multiplyScalar(delta);
-        //     target.copy(this.position).add(displacement);
+            this.smoother.calculate(this.velocity, velocitySmooth);
 
-        //     this.lookAt(target);
+            displacement.copy(velocitySmooth).multiplyScalar(delta);
+            target.copy(this.position).add(displacement);
 
-        // }
+            this.lookAt(target);
+
+        }
 
         return this;
     }
@@ -736,8 +728,10 @@ const MAX_LEAF_SIZE = 10;
 
 class EntityManager  extends YUKA.EntityManager {
 
-    constructor() {
+    constructor(navMesh) {
         super();
+
+        this.navMesh = navMesh;
 
         this.obstacles = new Array();
 
@@ -788,6 +782,52 @@ class EntityManager  extends YUKA.EntityManager {
         }
 
         return obstacleNo;
+    }
+
+    activateAgents(nb) {
+
+        let active_agents = this.entities.filter(agent => agent.active);
+        while (active_agents.length != nb) {
+
+            if (active_agents.length < nb) {
+
+                this.entities[active_agents.length].setActive(true);
+
+                const positions = this.entities.map(agent => agent.position);
+                const spawn_position = this.bestCandidate(positions, this.navMesh);
+                this.entities[active_agents.length].position.copy(spawn_position);
+
+            } else {
+                this.entities[active_agents.length - 1].setActive(false);
+            }
+
+            active_agents = this.entities.filter(agent => agent.active);
+
+        }
+
+    }
+
+    bestCandidate() {
+
+        let best;
+        let maxDist = -Infinity;
+        for (let i = 0; i < this.entities.length; i++) {
+
+            const {x, y} = this.navMesh.randomPoint();
+
+            const pos = new YUKA.Vector3(x, 0, y);
+            const minDist = Math.min(...this.entities.map(entity => pos.distanceTo(entity.position)));
+
+            if (minDist > maxDist) {
+
+                maxDist = minDist;
+                best = pos;
+
+            }
+
+        }
+
+        return best;
     }
 
     removeObstacle(obstacle) {
