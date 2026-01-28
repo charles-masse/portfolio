@@ -1,9 +1,9 @@
 # Node.js dependencies
 node_modules/
-# My Maya scenes
+# My 3D scenes
 scenes/
-# Assets
-public/
 # Build
 dist/
 .vite/
+# RV02 source code
+RVO2/
