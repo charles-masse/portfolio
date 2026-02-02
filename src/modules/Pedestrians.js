@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import * as YUKA from 'yuka';
 
 import {Agent, EntityManager} from '../customs/Agents.js';
-import {WallAvoidanceBehavior, FuzzySeparationBehavior, FuzzyCohesionBehavior, NonPenetrationBehavior} from '../customs/Steering.js'
+import {WallAvoidanceBehavior, FuzzySeparationBehavior, FuzzyCohesionBehavior,} from '../customs/Steering.js'
 
 import {createGraphHelper} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper} from '../helpers/NavMeshHelper.js'
@@ -57,24 +57,21 @@ export default class {
             agent.maxTurnRate = Math.PI / 3.0;
             //Forces + ORCA
             agent.maxSpeed = 0.75;
-            agent.boundingRadius = 0.4;
+            agent.boundingRadius = 0.3;
             //ORCA
-            agent.timeHorizon = 8;
-            agent.timeHorizonObst = 10;
+            agent.timeHorizon = 4;
+            agent.timeHorizonObst = 5;
             //Behaviors
-            const penetration = new NonPenetrationBehavior();
-            agent.steering.add(penetration);
-
             const obstacle = new YUKA.ObstacleAvoidanceBehavior(this.entityManager.entities);
-            // obstacle.brakingWeight = 1;
+            obstacle.brakingWeight = 0.5;
             agent.steering.add(obstacle);
 
             const wall = new WallAvoidanceBehavior(navMesh);
-            wall.weight = 0.5;
+            wall.weight = 2;
             agent.steering.add(wall);
 
             const separation = new FuzzySeparationBehavior();
-            separation.weight = 0.5;
+            separation.weight = 0.25;
             agent.steering.add(separation);
 
             const cohesion = new FuzzyCohesionBehavior();
@@ -90,20 +87,27 @@ export default class {
             this.entityManager.addAgent(agent);
 
         }
-        //Obstacles //Too many--hard on the framerate, please fix
-        for (const wall of navMesh.perimeter) {
+        //Obstacles
+        this.entityManager.addObstacle([
+            new THREE.Vector2(-5, 10),
+            new THREE.Vector2(5, 10),
+            new THREE.Vector2(5, 25),
+            new THREE.Vector2(-5, 25),
+        ]);
 
-            const from_thick = wall.from.clone().add(wall.normal.clone().multiplyScalar(-1));
-            const to_thick = wall.to.clone().add(wall.normal.clone().multiplyScalar(-1));
+        this.entityManager.addObstacle([
+            new THREE.Vector2(-5, -5),
+            new THREE.Vector2(20, -5),
+            new THREE.Vector2(20, 5),
+            new THREE.Vector2(-5, 5),
+        ]);
 
-            this.entityManager.addObstacle([
-                new THREE.Vector2(wall.from.x, wall.from.z),
-                new THREE.Vector2(wall.to.x, wall.to.z),
-                new THREE.Vector2(to_thick.x, to_thick.z),
-                new THREE.Vector2(from_thick.x, from_thick.z),
-            ]);
-
-        }
+        this.entityManager.addObstacle([
+            new THREE.Vector2(-25, -25),
+            new THREE.Vector2(25, -25),
+            new THREE.Vector2(25, -30),
+            new THREE.Vector2(-25, -30),
+        ]);
         
     }
 

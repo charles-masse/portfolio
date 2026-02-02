@@ -5,6 +5,8 @@ import * as YUKA from 'yuka';
 
 import {GUI} from '../customs/GUI.js';
 
+import {COLORS, MAX_NEIGHBORS} from '../settings.js';
+
 export default class {
 
     constructor(entityManager) {
@@ -12,6 +14,9 @@ export default class {
         this.entities = entityManager.entities;
 
         this.selected_agent = null;
+        //Scene objects
+        this.objects = new THREE.Group();
+        this.initLines();
         //UI
         this.gui = new GUI({title:'Agent Info'});
         this.gui.domElement.style.position = 'static';
@@ -50,19 +55,34 @@ export default class {
 
         const separation = this.gui.addFolder('Separation').hide();
 
-        const separation_flvs = behaviors[3].fuzzy.flvs
+        const separation_flvs = behaviors[2].fuzzy.flvs
         this.separation_direction = separation.addFuzzy(controller_values, '[I] Direction', separation_flvs.get('direction'), -180, 180).disable();
         this.separation_distance = separation.addFuzzy(controller_values, '[I] Distance', separation_flvs.get('distance'), 0, 3).disable();
         this.separation_weight = separation.addFuzzy(controller_values, '[O] Weight', separation_flvs.get('weight'), 0, 1).disable();
 
         const cohesion = this.gui.addFolder('Cohesion').hide();
 
-        const cohesion_flvs = behaviors[4].fuzzy.flvs
+        const cohesion_flvs = behaviors[3].fuzzy.flvs
         this.cohesion_facing = cohesion.addFuzzy(controller_values, '[I] Facing Angle', cohesion_flvs.get('facingAngle'), -180, 180).disable();
         this.cohesion_direction = cohesion.addFuzzy(controller_values, '[I] Direction', cohesion_flvs.get('direction'), -180, 180).disable();
         this.cohesion_weight = cohesion.addFuzzy(controller_values, '[O] Weight', cohesion_flvs.get('weight'), 0, 1).disable();
-        //For scene objects
-        this.objects = new THREE.Group();
+
+    }
+
+    initLines() {
+
+        this.neighbor_lines = []
+
+        for (let i = 0; i < MAX_NEIGHBORS; i++) {
+
+            const geometry = new THREE.BufferGeometry();
+            const material = new THREE.LineBasicMaterial({color: COLORS[i],});
+            const line = new THREE.Line(geometry, material);
+
+            this.neighbor_lines.push(line);
+            this.objects.add(line);
+
+        }
 
     }
 
@@ -128,15 +148,24 @@ export default class {
             this.rotY.setValue(direction.y.toFixed(4));
             this.rotZ.setValue(direction.z.toFixed(4));
             //Fuzzy
-            const separation = agent.steering.behaviors[3].fuzzy.flvs;
+            const separation = agent.steering.behaviors[2].fuzzy.flvs;
             this.separation_direction.setValue(separation.get('direction').io);
             this.separation_distance.setValue(separation.get('distance').io);
             this.separation_weight.setValue(separation.get('weight').io);
 
-            const cohesion = agent.steering.behaviors[4].fuzzy.flvs;
+            const cohesion = agent.steering.behaviors[3].fuzzy.flvs;
             this.cohesion_facing.setValue(cohesion.get('facingAngle').io);
             this.cohesion_direction.setValue(cohesion.get('direction').io);
             this.cohesion_weight.setValue(cohesion.get('weight').io);
+            //Lines
+            for (const line in this.neighbor_lines) {
+                if (line in agent.neighbors) {
+                    this.neighbor_lines[line].geometry.setFromPoints([new YUKA.Vector3(0, 0.1, 0).add(agent.position), new YUKA.Vector3(0, 0.1, 0).add(agent.neighbors[line].position)])
+                } else {
+                    this.neighbor_lines[line].geometry.setFromPoints([new YUKA.Vector3(0, -9999, 0), new YUKA.Vector3(0, -9999, 0)])
+                }
+
+            }
 
         }
 

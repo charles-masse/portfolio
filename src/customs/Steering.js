@@ -91,7 +91,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to left
         temp = direction.clone()
             .applyRotation(LEFT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0 )); //Prioritize walking on the right side
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length /* * 2.0 */));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -183,7 +183,7 @@ class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
             .add(right)
         this.fuzzy.addFLV('direction', direction);
 
-        const close = new LeftShoulderFuzzySet(0, 0.25, 3, {r:0, g:255, b:0});
+        const close = new LeftShoulderFuzzySet(0, 0, 3, {r:0, g:255, b:0});
         const far = new RightShoulderFuzzySet(0, 3, 3);
 
         const distance = new FuzzyVariable()
@@ -367,5 +367,4 @@ export {
     WallAvoidanceBehavior,
     FuzzySeparationBehavior,
     FuzzyCohesionBehavior,
-    NonPenetrationBehavior,
 };

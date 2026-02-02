@@ -424,8 +424,6 @@ class Agent extends YUKA.Vehicle {
 
             const distSq = absSq(this.position.clone().sub(agent.position));
 
-            if (agent.position.clone().sub(this.position).length() < this.neighborhoodRadius) this.neighbors.push(agent);
-
             if (distSq < this._rangeSq) {
 
                 if (this._agentNeighbors.length < MAX_NEIGHBORS) {
@@ -1001,17 +999,17 @@ class EntityManager  extends YUKA.EntityManager {
     }
 
     updateNeighborhood(entity) {
-        //Reset Yuka neighbors
-        entity.neighbors = [];
         //Agent::computeNeighbors
         entity._obstacleNeighbors = [];
         entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
         this.queryObstacleTreeRecursive(entity, this.obstacleTree);
 
         entity._agentNeighbors = [];
-        entity._rangeSq = sqr(entity.boundingRadius);
+        entity._rangeSq = sqr(entity.neighborhoodRadius);
         //KdTree::computeAgentNeighbors
         this.queryAgentTreeRecursive(entity, 0);
+        //Converting neighbors to Yuka
+        entity.neighbors = entity._agentNeighbors.map(neighbor => neighbor[1]);
 
     }
 
