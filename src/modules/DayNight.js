@@ -1,34 +1,7 @@
 
 import * as THREE from 'three';
 
-const START_TIME_SECS = 5;
-const SUN_SPEED = -20;
-const DAY_EVENTS = [
-    {   //Sunrise
-        time:0,
-        top_color:{r:106, g:132, b:191},
-        bot_color:{r:246, g:114, b:128},
-        ambient_color:{r:246, g:114, b:128},
-    },
-    {   //Midday
-        time:0.24,
-        top_color:{r:0, g:191, b:255},
-        bot_color:{r:255, g:255, b:255},
-        ambient_color:{r:0, g:191, b:255},
-    },
-    {   //Sunset
-        time:0.5,
-        top_color:{r:246, g:114, b:128},
-        bot_color:{r:246, g:114, b:128},
-        ambient_color:{r:25, g:25, b:112},
-    },
-    {   //Midnight
-        time:0.75,
-        top_color:{r:25, g:25, b:112},
-        bot_color:{r:0, g:0, b:0},
-        ambient_color:{r:25, g:25, b:112},
-    },
-];
+import {START_TIME_SECS, SUN_SPEED, DAY_EVENTS} from '../settings.js';
 
 export function lerpColor(c1, c2, t) {
 

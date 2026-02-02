@@ -22,10 +22,9 @@ export default class {
             'Pos x': 0,
             'Pos y': 0,
             'Pos z': 0,
-            'Rot x': 0,
-            'Rot y': 0,
-            'Rot z': 0,
-            'Rot w': 0,
+            'Dir x': 0,
+            'Dir y': 0,
+            'Dir z': 0,
             Variation:'skirt',
             Distance:[],
             Result:[]
@@ -40,19 +39,28 @@ export default class {
         this.posY = pos.add(controller_values, 'Pos y').disable();
         this.posZ = pos.add(controller_values, 'Pos z').disable();
 
-        const rot = this.gui.addFolder('Rotation').close().hide();
-        this.rotX = rot.add(controller_values, 'Rot x').disable();
-        this.rotY = rot.add(controller_values, 'Rot y').disable();
-        this.rotZ = rot.add(controller_values, 'Rot z').disable();
-        this.rotW = rot.add(controller_values, 'Rot w').disable();
+        const rot = this.gui.addFolder('Direction').close().hide();
+        this.rotX = rot.add(controller_values, 'Dir x').disable();
+        this.rotY = rot.add(controller_values, 'Dir y').disable();
+        this.rotZ = rot.add(controller_values, 'Dir z').disable();
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
 
-        // const fuzzy = this.gui.addFolder('Cohesion').hide();
+        const behaviors = this.entities[0].steering.behaviors;
 
-        // const flvs = this.entities[0].steering.behaviors[0].fuzzy.flvs;
-        // this.facingAngle = fuzzy.addFuzzy(controller_values, '[In] facing angle', flvs.get('facingAngle'), -180, 180).disable();
-        // this.result = fuzzy.addFuzzy(controller_values, 'Weight [Out]', flvs.get('weight')).disable();
+        const separation = this.gui.addFolder('Separation').hide();
+
+        const separation_flvs = behaviors[3].fuzzy.flvs
+        this.separation_direction = separation.addFuzzy(controller_values, '[I] Direction', separation_flvs.get('direction'), -180, 180).disable();
+        this.separation_distance = separation.addFuzzy(controller_values, '[I] Distance', separation_flvs.get('distance'), 0, 3).disable();
+        this.separation_weight = separation.addFuzzy(controller_values, '[O] Weight', separation_flvs.get('weight'), 0, 1).disable();
+
+        const cohesion = this.gui.addFolder('Cohesion').hide();
+
+        const cohesion_flvs = behaviors[4].fuzzy.flvs
+        this.cohesion_facing = cohesion.addFuzzy(controller_values, '[I] Facing Angle', cohesion_flvs.get('facingAngle'), -180, 180).disable();
+        this.cohesion_direction = cohesion.addFuzzy(controller_values, '[I] Direction', cohesion_flvs.get('direction'), -180, 180).disable();
+        this.cohesion_weight = cohesion.addFuzzy(controller_values, '[O] Weight', cohesion_flvs.get('weight'), 0, 1).disable();
         //For scene objects
         this.objects = new THREE.Group();
 
@@ -63,9 +71,9 @@ export default class {
         let nearest = null;
         let min_distance = Infinity;
 
-        for (let i = 0; i < this.entities.length; i++) {
+        this.entities.forEach((entity, i) => {
 
-            const distance = this.entities[i].position.squaredDistanceTo(point);
+            const distance = entity.position.squaredDistanceTo(point);
             if (distance < min_distance) {
 
                 min_distance = distance;
@@ -73,7 +81,7 @@ export default class {
 
             }
 
-        }
+        });
 
         if (this.selected_agent != nearest) {
             this.selected_agent = nearest;
@@ -89,67 +97,49 @@ export default class {
 
     showInfo() {
 
-        const constrollers = this.gui.children;
+        const controllers = this.gui.children;
 
         if (this.selected_agent) {
 
-            constrollers[0].hide();
-            for (let i = 1; i < constrollers.length; i++) constrollers[i].show();
+            controllers[0].hide();
+            for (let i = 1; i < controllers.length; i++) controllers[i].show();
 
         } else {
 
-            constrollers[0].show();
-            for (let i = 1; i < constrollers.length; i++) constrollers[i].hide();
+            controllers[0].show();
+            for (let i = 1; i < controllers.length; i++) controllers[i].hide();
 
         }
 
     }
 
     update(time) {
-        //TODO--Cheat for now, but has a hit on the framerate
-        this.objects.traverse(child => {
-
-            if (child.geometry) {
-                child.geometry.dispose();
-            }
-
-            if (child.material) {
-                child.material.dispose();
-            }
-            
-        });
-
-        this.objects.clear()
 
         if (this.selected_agent) {
 
             const agent = this.entities[this.selected_agent];
-            const pos = agent.position;
 
-            if (agent.steering.behaviors[0].hit) {
-
-                const material = new THREE.LineBasicMaterial({color: 0xff0000});
-                const geometry = new THREE.BufferGeometry().setFromPoints([new YUKA.Vector3(0, 0.1, 0).add(pos), new YUKA.Vector3(0, 0.1, 0).addVectors(pos, agent.steering.behaviors[0].force)]);
-                const line = new THREE.Line(geometry, material);
-
-                this.objects.add(line);
-
-            }
-            //Update UI
             this.posX.setValue(agent.position.x.toFixed(4));
             this.posY.setValue(agent.position.y.toFixed(4));
             this.posZ.setValue(agent.position.z.toFixed(4));
 
-            this.rotX.setValue(agent.rotation.x.toFixed(4));
-            this.rotY.setValue(agent.rotation.y.toFixed(4));
-            this.rotZ.setValue(agent.rotation.z.toFixed(4));
-            this.rotW.setValue(agent.rotation.w.toFixed(4));
+            const direction = agent.getDirection(new YUKA.Vector3());
+            this.rotX.setValue(direction.x.toFixed(4));
+            this.rotY.setValue(direction.y.toFixed(4));
+            this.rotZ.setValue(direction.z.toFixed(4));
+            //Fuzzy
+            const separation = agent.steering.behaviors[3].fuzzy.flvs;
+            this.separation_direction.setValue(separation.get('direction').io);
+            this.separation_distance.setValue(separation.get('distance').io);
+            this.separation_weight.setValue(separation.get('weight').io);
 
-            // this.facingAngle.setValue(agent.steering.behaviors[0].facingAngle);
-            // this.result.setValue(agent.steering.behaviors[0]._separation.outputs);
+            const cohesion = agent.steering.behaviors[4].fuzzy.flvs;
+            this.cohesion_facing.setValue(cohesion.get('facingAngle').io);
+            this.cohesion_direction.setValue(cohesion.get('direction').io);
+            this.cohesion_weight.setValue(cohesion.get('weight').io);
 
         }
 
     }
-        
+    
 }

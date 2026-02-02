@@ -19,6 +19,9 @@
 import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
+
+import {MAX_NEIGHBORS, MAX_LEAF_SIZE, TIME_STEP} from '../settings.js';
+
 /*
  * \brief      Computes the square of a float.
  * \param      a               The float to be squared.
@@ -83,26 +86,6 @@ function abs(v) {
     return Math.sqrt(v.x * v.x + v.y * v.y);
 }
 
-function getPointsFromMesh(mesh) {
-
-    mesh.updateMatrixWorld(true);
-
-    const points = [];
-
-    const pt = new THREE.Vector3();
-
-    const positions = mesh.geometry.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-
-        pt.fromBufferAttribute(positions, i);
-        pt.applyMatrix4(mesh.matrixWorld);
-        points.push(pt.clone());
-
-    }
-
-    return points;
-}
-
 class Line {
 
     constructor() {
@@ -133,13 +116,12 @@ class Agent extends YUKA.Vehicle {
 
     constructor() {
         super();
+
+        this.active = false;
+        this.stateMachine = new YUKA.StateMachine(this);
         //RVO2
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
-
-        this.active = false;
-
-        this.stateMachine = new YUKA.StateMachine(this);
 
     }
 
@@ -157,7 +139,7 @@ class Agent extends YUKA.Vehicle {
         const position = new THREE.Vector2(this.position.x, this.position.z);
         const velocity = new THREE.Vector2(this.velocity.x, this.velocity.z);
 
-        this.orcaLines = [];
+        this._orcaLines = [];
 
         const invTimeHorizonObst = 1 / this.timeHorizonObst;
         //Create obstacle ORCA lines.
@@ -168,12 +150,11 @@ class Agent extends YUKA.Vehicle {
 
             const relativePosition1 = obstacle1.point.clone().sub(position);
             const relativePosition2 = obstacle2.point.clone().sub(position);
-            //Check if velocity obstacle of obstacle is already taken care of by
-            //previously constructed obstacle ORCA lines.
+            //Check if velocity obstacle of obstacle is already taken care of by previously constructed obstacle ORCA lines.
             let alreadyCovered = false;
-            for (let j = 0; j < this.orcaLines.length; ++j) {
+            for (let j = 0; j < this._orcaLines.length; ++j) {
 
-                if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(this.orcaLines[j].point), this.orcaLines[j].direction) - invTimeHorizonObst * this.boundingRadius >= -RVO_EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(this.orcaLines[j].point), this.orcaLines[j].direction) - invTimeHorizonObst * this.boundingRadius >=  -RVO_EPSILON) {
+                if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(this._orcaLines[j].point), this._orcaLines[j].direction) - invTimeHorizonObst * this.boundingRadius >= -RVO_EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(this._orcaLines[j].point), this._orcaLines[j].direction) - invTimeHorizonObst * this.boundingRadius >=  -RVO_EPSILON) {
                     alreadyCovered = true;
                     break;
                 }
@@ -198,7 +179,7 @@ class Agent extends YUKA.Vehicle {
                 if (obstacle1.isConvex) {
                     line.point = new THREE.Vector2(0, 0);
                     line.direction = new THREE.Vector2(-relativePosition1.y, relativePosition1.x).normalize();
-                    this.orcaLines.push(line);
+                    this._orcaLines.push(line);
                 }
 
                 continue;
@@ -209,7 +190,7 @@ class Agent extends YUKA.Vehicle {
                 if (obstacle2.isConvex && det(relativePosition2, obstacle2.unitDir) >= 0) {
                     line.point = new THREE.Vector2(0, 0);
                     line.direction = new THREE.Vector2(-relativePosition2.y, relativePosition2.x).normalize();
-                    this.orcaLines.push(line);
+                    this._orcaLines.push(line);
                 }
 
                 continue;
@@ -217,13 +198,12 @@ class Agent extends YUKA.Vehicle {
             } else if (s >= 0 && s < 1 && distSqLine <= radiusSq) {
                 line.point = new THREE.Vector2(0, 0);
                 line.direction = obstacle1.unitDir.clone().negate();
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
 
                 continue;
             }
             //No collision.
-            //Compute legs. When obliquely viewed, both legs can come from a single
-            //vertex. Legs extend cut-off line when nonconvex vertex.
+            //Compute legs. When obliquely viewed, both legs can come from a single vertex. Legs extend cut-off line when nonconvex vertex.
 
             let leftLegDirection = new THREE.Vector2();
             let rightLegDirection = new THREE.Vector2();
@@ -267,9 +247,8 @@ class Agent extends YUKA.Vehicle {
                 }
 
             }
-            //Legs can never point into neighboring edge when convex vertex,
-            //take cutoff-line of neighboring edge instead. If velocity projected on
-            //"foreign" leg, no constraint is added.
+            //Legs can never point into neighboring edge when convex vertex, take cutoff-line of neighboring edge instead.
+            //If velocity projected on "foreign" leg, no constraint is added.
             const leftNeighbor = obstacle1.prevObstacle;
 
             let isLeftLegForeign = false;
@@ -308,7 +287,7 @@ class Agent extends YUKA.Vehicle {
 
                 line.direction = new THREE.Vector2(unitW.y, -unitW.x);
                 line.point = leftCutoff.clone().add(unitW.clone().multiplyScalar(this.boundingRadius * invTimeHorizonObst));
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
                 continue;
 
             } else if (t > 1 && tRight < 0) {
@@ -317,12 +296,11 @@ class Agent extends YUKA.Vehicle {
 
                 line.direction = new THREE.Vector2(unitW.y, -unitW.x);
                 line.point = rightCutoff.clone().add(unitW.clone().multiplyScalar(this.boundingRadius * invTimeHorizonObst));
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
                 continue;
 
             }
-            //Project on left leg, right leg, or cut-off line, whichever is closest
-            //to velocity.
+            //Project on left leg, right leg, or cut-off line, whichever is closest to velocity.
             const distSqCutoff = (t < 0 || t > 1 || obstacle1 == obstacle2) ? Infinity : absSq(velocity.clone().sub(leftCutoff.clone().add(cutoffVec.clone().multiplyScalar(t))));
             const distSqLeft = (tLeft < 0) ? Infinity : absSq(velocity.clone().sub(leftCutoff.clone().add(tLeft * leftLegDirection)));
             const distSqRight = (tRight < 0) ? Infinity : absSq(velocity.clone().sub(rightCutoff.clone().add(tRight * rightLegDirection)));
@@ -331,7 +309,7 @@ class Agent extends YUKA.Vehicle {
                 //Project on cut-off line.
                 line.direction = obstacle1.unitDir.clone().negate();
                 line.point = leftCutoff.clone().add(new THREE.Vector2(-line.direction.y, line.direction.x).multiplyScalar(this.boundingRadius * invTimeHorizonObst));
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
                 continue;
 
             } else if (distSqLeft <= distSqRight) {
@@ -340,7 +318,7 @@ class Agent extends YUKA.Vehicle {
 
                 line.direction = leftLegDirection;
                 line.point = leftCutoff.clone().add(new THREE.Vector2(-line.direction.y, line.direction.x).multiplyScalar(this.boundingRadius * invTimeHorizonObst));
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
                 continue;
 
             } else {
@@ -349,14 +327,14 @@ class Agent extends YUKA.Vehicle {
 
                 line.direction = rightLegDirection.clone().negate();
                 line.point = rightCutoff.clone().add(new THREE.Vector2(-line.direction.y, line.direction.x).multiplyScalar(this.boundingRadius * invTimeHorizonObst));
-                this.orcaLines.push(line);
+                this._orcaLines.push(line);
                 continue;
 
             }
 
         }
 
-        const numObstLines = this.orcaLines.length;
+        const numObstLines = this._orcaLines.length;
         const invTimeHorizon = 1.0 / this.timeHorizon;
         //Create agent ORCA lines.
         for (let i = 0; i < this._agentNeighbors.length; ++i) {
@@ -413,7 +391,7 @@ class Agent extends YUKA.Vehicle {
 
             } else {
                 //Collision. Project on cut-off circle of time timeStep.
-                const invTimeStep = 1.0 / 0.25;
+                const invTimeStep = 1.0 / TIME_STEP;
                 //Vector from cutoff center to relative velocity.
                 const w = relativeVelocity.clone().sub(relativePosition.clone().multiplyScalar(invTimeStep));
 
@@ -426,14 +404,14 @@ class Agent extends YUKA.Vehicle {
             }
 
             line.point = velocity.clone().add(u.clone().multiplyScalar(0.5));
-            this.orcaLines.push(line);
+            this._orcaLines.push(line);
 
         }
 
-        const lineFail = this.linearProgram2(this.orcaLines, velocity, false, newVelocity);
+        const lineFail = this.linearProgram2(this._orcaLines, velocity, false, newVelocity);
 
-        if (lineFail < this.orcaLines.length) {
-            this.linearProgram3(this.orcaLines, numObstLines, lineFail, newVelocity)
+        if (lineFail < this._orcaLines.length) {
+            this.linearProgram3(this._orcaLines, numObstLines, lineFail, newVelocity)
         }
 
         
@@ -445,9 +423,12 @@ class Agent extends YUKA.Vehicle {
         if (this != agent) {
 
             const distSq = absSq(this.position.clone().sub(agent.position));
+
+            if (agent.position.clone().sub(this.position).length() < this.neighborhoodRadius) this.neighbors.push(agent);
+
             if (distSq < this._rangeSq) {
 
-                if (this._agentNeighbors.length < agent.maxNeighbors) {
+                if (this._agentNeighbors.length < MAX_NEIGHBORS) {
                     this._agentNeighbors.push([distSq, agent]);
                 }
 
@@ -459,12 +440,12 @@ class Agent extends YUKA.Vehicle {
 
                 this._agentNeighbors[i] = [distSq, agent];
 
-                if (this._agentNeighbors.length == agent.maxNeighbors) {
+                if (this._agentNeighbors.length == MAX_NEIGHBORS) {
                     this._rangeSq = this._agentNeighbors[this._agentNeighbors.length - 1][0];
                 }
 
             }
-
+            
         }
 
     }
@@ -600,7 +581,7 @@ class Agent extends YUKA.Vehicle {
         for (let i = beginLine; i < lines.length; ++i) {
             if (det(lines[i].direction, lines[i].point.clone().sub(result)) > distance) {
                 //Result does not satisfy constraint of line i.
-                const projLines = this.orcaLines.slice(0, numObstLines);
+                const projLines = this._orcaLines.slice(0, numObstLines);
 
                 for (let j = numObstLines; j < i; ++j) {
 
@@ -632,9 +613,8 @@ class Agent extends YUKA.Vehicle {
                 const tempResult = result.clone();
 
                 if (this.linearProgram2(projLines, new THREE.Vector2(-lines[i].direction.y, lines[i].direction.x), true, result) < projLines.length) {
-                    //This should in principle not happen.  The result is by definition already in the feasible 
-                    //region of this linear program. If it fails, it is due to small floating point error, and
-                    //the current result is kept.
+                    //This should in principle not happen.  The result is by definition already in the feasible  region of this linear program.
+                    //If it fails, it is due to small floating point error, and the current result is kept.
                     result.copy(tempResult);
                 }
 
@@ -657,10 +637,10 @@ class Agent extends YUKA.Vehicle {
         //Update velocity
         this.velocity.add(acceleration.multiplyScalar(delta));
         //Make sure vehicle does not exceed maximum speed
-        // if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
-        //     this.velocity.normalize();
-        //     this.velocity.multiplyScalar(this.maxSpeed);
-        // }
+        if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
+            this.velocity.normalize();
+            this.velocity.multiplyScalar(this.maxSpeed);
+        }
         //Search for the best new velocity.
         const optimal_velocity = this.computeNewVelocity();
         this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
@@ -678,8 +658,7 @@ class Agent extends YUKA.Vehicle {
         }
         //Update position
         this.position.copy(target);
-        //If smoothing is enabled, the orientation (not the position!) of the vehicle is
-        //changed based on a post-processed velocity vector
+        //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
         const velocitySmooth = new YUKA.Vector3();
 
         if (this.updateOrientation === true && this.smoother !== null) {
@@ -724,7 +703,6 @@ class ObstacleTreeNode {
 }
 
 const RVO_EPSILON = 1e-8;
-const MAX_LEAF_SIZE = 10;
 
 class EntityManager  extends YUKA.EntityManager {
 
@@ -811,7 +789,7 @@ class EntityManager  extends YUKA.EntityManager {
 
         let best;
         let maxDist = -Infinity;
-        for (let i = 0; i < this.entities.length; i++) {
+        for (const entity of this.entities) {
 
             const {x, y} = this.navMesh.randomPoint();
 
@@ -1023,6 +1001,8 @@ class EntityManager  extends YUKA.EntityManager {
     }
 
     updateNeighborhood(entity) {
+        //Reset Yuka neighbors
+        entity.neighbors = [];
         //Agent::computeNeighbors
         entity._obstacleNeighbors = [];
         entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
@@ -1032,8 +1012,6 @@ class EntityManager  extends YUKA.EntityManager {
         entity._rangeSq = sqr(entity.boundingRadius);
         //KdTree::computeAgentNeighbors
         this.queryAgentTreeRecursive(entity, 0);
-        //Converting neighbors to Yuka
-        entity.neighbors = entity._agentNeighbors.map(neighbor => neighbor[1]);
 
     }
 

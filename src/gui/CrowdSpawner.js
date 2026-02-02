@@ -1,7 +1,7 @@
 
 import {GUI} from '../customs/GUI.js';
 
-const MAX_AGENTS = 500;
+import {MAX_AGENTS} from '../settings.js';
 
 export default class {
 
@@ -13,7 +13,7 @@ export default class {
         gui.domElement.style.position = 'static';
 
         const settings = {Population: MAX_AGENTS / 2.0};
-        this.populationController = gui.add(settings, 'Population', 1, MAX_AGENTS, 1).onChange( value => {
+        const populationController = gui.add(settings, 'Population', 1, MAX_AGENTS, 1).onFinishChange( value => {
             this.entityManager.activateAgents(value);
         });
 

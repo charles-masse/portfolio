@@ -5,6 +5,8 @@ import * as LIL from 'lil-gui';
 
 import Chart from 'chart.js/auto';
 
+import {COLORS} from '../settings.js';
+
 class GUI extends LIL.GUI {
 
     addFuzzy(object, property, fuzzyModule, min=0, max=1) {
@@ -29,11 +31,15 @@ class FuzzyController extends LIL.Controller {
 
     constructor(parent, object, property, fuzzyVariable, min, max) {
         super(parent, object, property, 'lil-color');
+
+        this.fuzzyVariable = fuzzyVariable;
         //Create the html element
         this.$display = document.createElement('canvas');
         this.$display.classList.add('lil-display');
         this.$widget.appendChild(this.$display);
         //Chart.js
+        const range = Math.abs(max-min);
+
         this.chart_settings = {
             type: 'line',
             data: {/*datasets goes here*/},
@@ -44,8 +50,8 @@ class FuzzyController extends LIL.Controller {
                     x: {
                         type: 'linear',
                         display: false,
-                        min: min,
-                        max: max,
+                        min: min - 0.01 * range,
+                        max: max + 0.01 * range,
                     },
                     y: {
                         display: false,
@@ -113,27 +119,31 @@ class FuzzyController extends LIL.Controller {
     }
 
     updateDisplay() {
-
+        
         const current_values = this.getValue();
 
-        let inputs = []
+        let data = []
 
-        for (const value_id in current_values) {
+        if (current_values) {
 
-            inputs.push(
-                {
-                    data: [
-                        {x: current_values[value_id], y: 0},
-                        {x: current_values[value_id], y: 1},
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#2cc9ff',
-                }
-            );
+            current_values.forEach((value, value_id) => {
+
+                data.push(
+                    {
+                        data: [
+                            {x: current_values[value_id], y: 0},
+                            {x: current_values[value_id], y: 1},
+                        ],
+                        borderWidth: 2,
+                        borderColor: COLORS[value_id],
+                    }
+                );
+
+            });
 
         }
 
-        this.chart_settings.data.datasets = [...inputs, ...this.sets];
+        this.chart_settings.data.datasets = [...data, ...this.sets];
         this.chart.update();
 
         return this;

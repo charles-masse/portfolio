@@ -6,8 +6,6 @@ import * as YUKA from 'yuka';
 import City from './loaders/City.js';
 import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader} from './loaders/Pictogram.js';
-
-import {EntityManager} from './customs/Agents.js';
 //Modules
 import DayNight from './modules/DayNight.js';
 import Pedestrians from './modules/Pedestrians.js';
@@ -40,12 +38,11 @@ async function main() {
     const pictogramShader = await PictogramShader(loadingManager);
     const navMesh = await NavMesh(loadingManager);
     //Modules
-    const entityManager = new EntityManager(navMesh);
-    const pedestrians = new Pedestrians(pictogramGeo, pictogramShader, entityManager, navMesh);
+    const pedestrians = new Pedestrians(pictogramGeo, pictogramShader, navMesh);
     const dayNight = new DayNight(canvas, city);
     //GUI
-    const crowdSpawner = new CrowdSpawner(entityManager);
-    const agentInfo = new AgentInfo(entityManager);
+    const crowdSpawner = new CrowdSpawner(pedestrians.entityManager);
+    const agentInfo = new AgentInfo(pedestrians.entityManager);
     const stats = new Stats();
     //Scene
     const scene = new THREE.Scene();
@@ -81,10 +78,8 @@ async function main() {
     function animate() {
 
         const updated_time = time.update();
-
-        entityManager.update(updated_time.getDelta());
         //Modules
-        pedestrians.update(updated_time.getElapsed());
+        pedestrians.update(updated_time.getDelta());
         dayNight.update(updated_time.getElapsed());
         //GUI
         agentInfo.update(updated_time.getElapsed());

@@ -26,11 +26,10 @@ class NavMesh extends YUKA.NavMesh {
 
         const triangulated = [];
 
-        const regions = this.regions;
-        for (let i = 0; i < regions.length; i++) {
+        for (const region of this.regions) {
 
             const contour = [];
-            regions[i].getContour(contour);
+            region.getContour(contour);
 
             const contour_2d = contour.map(p => new THREE.Vector2(p.x, p.z));
 
@@ -49,18 +48,17 @@ class NavMesh extends YUKA.NavMesh {
 
         const perimeter = [];
 
-        const regions = this.regions;
-        for (let r = 0; r < regions.length; r++) {
+        for (const region of this.regions) {
 
             const contour = [];
-            regions[r].getContour(contour);
+            region.getContour(contour);
 
             for (let i=0; i < contour.length; i++) {
 
                 const wall = new YUKA.LineSegment(contour[i], contour[(i + 1) % contour.length]);
                 wall.normal = wall.to.clone().sub(wall.from).cross(new YUKA.Vector3(0, 1, 0)).multiplyScalar(-1.0).normalize();
 
-                 perimeter.push(wall);
+                perimeter.push(wall);
 
             }
 

@@ -5,5 +5,3 @@ scenes/
 # Build
 dist/
 .vite/
-# RV02 source code
-RVO2/
