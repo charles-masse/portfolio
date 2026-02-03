@@ -26,7 +26,7 @@ async function main() {
             loadingScreen.addEventListener('transitionend', onTransitionEnd);
         },
         (itemUrl, itemsLoaded, itemsTotal) => {
-            console.log(`Loading asset (${itemsLoaded}/${itemsTotal}).`);
+            console.log(`Loading asset '${itemUrl}' (${itemsLoaded}/${itemsTotal}).`);
         },
         (url) => {
             console.error('Error loading', url);
@@ -47,15 +47,14 @@ async function main() {
     //Scene
     const scene = new THREE.Scene();
 
-    scene.add(city); //3D scene
-
+    scene.add(city);
     scene.add(pedestrians.objects)
     scene.add(dayNight.objects);
     scene.add(agentInfo.objects);
     //Camera
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
-    camera.position.set(20, 30, 30);
+    camera.position.set(20, 10, 30);
     camera.lookAt(0, 0, 0);
     //Renderer
     const renderer = new THREE.WebGLRenderer({

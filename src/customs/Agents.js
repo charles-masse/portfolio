@@ -114,8 +114,10 @@ class Obstacle {
 
 class Agent extends YUKA.Vehicle {
 
-    constructor() {
+    constructor(navMesh) {
         super();
+
+        this.navMesh = navMesh
 
         this.active = false;
         this.stateMachine = new YUKA.StateMachine(this);
@@ -128,8 +130,52 @@ class Agent extends YUKA.Vehicle {
     setActive(bool) {
 
         this.active = bool;
-        if (!bool) this.position.set(0, -9999, 0); //Shadow Realm
 
+        if (bool) {
+
+            const spawn_position = this.bestCandidate();
+            this.position.copy(spawn_position);
+
+            const pos = this.position;
+            const {x, y} = this.navMesh.randomPoint();
+            //Path
+            const points = this.navMesh.findPath(new YUKA.Vector3(pos.x, 0, pos.z), new YUKA.Vector3(x, 0, y));
+            const path = new YUKA.Path();
+            for (const point of points) {
+                path.add(point);
+            }
+
+            this.steering.behaviors[0].path = path;
+
+        } else {
+            this.position.set(0, -9999, 0); //Shadow Realm
+        }
+
+    }
+
+    bestCandidate() {
+
+        const entities = this.manager.entities.filter(entity => entity.active);
+
+        let best;
+        let maxDist = -Infinity;
+        for (let i = 0; i < 10; i++) {
+
+            const {x, y} = this.navMesh.randomPoint();
+            const pos = new YUKA.Vector3(x, 0, y);
+
+            const minDist = Math.min(...entities.map(entity => pos.distanceTo(entity.position)));
+
+            if (minDist > maxDist) {
+
+                maxDist = minDist;
+                best = pos;
+
+            }
+
+        }
+
+        return best;
     }
 
     computeNewVelocity() {
@@ -704,10 +750,8 @@ const RVO_EPSILON = 1e-8;
 
 class EntityManager  extends YUKA.EntityManager {
 
-    constructor(navMesh) {
+    constructor() {
         super();
-
-        this.navMesh = navMesh;
 
         this.obstacles = new Array();
 
@@ -766,13 +810,7 @@ class EntityManager  extends YUKA.EntityManager {
         while (active_agents.length != nb) {
 
             if (active_agents.length < nb) {
-
                 this.entities[active_agents.length].setActive(true);
-
-                const positions = this.entities.map(agent => agent.position);
-                const spawn_position = this.bestCandidate(positions, this.navMesh);
-                this.entities[active_agents.length].position.copy(spawn_position);
-
             } else {
                 this.entities[active_agents.length - 1].setActive(false);
             }
@@ -781,29 +819,6 @@ class EntityManager  extends YUKA.EntityManager {
 
         }
 
-    }
-
-    bestCandidate() {
-
-        let best;
-        let maxDist = -Infinity;
-        for (const entity of this.entities) {
-
-            const {x, y} = this.navMesh.randomPoint();
-
-            const pos = new YUKA.Vector3(x, 0, y);
-            const minDist = Math.min(...this.entities.map(entity => pos.distanceTo(entity.position)));
-
-            if (minDist > maxDist) {
-
-                maxDist = minDist;
-                best = pos;
-
-            }
-
-        }
-
-        return best;
     }
 
     removeObstacle(obstacle) {

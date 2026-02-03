@@ -39,6 +39,7 @@ async function PictogramShader(loadingManager) {
                     uniform vec2 atlasSize;
 
                     void main() {
+
                         float vertex_id = float(gl_VertexID);
                         vec3 anim_data = texture2D(
                             animationAtlas,
@@ -51,6 +52,7 @@ async function PictogramShader(loadingManager) {
                         vec3 anim_data_scaled = anim_data * 3.6485204696655273;
                         vec4 world_position = instanceMatrix * vec4(position + anim_data_scaled, 1.0);
                         gl_Position = projectionMatrix * modelViewMatrix * world_position;
+                    
                     }
                 `,
                 fragmentShader: `
@@ -69,6 +71,7 @@ async function PictogramShader(loadingManager) {
             });
 
             resolve(shader);
+
         });
 
     });

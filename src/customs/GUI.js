@@ -38,8 +38,9 @@ class FuzzyController extends LIL.Controller {
         this.$display.classList.add('lil-display');
         this.$widget.appendChild(this.$display);
         //Chart.js
-        const range = Math.abs(max-min);
+        this.sets = this.init_sets(fuzzyVariable);
 
+        const range = Math.abs(max-min);
         this.chart_settings = {
             type: 'line',
             data: {/*datasets goes here*/},
@@ -69,10 +70,7 @@ class FuzzyController extends LIL.Controller {
             }
         };
 
-        this.sets = this.init_sets(fuzzyVariable);
         this.chart = new Chart(this.$display, this.chart_settings);
-
-        this.updateDisplay();
 
     }
 
@@ -119,6 +117,10 @@ class FuzzyController extends LIL.Controller {
     }
 
     updateDisplay() {
+
+        const now = performance.now();
+        if (now - this._lastUpdate < 75) return this;
+        this._lastUpdate = now;
         
         const current_values = this.getValue();
 

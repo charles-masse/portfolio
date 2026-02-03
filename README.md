@@ -13,7 +13,7 @@ My website needs to run well on most computers and smartphones and the last thin
 Here's what I did to overcome these hurdles :
 
 ### Stylized over Realistic
-The *Uncanny Valley* is a though hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much ressources to make it look nice. 
+The *Uncanny Valley* is a tough hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much ressources to make it look nice. 
 
 I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
 
