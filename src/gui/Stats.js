@@ -75,7 +75,7 @@ var Stats = function () {
 
             if ( time >= prevTime + 1000 ) {
 
-                fpsPanel.update( ( frames * 1000 ) / ( time - prevTime ), 100 );
+                fpsPanel.update( ( frames * 1000 ) / ( time - prevTime ), 24 ); //MAX FPS
 
                 prevTime = time;
                 frames = 0;

@@ -117,7 +117,7 @@ export default class {
 
     update(time) {
 
-        const time_offset = time + START_TIME_SECS;
+        const time_offset = time.getElapsed() + START_TIME_SECS;
         //Sun
         this.sun.position.copy(this.sunOrbit(time_offset));
         this.sun_helper.update();

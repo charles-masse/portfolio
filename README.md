@@ -47,4 +47,3 @@ Like mentioned before, instances comes with a major constrain—they all need to
 
 ## Special Thanks
 - [Mugen87](https://github.com/Mugen87) for the [Yuka Game AI library](https://github.com/Mugen87/yuka)
-- [isaac-mason](https://github.com/isaac-mason) for their [NavMesh Generator](https://navmesh.isaacmason.com)

@@ -117,6 +117,8 @@ class Agent extends YUKA.Vehicle {
     constructor(navMesh) {
         super();
 
+        this.life = Math.round(Math.random() * 24);
+
         this.navMesh = navMesh
 
         this.active = false;
@@ -671,6 +673,8 @@ class Agent extends YUKA.Vehicle {
     }
 
     update(delta) {
+
+        this.life += 1;
         //Calculate steering force
         const steeringForce = new YUKA.Vector3();
         const acceleration = new YUKA.Vector3();

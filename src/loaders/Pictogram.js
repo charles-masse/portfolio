@@ -12,7 +12,9 @@ async function PictogramGeo(loadingManager) {
                 let mesh = null;
 
                 gltf.scene.traverse((child) => {
-                    if (child.isMesh) mesh = child;
+                    if (child.isMesh) {
+                        mesh = child;
+                    }
                 });
 
                 resolve(mesh.geometry);
@@ -29,7 +31,7 @@ async function PictogramShader(loadingManager) {
     const loaded = new Promise((resolve) => {
 
         const loader = new THREE.TextureLoader(loadingManager)
-            .load('./textures/animations.png', (animation_texture) => {
+            .load('./VAT/animations.png', (animation_texture) => {
 
             const shader = new THREE.ShaderMaterial({
                 vertexShader: `
@@ -40,16 +42,19 @@ async function PictogramShader(loadingManager) {
 
                     void main() {
 
+                        vec3 rest = vec3(0.5059214058523709);
+                        float amplitude = 0.9067607074975969;
+
                         float vertex_id = float(gl_VertexID);
                         vec3 anim_data = texture2D(
                             animationAtlas,
                             vec2(
                                 (vertex_id + 0.5) / atlasSize.x,
-                                (mod(48.0 - instance_frame + 0.5, atlasSize.y)) / atlasSize.y
+                                1. - mod((instance_frame + 0.5), atlasSize.y) / atlasSize.y
                             )
                         ).rgb;
 
-                        vec3 anim_data_scaled = anim_data * 3.6485204696655273;
+                        vec3 anim_data_scaled = (anim_data - rest) * amplitude;
                         vec4 world_position = instanceMatrix * vec4(position + anim_data_scaled, 1.0);
                         gl_Position = projectionMatrix * modelViewMatrix * world_position;
                     

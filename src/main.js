@@ -16,7 +16,6 @@ import Stats from './gui/stats.js';
 
 async function main() {
 
-    const time = new YUKA.Time();
     const canvas = document.querySelector('#canvas');
     //Loading Screen
     const loadingManager = new THREE.LoadingManager(
@@ -26,10 +25,10 @@ async function main() {
             loadingScreen.addEventListener('transitionend', onTransitionEnd);
         },
         (itemUrl, itemsLoaded, itemsTotal) => {
-            console.log(`Loading asset '${itemUrl}' (${itemsLoaded}/${itemsTotal}).`);
+            console.log(`Loading '${itemUrl}' (${itemsLoaded}/${itemsTotal})`);
         },
         (url) => {
-            console.error('Error loading', url);
+            console.error(`Error loading '${url}'`);
         }
     );
     //Loaders
@@ -54,7 +53,7 @@ async function main() {
     //Camera
     const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
     camera.setFocalLength(14.872)
-    camera.position.set(20, 10, 30);
+    camera.position.set(25, 25, 25);
     camera.lookAt(0, 0, 0);
     //Renderer
     const renderer = new THREE.WebGLRenderer({
@@ -65,7 +64,6 @@ async function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
-    renderer.setAnimationLoop(animate);
     //Listeners
     window.addEventListener('resize', onWindowResize, false);
     
@@ -73,16 +71,38 @@ async function main() {
         const click = getClick(event);
         if (click) agentInfo.selectAgent(click.point);
     });
+    //Clock
+    const clock = new THREE.Clock();
+
+    const time = new YUKA.Time();
+    // time.setFixedDelta(24 / 1000.);
+    // time.enableFixedDelta();
+
+    let accumulator = 0;
+    const step = 1000 / 24.;
+
+    animate();
 
     function animate() {
 
-        const updated_time = time.update();
-        //Modules
-        pedestrians.update(updated_time.getDelta());
-        dayNight.update(updated_time.getElapsed());
-        //GUI
-        agentInfo.update(updated_time.getElapsed());
-        stats.update();
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta() * 1000;
+        accumulator += delta;
+
+        if (accumulator >= step) {
+
+            const updated_time = time.update()
+            //Modules
+            pedestrians.update(updated_time);
+            dayNight.update(updated_time);
+            //GUI
+            agentInfo.update();
+            stats.update();
+
+            accumulator -= step * Math.floor(accumulator / step);
+
+        }
 
         renderer.render(scene, camera);
 

@@ -1,5 +1,5 @@
 //Crowd
-export const MAX_AGENTS = 500;
+export const MAX_AGENTS = 2000;
 //KdTree
 export const MAX_NEIGHBORS = 10;
 export const MAX_LEAF_SIZE = 10;

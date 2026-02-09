@@ -133,7 +133,7 @@ export default class {
 
     }
 
-    update(time) {
+    update() {
 
         if (this.selected_agent) {
 
