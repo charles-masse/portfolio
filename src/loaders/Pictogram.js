@@ -1,6 +1,8 @@
 
 import * as THREE from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {GLTFLoader,} from 'three/addons/loaders/GLTFLoader.js';
+
+import {MAX_AGENTS,} from '../settings.js';
 
 async function PictogramGeo(loadingManager) {
 
@@ -17,7 +19,16 @@ async function PictogramGeo(loadingManager) {
                     }
                 });
 
-                resolve(mesh.geometry);
+                const geo = mesh.geometry;
+                //For VAT setup
+                geo.setAttribute('current_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+                geo.setAttribute('length', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+                geo.setAttribute('origin', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+                geo.setAttribute('amplitude', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+
+                // geo.setAttribute('textureStart', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+
+                resolve(geo);
             },
 
         );
@@ -35,7 +46,10 @@ async function PictogramShader(loadingManager) {
 
             const shader = new THREE.ShaderMaterial({
                 vertexShader: `
-                    attribute float instance_frame;
+                    attribute float current_frame;
+                    attribute float length;
+                    attribute float origin;
+                    attribute float amplitude;
 
                     uniform sampler2D animationAtlas;
                     uniform vec2 atlasSize;
@@ -50,7 +64,7 @@ async function PictogramShader(loadingManager) {
                             animationAtlas,
                             vec2(
                                 (vertex_id + 0.5) / atlasSize.x,
-                                1. - mod((instance_frame + 0.5), atlasSize.y) / atlasSize.y
+                                1. - mod((current_frame + 0.5), atlasSize.y) / atlasSize.y
                             )
                         ).rgb;
 
@@ -84,4 +98,7 @@ async function PictogramShader(loadingManager) {
     return loaded;
 }
 
-export {PictogramGeo, PictogramShader};
+export {
+    PictogramGeo,
+    PictogramShader,
+};

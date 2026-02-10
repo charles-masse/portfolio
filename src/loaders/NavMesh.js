@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 
-import {NavMeshLoader} from '../customs/NavMesh.js'
+import {NavMeshLoader,} from '../extensions/NavMesh.js'
 
 export default function(loadingManager, path='models/navmesh.gltf') {
 

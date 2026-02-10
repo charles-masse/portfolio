@@ -3,9 +3,9 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {FuzzyVariable, FuzzyModule, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet} from '../customs/Fuzzy.js';
+import {FuzzyVariable, FuzzyModule, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet,} from '../extensions/Fuzzy.js';
 
-import {FEELER_ANGLE} from '../settings.js';
+import {FEELER_ANGLE,} from '../settings.js';
 
 // function radiansToDegrees(radians) {
 //   return radians * (180 / Math.PI);

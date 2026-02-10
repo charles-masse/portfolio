@@ -3,9 +3,9 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {GUI} from '../customs/GUI.js';
+import {GUI,} from '../extensions/GUI.js';
 
-import {COLORS, MAX_NEIGHBORS} from '../settings.js';
+import {COLORS, MAX_NEIGHBORS,} from '../settings.js';
 
 export default class {
 

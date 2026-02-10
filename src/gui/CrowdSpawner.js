@@ -1,7 +1,7 @@
 
-import {GUI} from '../customs/GUI.js';
+import {GUI,} from '../extensions/GUI.js';
 
-import {MAX_AGENTS} from '../settings.js';
+import {MAX_AGENTS,} from '../settings.js';
 
 export default class {
 

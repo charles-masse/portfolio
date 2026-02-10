@@ -5,7 +5,7 @@ import * as LIL from 'lil-gui';
 
 import Chart from 'chart.js/auto';
 
-import {COLORS} from '../settings.js';
+import {COLORS,} from '../settings.js';
 
 class GUI extends LIL.GUI {
 

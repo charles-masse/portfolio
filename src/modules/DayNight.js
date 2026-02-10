@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 
-import {START_TIME_SECS, SUN_SPEED, DAY_EVENTS} from '../settings.js';
+import {START_TIME_SECS, SUN_SPEED, DAY_EVENTS,} from '../settings.js';
 
 export function lerpColor(c1, c2, t) {
 
@@ -25,7 +25,7 @@ export default class {
 
         this.sun = new THREE.DirectionalLight(0xffffff, 20)
         this.sun.castShadow = true
-        this.sun.shadow.radius = 2
+        // this.sun.shadow.radius = 2
         this.sun.shadow.bias = -0.001
         this.sun.shadow.mapSize.set(2048, 2048);
 
