@@ -19,9 +19,22 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
+import {AgentStateMachine,} from '../extensions/States.js';
+
 import {absSq, det, leftOf, sqr, distSqPointLineSegment, abs,} from '../utilities/RVO2.js';
 
 import {MAX_NEIGHBORS, TIME_STEP, RVO_EPSILON,} from '../settings.js';
+
+class Line {
+
+    constructor() {
+
+        this.point = null;
+        this.direction = null;
+
+    }
+
+}
 
 function renderAgent(vehicle, renderComponent) {
     //Geo
@@ -35,17 +48,6 @@ function renderAgent(vehicle, renderComponent) {
 
 }
 
-class Line {
-
-    constructor() {
-
-        this.point = null;
-        this.direction = null;
-
-    }
-
-}
-
 export default class extends YUKA.Vehicle {
 
     constructor(navMesh, id) {
@@ -54,7 +56,7 @@ export default class extends YUKA.Vehicle {
         this.navMesh = navMesh
         this.agentId = id
 
-        this.stateMachine = new YUKA.StateMachine(this);
+        this.stateMachine = new AgentStateMachine(this);
 
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
@@ -465,8 +467,6 @@ export default class extends YUKA.Vehicle {
     }
 
     update(delta) {
-
-        this.stateMachine.update();
         //Calculate steering force
         const steeringForce = new YUKA.Vector3();
         const acceleration = new YUKA.Vector3();
@@ -484,33 +484,27 @@ export default class extends YUKA.Vehicle {
         //Search for the best new velocity.
         const optimal_velocity = this.computeNewVelocity();
         this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
-        //Calculate displacement
-        const displacement = new YUKA.Vector3();
-
-        displacement.copy(this.velocity).multiplyScalar(delta);
-        //Calculate target position
-        const target = new YUKA.Vector3();
-
-        target.copy(this.position).add(displacement);
-        //Update the orientation if the vehicle has a non zero velocity
-        if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-            this.lookAt(target);
-        }
-        //Update position
-        this.position.copy(target);
+        //Find best clip for the job
+        //TODO
+        this.stateMachine.update();
+        const current_state = this.stateMachine.currentState;
+        //Update the orientation and position TODO blended transforms
+        this.lookAt(this.position.clone().add(current_state.direction));
+        this.position.add(current_state.locomotion.clone().multiplyScalar(delta));
         //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
-        const velocitySmooth = new YUKA.Vector3();
+        //KEEP FOR NOW, MIGHT BE USEFUL
+        // const velocitySmooth = new YUKA.Vector3();
 
-        if (this.updateOrientation === true && this.smoother !== null) {
+        // if (this.updateOrientation === true && this.smoother !== null) {
 
-            this.smoother.calculate(this.velocity, velocitySmooth);
+        //     this.smoother.calculate(this.velocity, velocitySmooth);
 
-            displacement.copy(velocitySmooth).multiplyScalar(delta);
-            target.copy(this.position).add(displacement);
+        //     displacement.copy(velocitySmooth).multiplyScalar(delta);
+        //     target.copy(this.position).add(displacement);
 
-            this.lookAt(target);
+        //     this.lookAt(target);
 
-        }
+        // }
 
         return this;
     }

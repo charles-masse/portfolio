@@ -8,8 +8,8 @@ import AgentManager from '../extensions/AgentManager.js';
 import {AgentState,} from '../extensions/States.js';
 import {WallAvoidanceBehavior,} from '../extensions/Steering.js'
 
-// import {createGraphHelper,} from '../helpers/GraphHelper.js'
-// import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
+import {createGraphHelper,} from '../helpers/GraphHelper.js'
+import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
 
@@ -37,11 +37,12 @@ export default class {
         this.entityManager = new AgentManager();
 
         this.objects = new THREE.Group();
-
-        // const navMeshHelper = createConvexRegionHelper(navMesh);
-        // const graphHelper = createGraphHelper(navMesh.graph, 0.25);
+        //Helpers
+        const navMeshHelper = createConvexRegionHelper(navMesh);
+        const graphHelper = createGraphHelper(navMesh.graph, 0.25);
+        
         // this.objects.add(navMeshHelper, graphHelper);
-
+        //Instance
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, agent_shader, MAX_AGENTS);
         this.objects.add(this.instancedMesh);
         //Link each instance to their individual agent
@@ -49,11 +50,10 @@ export default class {
 
             const agent = new Agent(navMesh, i);
             agent.setRenderComponent(this.instancedMesh);
-            
+            //Settings
             agent.neighborhoodRadius = 2;
-            agent.maxSpeed = 0.35;
             agent.boundingRadius = 0.35;
-            //RVO2 Settings
+            //ORCA
             agent.timeHorizon = 2;
             agent.timeHorizonObst = 3;
             //Steering
@@ -65,12 +65,13 @@ export default class {
             agent.steering.add(wall);
             //States
             agent.stateMachine.add('walk', new AgentState());
+
             agent.stateMachine.changeTo('walk');
 
             this.entityManager.addAgent(agent);
 
         }
-        //ORCA Obstacles
+        //ORCA Obstacles TODO
         this.entityManager.addObstacle([
             new THREE.Vector2(-5, 10),
             new THREE.Vector2(5, 10),

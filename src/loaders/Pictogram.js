@@ -25,8 +25,7 @@ async function PictogramGeo(loadingManager) {
                 geo.setAttribute('length', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
                 geo.setAttribute('origin', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
                 geo.setAttribute('amplitude', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-
-                // geo.setAttribute('textureStart', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+                geo.setAttribute('textureStart', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
 
                 resolve(geo);
             },
@@ -42,7 +41,7 @@ async function PictogramShader(loadingManager) {
     const loaded = new Promise((resolve) => {
 
         const loader = new THREE.TextureLoader(loadingManager)
-            .load('./VAT/animations.png', (animation_texture) => {
+            .load('./VATs/animations.png', (animation_texture) => {
 
             const shader = new THREE.ShaderMaterial({
                 vertexShader: `

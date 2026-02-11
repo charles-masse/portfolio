@@ -8,6 +8,7 @@ import NavMesh from './loaders/NavMesh.js';
 import {PictogramGeo, PictogramShader,} from './loaders/Pictogram.js';
 //Modules
 import DayNight from './modules/DayNight.js';
+import MovieScreen from './modules/MovieScreen.js';
 import Pedestrians from './modules/Pedestrians.js';
 //GUI
 import CrowdSpawner from './gui/CrowdSpawner.js';
@@ -36,6 +37,7 @@ const pictogramShader = await PictogramShader(loadingManager);
 const navMesh = await NavMesh(loadingManager);
 //Modules
 const pedestrians = new Pedestrians(pictogramGeo, pictogramShader, navMesh);
+const movieScreen = new MovieScreen();
 const dayNight = new DayNight(canvas, city);
 //GUI
 const crowdSpawner = new CrowdSpawner(pedestrians.entityManager);
@@ -43,14 +45,16 @@ const agentInfo = new AgentInfo(pedestrians.entityManager);
 const stats = new Stats();
 //Scene
 const scene = new THREE.Scene();
+
 scene.add(city);
-scene.add(pedestrians.objects)
+scene.add(movieScreen.objects);
+scene.add(pedestrians.objects);
 scene.add(dayNight.objects);
 scene.add(agentInfo.objects);
 //Camera
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
 camera.setFocalLength(14.872)
-camera.position.set(25, 5, 25);
+camera.position.set(20, 5, 20);
 camera.lookAt(0, 0, 0);
 //Renderer
 const renderer = new THREE.WebGLRenderer({
