@@ -1,3 +1,4 @@
+[![Deploy to GitHub Pages](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml)
 # Portfolio [WIP]
 I always wanted an interactive Crowd portfolio where, instead of being just a few seconds of curated footage, visitors could actually *stress-test* the behaviors I usually use in my crowds. I feel it would let visitors see, firsthand, the intricacy in the work I'm producing.
 
@@ -24,9 +25,9 @@ For the environment, I went with something similar. Super minimalistic shapes to
 ![A minimalist city with hard shadows](/../gh-images/city.jpg)
 
 ### Instanced characters
-A more technical way to handle a large number of objects in **Three.js** is to use a single [instanced mesh](https://threejs.org/docs/?q=instancedMes#InstancedMesh) with X instances, instead of cloning the same object X times.
+A more technical way to handle a large number of objects in **Three.js** is to use a single *Instanced Mesh* with X instances, instead of cloning the same object X times.
 
-Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl) vs 10 000 instances of [Suzanne](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl):
+Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl) vs 10 000 instances of Suzanne:
 
 |                     | Cloned (min-max)  | Instanced (min-max) |
 |---------------------|-------------------|---------------------|
@@ -38,11 +39,20 @@ As you can see, the max FPS is nearly doubled with the instances, they load 10x 
 The only problem, every instanced characters must look the same and play the same animation...
 
 ### GL Shaders
-Like mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where custom shaders come into play.
+Like I mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same animation. This is where custom shaders come into play.
+
+By overriding each agent's vertices position in the *Vertex Shader*, you can have everyone play a different clip. Additionally, to lower the CPU's calculation load, the vertex animations can be read by the GPU through a texture where each pixel's RGB values represent a XYZ transforms :
+
+![The vertex animation texture](/public/VATs/animations.png)
 
 ## An interesting environment
 
 ### Showcase the typical crowd behaviors
+- Pedestrians
+- Stairs
+- Spectators
+- Flock
+- Traffic
 
 ### Be interesting on phones and computers
 
