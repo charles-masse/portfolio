@@ -1,5 +1,4 @@
-[![Deploy to GitHub Pages](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml)
-# Portfolio [WIP]
+# Portfolio [WIP] ![Dynamic Regex Badge](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fgithub.com%2Fcharles-masse%2Fportfolio%2Fblob%2Fmain%2Findex.html&search=Version%5Cs(%5B0-9%5D%2B%5C.%5B0-9%5D%2B%5Ba-z%5D%3F%5Cs)&replace=%241&style=flat&label=Version&labelColor=%23333A41) [![Deploy to GitHub Pages](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/charles-masse/portfolio/actions/workflows/deploy.yml)
 I always wanted an interactive Crowd portfolio where, instead of being just a few seconds of curated footage, visitors could actually *stress-test* the behaviors I usually use in my crowds. I feel it would let visitors see, firsthand, the intricacy in the work I'm producing.
 
 ## Goals
