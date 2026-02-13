@@ -13,7 +13,7 @@ import Pedestrians from './modules/Pedestrians.js';
 //GUI
 import CrowdSpawner from './gui/CrowdSpawner.js';
 import AgentInfo from './gui/AgentInfo.js';
-import Stats from './gui/stats.js';
+import Stats from './gui/Stats.js';
 
 const canvas = document.querySelector('#canvas');
 //Loading Screen
@@ -54,7 +54,7 @@ scene.add(agentInfo.objects);
 //Camera
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
 camera.setFocalLength(14.872)
-camera.position.set(20, 5, 20);
+camera.position.set(15, 7.5, 25);
 camera.lookAt(0, 0, 0);
 //Renderer
 const renderer = new THREE.WebGLRenderer({
