@@ -46,7 +46,7 @@ class BlendSpaces {
 
     }
 
-    getClipWeights(velocity) {
+    getClipWeights(local_velocity) {
         //Find the triangle where the locomotion resides
         let results = {};
         
@@ -58,7 +58,7 @@ class BlendSpaces {
                 this.clips[this.triangles[i+2]].locomotion
             );
 
-            if (triangle.containsPoint(velocity)) {
+            if (triangle.containsPoint(local_velocity)) {
                 results = {triangle:triangle, id:i};
                 break;
             }
@@ -68,7 +68,7 @@ class BlendSpaces {
         let barycentric_coords = new THREE.Vector3();
 
         if (results) {
-            results.triangle.getBarycoord(velocity, barycentric_coords);
+            results.triangle.getBarycoord(local_velocity, barycentric_coords);
 
             return {
                 clips : [

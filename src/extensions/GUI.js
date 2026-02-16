@@ -1,7 +1,11 @@
 
 import * as THREE from 'three';
 
+import * as YUKA from 'yuka';
+
 import * as LIL from 'lil-gui';
+
+import {worldToLocal,} from '../utilities/math.js';
 
 //'#ebebeb' White
 //'#424242' Grey
@@ -100,8 +104,8 @@ class DelaunayController extends LIL.Controller {
         min_z = THREE.MathUtils.lerp(center_y,  min_z, 1.5);
         //Map coords on 100px display
         const scaled_points = blendSpaces.clips.map(point => new THREE.Vector2(
-            THREE.MathUtils.inverseLerp(min_x, max_x, point.locomotion.x) * 100,
-            THREE.MathUtils.inverseLerp(min_z, max_z, point.locomotion.z) * 100)
+            THREE.MathUtils.inverseLerp(max_x, min_x, point.locomotion.x) * 100,
+            THREE.MathUtils.inverseLerp(max_z, min_z, point.locomotion.z) * 100)
         );
         //Draw triangles
         const triangles = [];
@@ -122,10 +126,13 @@ class DelaunayController extends LIL.Controller {
             this.drawClip(scaled_points[i], blendSpaces.clips[i].name);
         }
 
+        const direction = agent.getDirection(new YUKA.Vector3());
+        const velocity = worldToLocal(agent.velocity, direction);
+
         this.drawClip(
             new THREE.Vector2(
-                THREE.MathUtils.inverseLerp(min_x, max_x, agent.velocity.x) * 100,
-                THREE.MathUtils.inverseLerp(min_z, max_z, agent.velocity.z) * 100
+                THREE.MathUtils.inverseLerp(max_x, min_x, velocity.x) * 100,
+                THREE.MathUtils.inverseLerp(max_z, min_z, velocity.z) * 100
             ),
             '',
             '#2cc9ff'

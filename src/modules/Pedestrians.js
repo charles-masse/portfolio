@@ -51,8 +51,8 @@ export default class {
             agent.neighborhoodRadius = 2;
             agent.boundingRadius = 0.35;
             //ORCA
-            agent.timeHorizon = 2;
-            agent.timeHorizonObst = 3;
+            agent.timeHorizon = 4;
+            agent.timeHorizonObst = 1;
             //Steering
             const follow = new YUKA.FollowPathBehavior();
             agent.steering.add(follow);
@@ -60,13 +60,6 @@ export default class {
             const wall = new WallAvoidanceBehavior(navMesh);
             wall.weight = 0.75;
             agent.steering.add(wall);
-            // //States
-            // agent.stateMachine.add('idle', new AgentState(new YUKA.Vector3(0, 0, 0)));
-            // agent.stateMachine.add('walkFront', new AgentState(new YUKA.Vector3(0, 0, 0.25)));
-            // agent.stateMachine.add('walk45L', new AgentState(new YUKA.Vector3(0.125, 0, 0.125)));
-            // agent.stateMachine.add('walk45R', new AgentState(new YUKA.Vector3(-0.125, 0, 0.125)));
-
-            // agent.stateMachine.changeTo('idle'); //DELETE ME
 
             this.entityManager.addAgent(agent);
 

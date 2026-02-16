@@ -58,21 +58,38 @@ export default class extends YUKA.Vehicle {
         this.navMesh = navMesh
         this.agentId = id
 
+        this.smoother = new YUKA.Smoother(20);
         // this.stateMachine = new AgentStateMachine(this);
+        
         this.blendSpaces = new BlendSpaces(this);
 
         const idle = new LocomotionClip('idle');
-        const walk = new LocomotionClip('walk');
-        walk.locomotion.set(0, 0, -2);
-        const walk45R = new LocomotionClip('walk45R');
-        walk45R.locomotion.set(1.125, 0, -1.125);
-        const walk45L = new LocomotionClip('walk45L');
-        walk45L.locomotion.set(-1.125, 0, -1.125);
-
         this.blendSpaces.add(idle);
+
+        const walk = new LocomotionClip('walk');
+        walk.locomotion.set(0, 0, 1.75);
         this.blendSpaces.add(walk);
+
+        const walk45R = new LocomotionClip('walk45R');
+        walk45R.locomotion.set(-1.125, 0, 1.125);
         this.blendSpaces.add(walk45R);
+
+        const walk45L = new LocomotionClip('walk45L');
+        walk45L.locomotion.set(1.125, 0, 1.125);
         this.blendSpaces.add(walk45L);
+
+        const walk90L = new LocomotionClip('walk90L');
+        walk90L.locomotion.set(1, 0, 0);
+        this.blendSpaces.add(walk90L);
+
+        const walk90R = new LocomotionClip('walk90R');
+        walk90R.locomotion.set(-1, 0, 0);
+        this.blendSpaces.add(walk90R);
+
+        const walk180R = new LocomotionClip('walk180R');
+        walk180R.locomotion.set(0, 0, -0.5);
+        this.blendSpaces.add(walk180R);
+
 
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
