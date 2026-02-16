@@ -1,6 +1,8 @@
 
 import * as YUKA from 'yuka';
 
+import {radiansToDegrees,} from '../utilities/math.js';
+
 class AgentStateMachine extends YUKA.StateMachine {
 
     update() {
@@ -9,18 +11,8 @@ class AgentStateMachine extends YUKA.StateMachine {
         if (this.previousState !== null && this.previousState.current_blendFrame) {
             this.previousState.execute();
         }
-        //TODO blended speed
-        this.owner.maxSpeed = this.currentState.locomotion.length();
-
-    }
-
-    getBlendWeight() {
-
-    }
-
-    getBestClip() {
-
-        console.log(this);
+        
+        this.owner.maxSpeed = this.currentState.locomotion.length(); //TODO blended speed
 
     }
 
@@ -28,7 +20,7 @@ class AgentStateMachine extends YUKA.StateMachine {
 
 class AgentState extends YUKA.State {
 
-    constructor() {
+    constructor(locomotion) {
         super();
         //Accumulators
         this.current_frame = 0;
@@ -38,7 +30,7 @@ class AgentState extends YUKA.State {
         //TODO transition frames, sync, etc.
         //Steering
         this.direction = new YUKA.Vector3(0, 0, 1);
-        this.locomotion = new YUKA.Vector3(0, 0, 0);
+        this.locomotion = locomotion;
         //VAT
         this.length = 24; //When to loopback the clip
         this.origin = 0; //The 'zero' value
@@ -58,7 +50,7 @@ class AgentState extends YUKA.State {
     execute(owner) {
 
         this.current_frame += 1;
-
+        //Blend frames
         if (this.current_blendFrame && owner.stateMachine.previousState) {
             this.current_blendFrame -= 1;
         }

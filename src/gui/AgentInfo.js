@@ -49,23 +49,10 @@ export default class {
         this.rotY = rot.add(controller_values, 'Dir y').disable();
         this.rotZ = rot.add(controller_values, 'Dir z').disable();
 
+        const anims = this.gui.addFolder('Animations').hide();
+        this.test = anims.addDelaunay(this.entities[0].blendSpaces, 'Blend Spaces');
+
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
-
-        const behaviors = this.entities[0].steering.behaviors;
-
-        // const separation = this.gui.addFolder('Separation').hide();
-
-        // const separation_flvs = behaviors[3].fuzzy.flvs
-        // this.separation_direction = separation.addFuzzy(controller_values, '[I] Direction', separation_flvs.get('direction'), -180, 180).disable();
-        // this.separation_distance = separation.addFuzzy(controller_values, '[I] Distance', separation_flvs.get('distance'), 0, 3).disable();
-        // this.separation_weight = separation.addFuzzy(controller_values, '[O] Weight', separation_flvs.get('weight'), 0, 1).disable();
-
-        // const cohesion = this.gui.addFolder('Cohesion').hide();
-
-        // const cohesion_flvs = behaviors[4].fuzzy.flvs
-        // this.cohesion_facing = cohesion.addFuzzy(controller_values, '[I] Facing Angle', cohesion_flvs.get('facingAngle'), -180, 180).disable();
-        // this.cohesion_direction = cohesion.addFuzzy(controller_values, '[I] Direction', cohesion_flvs.get('direction'), -180, 180).disable();
-        // this.cohesion_weight = cohesion.addFuzzy(controller_values, '[O] Weight', cohesion_flvs.get('weight'), 0, 1).disable();
 
     }
 
@@ -139,6 +126,8 @@ export default class {
 
             const agent = this.entities[this.selected_agent];
 
+            this.test.setValue(agent);
+
             this.posX.setValue(agent.position.x.toFixed(4));
             this.posY.setValue(agent.position.y.toFixed(4));
             this.posZ.setValue(agent.position.z.toFixed(4));
@@ -147,16 +136,6 @@ export default class {
             this.rotX.setValue(direction.x.toFixed(4));
             this.rotY.setValue(direction.y.toFixed(4));
             this.rotZ.setValue(direction.z.toFixed(4));
-            //Fuzzy
-            // const separation = agent.steering.behaviors[3].fuzzy.flvs;
-            // this.separation_direction.setValue(separation.get('direction').io);
-            // this.separation_distance.setValue(separation.get('distance').io);
-            // this.separation_weight.setValue(separation.get('weight').io);
-
-            // const cohesion = agent.steering.behaviors[4].fuzzy.flvs;
-            // this.cohesion_facing.setValue(cohesion.get('facingAngle').io);
-            // this.cohesion_direction.setValue(cohesion.get('direction').io);
-            // this.cohesion_weight.setValue(cohesion.get('weight').io);
             //Lines
             for (const line in this.neighbor_lines) {
                 if (line in agent.neighbors) {

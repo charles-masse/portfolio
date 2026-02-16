@@ -1,16 +1,17 @@
 
-import * as YUKA from 'yuka';
+import * as THREE from 'three';
 
 import * as LIL from 'lil-gui';
 
-import Chart from 'chart.js/auto';
-
-import {COLORS,} from '../settings.js';
+//'#ebebeb' White
+//'#424242' Grey
+//'#2cc9ff' Blue
+//'#a2db3c' Green
 
 class GUI extends LIL.GUI {
 
-    addFuzzy(object, property, fuzzyModule, min=0, max=1) {
-        return new FuzzyController(this, object, property, fuzzyModule, min, max);
+    addDelaunay(object, property) {
+        return new DelaunayController(this, object, property).disable();
     }
 
     addText(property) {
@@ -27,133 +28,118 @@ class GUI extends LIL.GUI {
 
 }
 
-class FuzzyController extends LIL.Controller {
+class DelaunayController extends LIL.Controller {
 
-    constructor(parent, object, property, fuzzyVariable, min, max) {
+    constructor(parent, object, property) {
         super(parent, object, property, 'lil-color');
 
-        this.fuzzyVariable = fuzzyVariable;
-        //Create the html element
         this.$display = document.createElement('canvas');
         this.$display.classList.add('lil-display');
+        this.$display.width = 100;
+        this.$display.height = 100;
+        this.$display.style.width = '100%';
+        this.$display.style.height = '100%';
+        
         this.$widget.appendChild(this.$display);
-        //Chart.js
-        this.sets = this.init_sets(fuzzyVariable);
 
-        const range = Math.abs(max-min);
-        this.chart_settings = {
-            type: 'line',
-            data: {/*datasets goes here*/},
-            options: {
-                animation: false,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'linear',
-                        display: false,
-                        min: min - 0.01 * range,
-                        max: max + 0.01 * range,
-                    },
-                    y: {
-                        display: false,
-                        min: 0,
-                        max: 1,
-                    }
-                },
-                plugins: {
-                    legend: {display: false},
-                    tooltip: {enabled: false},
-                },
-                elements: {
-                    point: {radius: 0}
-                },
-            }
-        };
+        this.ctx = this.$display.getContext('2d');
 
-        this.chart = new Chart(this.$display, this.chart_settings);
+        // this.draw();
+
+        return this;
 
     }
 
-    init_sets(fuzzyVariable) {
+    drawClip(point, name='', color='#ebebeb') {
 
-        const sets_array = [];
+        this.ctx.fillStyle = color;
 
-        for (const set_id in fuzzyVariable.fuzzySets) {
+        this.ctx.beginPath();
+        this.ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+        this.ctx.fill();
 
-            const set_data = fuzzyVariable.fuzzySets[set_id];
-            //Display the right graph type
-            let y_value = null;
-            if (set_data instanceof YUKA.LeftShoulderFuzzySet) {
-                y_value = {left: 1, midpoint: 1, right: 0};
+        this.ctx.font = '9px monospace';
+        this.ctx.textAlign = 'center';
 
-            } else if (set_data instanceof YUKA.RightShoulderFuzzySet) {
-                y_value = {left: 0, midpoint: 1, right: 1};
+        this.ctx.fillText(name, point.x, point.y - 4.5);
 
-            } else if (set_data instanceof YUKA.TriangularFuzzySet) {
-                y_value = {left: 0, midpoint: 1, right: 0};
+    }
 
-            }
-            
-            const color = set_data.color;
+    drawTriangle(coords) {
 
-            sets_array.push(
+        this.ctx.strokeStyle = '#424242';
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(coords[0].x, coords[0].y);
+        this.ctx.lineTo(coords[1].x, coords[1].y);
+        this.ctx.lineTo(coords[2].x, coords[2].y);
+        this.ctx.closePath();
+        this.ctx.stroke();
 
-                {
-                    data: [
-                        {x: set_data.left, y: y_value.left},
-                        {x: set_data.midpoint, y: y_value.midpoint},
-                        {x: set_data.right, y: y_value.right},
-                    ],
-                    fill: 'origin',
-                    borderWidth: 1,
-                    borderColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                    backgroundColor: `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`,
-                }
-
-            );
-        }
-
-        return sets_array;
     }
 
     updateDisplay() {
 
-        const now = performance.now();
-        if (now - this._lastUpdate < 75) return this;
-        this._lastUpdate = now;
-        
-        const current_values = this.getValue();
+        this.ctx.clearRect(0,0,100,100);
 
-        let data = []
+        const agent = this.getValue();
+        const blendSpaces = agent.blendSpaces;
+        //Find min and max values
+        const points_x = blendSpaces.clips.map(point => point.locomotion.x);
+        let max_x = Math.max(...points_x);
+        let min_x = Math.min(...points_x);
 
-        if (current_values) {
+        const points_y = blendSpaces.clips.map(point => point.locomotion.z);
+        let max_y = Math.max(...points_y);
+        let min_y = Math.min(...points_y);
+        //Scale coords for display
+        const center_x = (min_x + max_x) / 2;
+        const center_y = (min_y + max_y) / 2;
 
-            current_values.forEach((value, value_id) => {
+        max_x = THREE.MathUtils.lerp(center_x,  max_x, 1.5);
+        min_x = THREE.MathUtils.lerp(center_x,  min_x, 1.5);
 
-                data.push(
-                    {
-                        data: [
-                            {x: current_values[value_id], y: 0},
-                            {x: current_values[value_id], y: 1},
-                        ],
-                        borderWidth: 2,
-                        borderColor: COLORS[value_id],
-                    }
-                );
+        max_y = THREE.MathUtils.lerp(center_y,  max_y, 1.25); //Bottom doesn't have labels
+        min_y = THREE.MathUtils.lerp(center_y,  min_y, 1.5);
+        //Map coords on 100px display
+        const scaled_points = blendSpaces.clips.map(point => new THREE.Vector2(
+            THREE.MathUtils.inverseLerp(min_x, max_x, point.locomotion.x) * 100,
+            THREE.MathUtils.inverseLerp(min_y, max_y, point.locomotion.z) * 100)
+        );
+        //Draw triangles
+        const triangles = [];
 
-            });
+        for (let i = 0; i < blendSpaces.triangles.length; i += 3) {
+
+            triangles.push([
+                scaled_points[blendSpaces.triangles[i]],
+                scaled_points[blendSpaces.triangles[i + 1]],
+                scaled_points[blendSpaces.triangles[i + 2]]
+            ]);
 
         }
 
-        this.chart_settings.data.datasets = [...data, ...this.sets];
-        this.chart.update();
+        for (let i = 0; i < triangles.length; ++i) {
+            this.drawTriangle(triangles[i]);
+        }
+        //Draw points
+        for (let i = 0; i < scaled_points.length; ++i) {
+            this.drawClip(scaled_points[i], blendSpaces.clips[i].name);
+        }
 
-        return this;
+        this.drawClip(
+            new THREE.Vector2(
+                THREE.MathUtils.inverseLerp(min_x, max_x, agent.velocity.x) * 100,
+                THREE.MathUtils.inverseLerp(min_y, max_y, agent.velocity.z) * 100
+            ),
+            '',
+            '#2cc9ff'
+        );
+
     }
 
 }
 
 export {
     GUI,
-    FuzzyController,
 };

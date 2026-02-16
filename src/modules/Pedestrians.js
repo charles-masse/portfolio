@@ -8,7 +8,6 @@ import AgentManager from '../extensions/AgentManager.js';
 import {AgentState,} from '../extensions/States.js';
 import {WallAvoidanceBehavior,} from '../extensions/Steering.js'
 
-import {createGraphHelper,} from '../helpers/GraphHelper.js'
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
@@ -39,9 +38,7 @@ export default class {
         this.objects = new THREE.Group();
         //Helpers
         const navMeshHelper = createConvexRegionHelper(navMesh);
-        const graphHelper = createGraphHelper(navMesh.graph, 0.25);
-        
-        // this.objects.add(navMeshHelper, graphHelper);
+        // this.objects.add(navMeshHelper);
         //Instance
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, agent_shader, MAX_AGENTS);
         this.objects.add(this.instancedMesh);
@@ -63,10 +60,13 @@ export default class {
             const wall = new WallAvoidanceBehavior(navMesh);
             wall.weight = 0.75;
             agent.steering.add(wall);
-            //States
-            agent.stateMachine.add('walk', new AgentState());
+            // //States
+            // agent.stateMachine.add('idle', new AgentState(new YUKA.Vector3(0, 0, 0)));
+            // agent.stateMachine.add('walkFront', new AgentState(new YUKA.Vector3(0, 0, 0.25)));
+            // agent.stateMachine.add('walk45L', new AgentState(new YUKA.Vector3(0.125, 0, 0.125)));
+            // agent.stateMachine.add('walk45R', new AgentState(new YUKA.Vector3(-0.125, 0, 0.125)));
 
-            agent.stateMachine.changeTo('walk');
+            // agent.stateMachine.changeTo('idle'); //DELETE ME
 
             this.entityManager.addAgent(agent);
 

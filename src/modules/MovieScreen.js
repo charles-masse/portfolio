@@ -9,12 +9,16 @@ export default class {
         
         this.video = document.getElementById('video');
         const texture = new THREE.VideoTexture(this.video);
-        const videoMaterial =  new THREE.MeshBasicMaterial({map: texture, side:THREE.FrontSide, toneMapped: false});
+        const videoMaterial =  new THREE.MeshBasicMaterial(
+            {
+                map: texture,
+                side:THREE.FrontSide,
+            });
         const screen = new THREE.PlaneGeometry(9.6, 5.4);
         const videoScreen = new THREE.Mesh(screen, videoMaterial);
 
         videoScreen.position.set(0, 6.5, 5.01);
-        
+
         this.play();
 
         this.objects.add(videoScreen);

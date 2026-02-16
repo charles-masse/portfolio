@@ -35,6 +35,7 @@ Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](h
 | **Memory (mb)**     | 130-282           | 9-20                |
 
 As you can see, the max FPS is nearly doubled with the instances, they load 10x faster and use less than 10% of the cloned memory.
+
 The only problem, every instanced characters must look the same and play the same animation...
 
 ### GL Shaders

@@ -3,8 +3,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {FuzzyVariable, FuzzyModule, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet,} from '../extensions/Fuzzy.js';
-import {degreesToRadians,} from '../utilities/vectors.js';
+import {degreesToRadians,} from '../utilities/math.js';
 
 import {FEELER_ANGLE,} from '../settings.js';
 
@@ -128,211 +127,36 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
 
 }
 
-// class FuzzySeparationBehavior extends YUKA.SeparationBehavior {
+class NonPenetrationBehavior extends YUKA.SteeringBehavior {
 
-//     constructor() {
-//         super();
+    calculate(vehicle, force) {
+        //Iterate over all neighbors checking for any overlap of bounding radii
+        const neighbors = vehicle.neighbors;
+        for (const neighbor of neighbors) {
+            //Calculate the distance between the positions of the entities
+            const toAgent = new YUKA.Vector3()
+                .subVectors(vehicle.position, neighbor.position);
+            const length = toAgent.length();
+            //If this distance is smaller than the sum of their radii then this entity must be moved
+            //away in the direction parallel to the toAgent vector
+            const amount_of_overlap = vehicle.boundingRadius + neighbor.boundingRadius - length;
 
-//         this.initFuzzy();
+            if (amount_of_overlap >= 0) {
 
-//     }
+                const away = toAgent.clone()
+                    .divideScalar(length)
+                    .multiplyScalar(amount_of_overlap);
 
-//     initFuzzy() {
+                force.add(away);
 
-//         this.fuzzy = new FuzzyModule();
-//         //Inputs
-//         const center = new TriangularFuzzySet(-90, 0, 90);
-//         const left = new LeftShoulderFuzzySet(-180, -135, -45, {r:0, g:255, b:0});
-//         const right = new RightShoulderFuzzySet(45, 135, 180, {r:0, g:255, b:0});
-//         const direction = new FuzzyVariable()
-//             .add(center)
-//             .add(left)
-//             .add(right)
-//         this.fuzzy.addFLV('direction', direction);
+            }
+        }
 
-//         const close = new LeftShoulderFuzzySet(0, 0, 3, {r:0, g:255, b:0});
-//         const far = new RightShoulderFuzzySet(0, 3, 3);
+        return force;
+    }
 
-//         const distance = new FuzzyVariable()
-//             .add(close)
-//             .add(far);
-//         this.fuzzy.addFLV('distance', distance);
-//         //Outputs
-//         const weak = new LeftShoulderFuzzySet(0, 0, 1);
-//         const strong = new RightShoulderFuzzySet(0, 1, 1, {r:0, g:255, b:0});
-        
-//         const weight = new FuzzyVariable()
-//             .add(weak)
-//             .add(strong);
-//         this.fuzzy.addFLV('weight', weight);
-//         //Rules
-//         this.fuzzy.addRule(new YUKA.FuzzyRule(new YUKA.FuzzyAND(new YUKA.FuzzyOR(left, right), close), strong));
-//         this.fuzzy.addRule(new YUKA.FuzzyRule(new YUKA.FuzzyAND(center, far), weak));
-
-//     }
-
-//     calculate(vehicle, force) {
-
-//         this.fuzzy.clearIO();
-
-//         const direction = vehicle.getDirection(new YUKA.Vector3());
-
-//         const neighbors = vehicle.neighbors;
-//         for (const neighbor of neighbors) {
-
-//             const toAgent = new YUKA.Vector3()
-//                 .subVectors(vehicle.position, neighbor.position);
-
-//             const angle = angleTo(direction, toAgent);
-//             const length = toAgent.length();
-//             //IN
-//             this.fuzzy.fuzzify('direction', angle);
-//             this.fuzzy.fuzzify('distance', length);
-//             //OUT
-//             const factor = this.fuzzy.defuzzify('weight');
-//             toAgent.normalize().multiplyScalar(factor);
-
-//             force.add(toAgent);
-
-//         }
-
-//         return force;
-//     }
-
-// }
-
-// class FuzzyCohesionBehavior extends YUKA.CohesionBehavior {
-
-//     constructor() {
-//         super();
-
-//         this.initFuzzy();
-
-//         this._seek = new YUKA.SeekBehavior();
-
-//     }
-
-//     initFuzzy() {
-
-//         this.fuzzy = new FuzzyModule();
-//         //Inputs
-//         const facingCenter = new TriangularFuzzySet(-22, 0, 22, {r:0, g:255, b:0});
-//         const facingLeft = new LeftShoulderFuzzySet(-180, -22, 0);
-//         const facingRight = new RightShoulderFuzzySet(0, 22, 180);
-//         const facingAngle = new FuzzyVariable()
-//             .add(facingCenter)
-//             .add(facingLeft)
-//             .add(facingRight);
-//         this.fuzzy.addFLV('facingAngle', facingAngle);
-
-//         const center = new TriangularFuzzySet(-135, 0, 135, {r:0, g:255, b:0});
-//         const left = new LeftShoulderFuzzySet(-180, -135, -90);
-//         const right = new RightShoulderFuzzySet(90, 135, 180);
-//         const direction = new FuzzyVariable()
-//             .add(center)
-//             .add(left)
-//             .add(right);
-//         this.fuzzy.addFLV('direction', direction);
-//         //Outputs
-//         const weak = new LeftShoulderFuzzySet(0, 0, 1);
-//         const strong = new RightShoulderFuzzySet(0, 1, 1, {r:0, g:255, b:0});
-        
-//         const weight = new FuzzyVariable()
-//             .add(weak)
-//             .add(strong);
-//         this.fuzzy.addFLV('weight', weight);
-//         //Rules
-//         this.fuzzy.addRule(new YUKA.FuzzyRule(new YUKA.FuzzyAND(facingCenter, center), strong));
-//         this.fuzzy.addRule(new YUKA.FuzzyRule(new YUKA.FuzzyAND(new YUKA.FuzzyOR(facingLeft, facingRight), new YUKA.FuzzyOR(left, right)), weak));
-
-//     }
-
-//     calculate(vehicle, force) {
-
-//         this.fuzzy.clearIO();
-
-//         const center_of_mass = new YUKA.Vector3(0, 0, 0);
-
-//         const direction = vehicle.getDirection(new YUKA.Vector3());
-//         //Iterate over all neighbors to calculate the center of mass
-//         const neighbors = vehicle.neighbors;
-//         for (const neighbor of neighbors) {
-//             //Follow agents in motion
-//             if (neighbor.velocity.length() > 0.1) {
-
-//                 const neighbor_heading = neighbor.getDirection(new YUKA.Vector3());
-//                 //IN
-//                 const facingAngle = angleBetween(direction, neighbor_heading);
-//                 this.fuzzy.fuzzify('facingAngle', facingAngle);
-
-//                 const toAgent = new YUKA.Vector3()
-//                     .subVectors(vehicle.position, neighbor.position)
-//                     .normalize();
-
-//                 const angle = angleTo(direction, toAgent);
-//                 this.fuzzy.fuzzify('direction', angle);
-//                 //OUT
-//                 const factor = this.fuzzy.defuzzify('weight');
-//                 const scaled_target = vehicle.position.clone().add(neighbor.position.clone().sub(vehicle.position).multiplyScalar(factor));
-
-//                 this._seek.target = center_of_mass;
-//                 this._seek.calculate(vehicle, force);
-
-//             }
-
-//         }
-
-//         if (neighbors.length > 0) {
-
-//             center_of_mass.divideScalar(neighbors.length);
-
-//             const steering_force = new YUKA.Vector3()
-//                 .subVectors(center_of_mass, vehicle.position)
-//                 .normalize()
-//                 .multiplyScalar(vehicle.maxSpeed);
-
-//              force.subVectors(steering_force, vehicle.velocity);
-
-//         }
-
-//         return force;
-//     }
-
-// }
-
-// class NonPenetrationBehavior extends YUKA.SteeringBehavior {
-
-//     calculate(vehicle, force) {
-//         //Iterate over all neighbors checking for any overlap of bounding radii
-//         const neighbors = vehicle.neighbors;
-//         for (const neighbor of neighbors) {
-//             //Calculate the distance between the positions of the entities
-//             const toAgent = new YUKA.Vector3()
-//                 .subVectors(vehicle.position, neighbor.position);
-//             const length = toAgent.length();
-//             //If this distance is smaller than the sum of their radii then this entity must be moved
-//             //away in the direction parallel to the toAgent vector
-//             const amount_of_overlap = vehicle.boundingRadius + neighbor.boundingRadius - length;
-
-//             if (amount_of_overlap >= 0) {
-
-//                 const away = toAgent.clone()
-//                     .divideScalar(length)
-//                     .multiplyScalar(amount_of_overlap);
-
-//                 force.add(away);
-
-//             }
-//         }
-
-//         return force;
-//     }
-
-// }
+}
 
 export {
     WallAvoidanceBehavior,
-    // FuzzySeparationBehavior,
-    // FuzzyCohesionBehavior,
-    // NonPenetrationBehavior,
 };

@@ -19,7 +19,9 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {AgentStateMachine,} from '../extensions/States.js';
+import {LocomotionClip, BlendSpaces} from '../core/BlendSpaces.js';
+
+// import {AgentStateMachine,} from '../extensions/States.js';
 
 import {absSq, det, leftOf, sqr, distSqPointLineSegment, abs,} from '../utilities/RVO2.js';
 
@@ -41,7 +43,7 @@ function renderAgent(vehicle, renderComponent) {
     renderComponent.setMatrixAt(vehicle.agentId, vehicle.worldMatrix);
     //Attributes
     const instance_frame_attribute = renderComponent.geometry.getAttribute('current_frame');
-    instance_frame_attribute.array[vehicle.agentId] = vehicle.stateMachine.currentState.current_frame;
+    // instance_frame_attribute.array[vehicle.agentId] = vehicle.stateMachine.currentState.current_frame;
     instance_frame_attribute.needsUpdate = true;
 
     renderComponent.instanceMatrix.needsUpdate = true;
@@ -56,7 +58,18 @@ export default class extends YUKA.Vehicle {
         this.navMesh = navMesh
         this.agentId = id
 
-        this.stateMachine = new AgentStateMachine(this);
+        // this.stateMachine = new AgentStateMachine(this);
+        this.blendSpaces = new BlendSpaces(this);
+
+        const idle = new LocomotionClip('idle');
+        const walk = new LocomotionClip('walk');
+        walk.locomotion.set(0, 0, -5);
+        const walk45L = new LocomotionClip('walk45L');
+        walk45L.locomotion.set(2.5, 0, -2.5);
+
+        this.blendSpaces.add(idle);
+        this.blendSpaces.add(walk);
+        this.blendSpaces.add(walk45L);
 
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
@@ -485,26 +498,23 @@ export default class extends YUKA.Vehicle {
         const optimal_velocity = this.computeNewVelocity();
         this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
         //Find best clip for the job
-        //TODO
-        this.stateMachine.update();
-        const current_state = this.stateMachine.currentState;
+
         //Update the orientation and position TODO blended transforms
-        this.lookAt(this.position.clone().add(current_state.direction));
-        this.position.add(current_state.locomotion.clone().multiplyScalar(delta));
+        // this.lookAt(this.position.clone().add(current_state.direction));
+        // this.position.add(current_state.locomotion.clone().multiplyScalar(delta));
         //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
-        //KEEP FOR NOW, MIGHT BE USEFUL
-        // const velocitySmooth = new YUKA.Vector3();
+        const velocitySmooth = new YUKA.Vector3();
 
-        // if (this.updateOrientation === true && this.smoother !== null) {
+        if (this.updateOrientation === true && this.smoother !== null) {
 
-        //     this.smoother.calculate(this.velocity, velocitySmooth);
+            this.smoother.calculate(this.velocity, velocitySmooth);
 
-        //     displacement.copy(velocitySmooth).multiplyScalar(delta);
-        //     target.copy(this.position).add(displacement);
+            displacement.copy(velocitySmooth).multiplyScalar(delta);
+            target.copy(this.position).add(displacement);
 
-        //     this.lookAt(target);
+            this.lookAt(target);
 
-        // }
+        }
 
         return this;
     }
