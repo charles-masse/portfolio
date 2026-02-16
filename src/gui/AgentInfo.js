@@ -44,10 +44,10 @@ export default class {
         this.posY = pos.add(controller_values, 'Pos y').disable();
         this.posZ = pos.add(controller_values, 'Pos z').disable();
 
-        const rot = this.gui.addFolder('Direction').close().hide();
-        this.rotX = rot.add(controller_values, 'Dir x').disable();
-        this.rotY = rot.add(controller_values, 'Dir y').disable();
-        this.rotZ = rot.add(controller_values, 'Dir z').disable();
+        const dir = this.gui.addFolder('Direction').close().hide();
+        this.dirX = dir.add(controller_values, 'Dir x').disable();
+        this.dirY = dir.add(controller_values, 'Dir y').disable();
+        this.dirZ = dir.add(controller_values, 'Dir z').disable();
 
         const anims = this.gui.addFolder('Animations').hide();
         this.test = anims.addDelaunay(this.entities[0].blendSpaces, 'Blend Spaces');
@@ -127,15 +127,16 @@ export default class {
             const agent = this.entities[this.selected_agent];
 
             this.test.setValue(agent);
+            this.test.updateDisplay();
 
             this.posX.setValue(agent.position.x.toFixed(4));
             this.posY.setValue(agent.position.y.toFixed(4));
             this.posZ.setValue(agent.position.z.toFixed(4));
 
             const direction = agent.getDirection(new YUKA.Vector3());
-            this.rotX.setValue(direction.x.toFixed(4));
-            this.rotY.setValue(direction.y.toFixed(4));
-            this.rotZ.setValue(direction.z.toFixed(4));
+            this.dirX.setValue(direction.x.toFixed(4));
+            this.dirY.setValue(direction.y.toFixed(4));
+            this.dirZ.setValue(direction.z.toFixed(4));
             //Lines
             for (const line in this.neighbor_lines) {
                 if (line in agent.neighbors) {

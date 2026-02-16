@@ -34,17 +34,14 @@ class DelaunayController extends LIL.Controller {
         super(parent, object, property, 'lil-color');
 
         this.$display = document.createElement('canvas');
-        this.$display.classList.add('lil-display');
-        this.$display.width = 100;
-        this.$display.height = 100;
-        this.$display.style.width = '100%';
-        this.$display.style.height = '100%';
+        this.$display.width = 100
+        this.$display.height = 100
+        this.$display.style.width = '100px'
+        this.$display.style.height = '100px';
         
         this.$widget.appendChild(this.$display);
 
         this.ctx = this.$display.getContext('2d');
-
-        // this.draw();
 
         return this;
 
@@ -89,34 +86,32 @@ class DelaunayController extends LIL.Controller {
         let max_x = Math.max(...points_x);
         let min_x = Math.min(...points_x);
 
-        const points_y = blendSpaces.clips.map(point => point.locomotion.z);
-        let max_y = Math.max(...points_y);
-        let min_y = Math.min(...points_y);
+        const points_z = blendSpaces.clips.map(point => point.locomotion.z);
+        let max_z = Math.max(...points_z);
+        let min_z = Math.min(...points_z);
         //Scale coords for display
         const center_x = (min_x + max_x) / 2;
-        const center_y = (min_y + max_y) / 2;
+        const center_y = (min_z + max_z) / 2;
 
         max_x = THREE.MathUtils.lerp(center_x,  max_x, 1.5);
         min_x = THREE.MathUtils.lerp(center_x,  min_x, 1.5);
 
-        max_y = THREE.MathUtils.lerp(center_y,  max_y, 1.25); //Bottom doesn't have labels
-        min_y = THREE.MathUtils.lerp(center_y,  min_y, 1.5);
+        max_z = THREE.MathUtils.lerp(center_y,  max_z, 1.25); //Bottom doesn't have labels
+        min_z = THREE.MathUtils.lerp(center_y,  min_z, 1.5);
         //Map coords on 100px display
         const scaled_points = blendSpaces.clips.map(point => new THREE.Vector2(
             THREE.MathUtils.inverseLerp(min_x, max_x, point.locomotion.x) * 100,
-            THREE.MathUtils.inverseLerp(min_y, max_y, point.locomotion.z) * 100)
+            THREE.MathUtils.inverseLerp(min_z, max_z, point.locomotion.z) * 100)
         );
         //Draw triangles
         const triangles = [];
 
         for (let i = 0; i < blendSpaces.triangles.length; i += 3) {
-
             triangles.push([
                 scaled_points[blendSpaces.triangles[i]],
                 scaled_points[blendSpaces.triangles[i + 1]],
                 scaled_points[blendSpaces.triangles[i + 2]]
             ]);
-
         }
 
         for (let i = 0; i < triangles.length; ++i) {
@@ -130,7 +125,7 @@ class DelaunayController extends LIL.Controller {
         this.drawClip(
             new THREE.Vector2(
                 THREE.MathUtils.inverseLerp(min_x, max_x, agent.velocity.x) * 100,
-                THREE.MathUtils.inverseLerp(min_y, max_y, agent.velocity.z) * 100
+                THREE.MathUtils.inverseLerp(min_z, max_z, agent.velocity.z) * 100
             ),
             '',
             '#2cc9ff'

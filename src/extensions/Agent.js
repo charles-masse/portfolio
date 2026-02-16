@@ -63,12 +63,15 @@ export default class extends YUKA.Vehicle {
 
         const idle = new LocomotionClip('idle');
         const walk = new LocomotionClip('walk');
-        walk.locomotion.set(0, 0, -5);
+        walk.locomotion.set(0, 0, -2);
+        const walk45R = new LocomotionClip('walk45R');
+        walk45R.locomotion.set(1.125, 0, -1.125);
         const walk45L = new LocomotionClip('walk45L');
-        walk45L.locomotion.set(2.5, 0, -2.5);
+        walk45L.locomotion.set(-1.125, 0, -1.125);
 
         this.blendSpaces.add(idle);
         this.blendSpaces.add(walk);
+        this.blendSpaces.add(walk45R);
         this.blendSpaces.add(walk45L);
 
         this._agentNeighbors = [];
@@ -498,10 +501,19 @@ export default class extends YUKA.Vehicle {
         const optimal_velocity = this.computeNewVelocity();
         this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
         //Find best clip for the job
-
-        //Update the orientation and position TODO blended transforms
-        // this.lookAt(this.position.clone().add(current_state.direction));
-        // this.position.add(current_state.locomotion.clone().multiplyScalar(delta));
+        //TODO
+        //Calculate displacement
+        const displacement = new YUKA.Vector3();
+        displacement.copy(this.velocity).multiplyScalar(delta);
+        //Calculate target position
+        const target = new YUKA.Vector3();
+        target.copy(this.position).add(displacement);
+        //Update the orientation if the vehicle has a non zero velocity
+        if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
+            this.lookAt(target);
+        }
+        //Update position
+        this.position.copy(target);
         //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
         const velocitySmooth = new YUKA.Vector3();
 
