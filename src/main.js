@@ -67,9 +67,10 @@ for (let i = 0; i < AGENT_NUM; i++) {
 
 }
 
+instancedMesh.instanceMatrix.needsUpdate = true;
+
 instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
 instancedMesh.geometry.setAttribute("cam_dist", new THREE.InstancedBufferAttribute(camDist, 1));
-instancedMesh.instanceMatrix.needsUpdate = true;
 
 scene.add(instancedMesh);
 //Renderer
@@ -96,14 +97,16 @@ composer.addPass(beautyPass);
 const outlineShader = new THREE.ShaderMaterial({
 
     uniforms: {
+
         tDiffuse: {value: beautyPass.texture},
         tDepth: { value: depthRender.depthTexture },
         tId: {value: idRender.texture},
 
         width: {value: window.innerWidth},
         height: {value: window.innerHeight},
+        
+        outlineColor: {value: new THREE.Color(0xffffff)},
 
-        outlineColor: {value: new THREE.Color(0x00ff00)},
     },
 
     vertexShader: `
@@ -130,40 +133,70 @@ const outlineShader = new THREE.ShaderMaterial({
 
         varying vec2 vUv;
 
-        void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
-        {
+        void make_kernel(inout vec4 n[9], inout float d[9], sampler2D tex, sampler2D depthTex, vec2 coord) {
 
-            float w = (1. - texture2D(tDepth, vUv).r) * (400. / width);
-            float h = (1. - texture2D(tDepth, vUv).r) * (400. / height);
+            float depth = texture2D(depthTex, coord).r;
 
-            n[0] = texture2D(tex, coord + vec2(-w, -h));
-            n[1] = texture2D(tex, coord + vec2(0.0, -h));
-            n[2] = texture2D(tex, coord + vec2(w, -h));
-            n[3] = texture2D(tex, coord + vec2(-w, 0.0));
-            n[4] = texture2D(tex, coord);
-            n[5] = texture2D(tex, coord + vec2(w, 0.0));
-            n[6] = texture2D(tex, coord + vec2(-w, h));
-            n[7] = texture2D(tex, coord + vec2(0.0, h));
-            n[8] = texture2D(tex, coord + vec2(w, h));
+            float w = ((1.0 - depth) * 500.0) / width;
+            float h = ((1.0 - depth) * 500.0) / height;
+
+            vec2 offsets[9];
+            offsets[0] = vec2(-w, -h);
+            offsets[1] = vec2(0.0, -h);
+            offsets[2] = vec2(w, -h);
+            offsets[3] = vec2(-w, 0.0);
+            offsets[4] = vec2(0.0, 0.0);
+            offsets[5] = vec2(w, 0.0);
+            offsets[6] = vec2(-w, h);
+            offsets[7] = vec2(0.0, h);
+            offsets[8] = vec2(w, h);
+
+            for (int i = 0; i < 9; i++) {
+                n[i] = texture2D(tex, coord + offsets[i]);
+                d[i] = texture2D(depthTex, coord + offsets[i]).r;
+            }
 
         }
 
         void main() {
-
+            //Check around
             vec4 n[9];
-            make_kernel(n, tId, vUv);
+            float d[9];
 
-            vec4 sobel_h = n[2] + 2.0*n[5] + n[8] - (n[0] + 2.0*n[3] + n[6]);
-            vec4 sobel_v = n[0] + 2.0*n[1] + n[2] - (n[6] + 2.0*n[7] + n[8]);
+            make_kernel(n, d, tId, tDepth, vUv);
+            //Sobel
+            vec4 sobel_h = n[2] + 2. * n[5] + n[8] - (n[0] + 2. * n[3] + n[6]);
+            vec4 sobel_v = n[0] + 2. * n[1] + n[2] - (n[6] + 2. * n[7] + n[8]);
             vec3 sobel = sqrt(sobel_h.rgb * sobel_h.rgb + sobel_v.rgb * sobel_v.rgb);
 
-            vec3 beauty = texture2D(tDiffuse, vUv).rgb;
-
             float edge = length(sobel);
+            //Depth occlusion
+            float depth = d[4];
+            vec4 id = n[4];
 
+            float occluded = 0.;
+
+            float depthThreshold = 0.01;
+
+            for (int i = 0; i < 9; i++) {
+                if (i == 4) continue;
+
+                bool differentObject = distance(n[i], id) > 0.001;
+                bool neighborCloser = d[i] < depth - depthThreshold;
+
+                if (differentObject && neighborCloser) {
+                    occluded = 1.0;
+                    break;
+                }
+            }
+
+            edge *= (1. - occluded);
+            //Smooth
+            edge = smoothstep(0., 0.5, edge);
+            //Mix colors
+            vec3 beauty = texture2D(tDiffuse, vUv).rgb;
             vec3 finalColor = mix(beauty, outlineColor, edge);
-
-            gl_FragColor = vec4(finalColor, 1.0);
+            gl_FragColor = vec4(finalColor, 1.);
         
         }
 
