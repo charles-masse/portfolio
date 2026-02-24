@@ -12,7 +12,6 @@ const scene = new THREE.Scene();
 
 const geometry = new THREE.BoxGeometry(5, 5, 5);
 geometry.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(AGENT_NUM), 1));
-geometry.setAttribute('cam_dist', new THREE.InstancedBufferAttribute(new Float32Array(AGENT_NUM), 1));
 //Geo
 const material = new THREE.ShaderMaterial({
 
@@ -56,7 +55,6 @@ for (let i = 0; i < AGENT_NUM; i++) {
     const rotation = new THREE.Matrix4().makeRotationZ(Math.random() * 360);
 
     const position_matrix = new THREE.Matrix4().multiplyMatrices(translation, rotation);
-
     instancedMesh.setMatrixAt(i, position_matrix);
 
     for (let i = 0; i < AGENT_NUM; i++) {
@@ -68,9 +66,7 @@ for (let i = 0; i < AGENT_NUM; i++) {
 }
 
 instancedMesh.instanceMatrix.needsUpdate = true;
-
 instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
-instancedMesh.geometry.setAttribute("cam_dist", new THREE.InstancedBufferAttribute(camDist, 1));
 
 scene.add(instancedMesh);
 //Renderer
@@ -176,7 +172,7 @@ const outlineShader = new THREE.ShaderMaterial({
 
             float occluded = 0.;
 
-            float depthThreshold = 0.01;
+            float depthThreshold = 0.05;
 
             for (int i = 0; i < 9; i++) {
                 if (i == 4) continue;
