@@ -1,18 +1,77 @@
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+
+const AGENT_NUM = 10;
+//Camera
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 0);
 //Scene
 const scene = new THREE.Scene();
 
 const geometry = new THREE.BoxGeometry(5, 5, 5);
-const material = new THREE.MeshBasicMaterial({color: 0xffffff});
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-//Camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(10, 5, 10);
-camera.lookAt(0, 0, 0);
+geometry.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(AGENT_NUM), 1));
+geometry.setAttribute('cam_dist', new THREE.InstancedBufferAttribute(new Float32Array(AGENT_NUM), 1));
+//Geo
+const material = new THREE.ShaderMaterial({
+
+    vertexShader: `
+
+        attribute vec3 instance_id;
+        varying vec3 vColor;
+
+        void main() {
+
+            vColor = instance_id;
+            gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+
+        }
+
+    `,
+
+    fragmentShader: `
+
+        varying vec3 vColor;
+
+        void main() {
+
+            gl_FragColor = vec4(vColor, 1.0);
+
+        }
+
+    `,
+});
+
+const instancedMesh = new THREE.InstancedMesh(geometry, material, AGENT_NUM);
+
+const color = new Float32Array(AGENT_NUM * 3);
+const camDist = new Float32Array(AGENT_NUM);
+
+for (let i = 0; i < AGENT_NUM; i++) {
+
+    const trans = new THREE.Vector3((Math.random() * 50) - 25, 0, Math.random() * -100)
+
+    const translation = new THREE.Matrix4().makeTranslation(trans);
+    const rotation = new THREE.Matrix4().makeRotationZ(Math.random() * 360);
+
+    const position_matrix = new THREE.Matrix4().multiplyMatrices(translation, rotation);
+
+    instancedMesh.setMatrixAt(i, position_matrix);
+
+    for (let i = 0; i < AGENT_NUM; i++) {
+        color[i * 3 + 0] = Math.random();
+        color[i * 3 + 1] = Math.random();
+        color[i * 3 + 2] = Math.random();
+    }
+
+}
+
+instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
+instancedMesh.geometry.setAttribute("cam_dist", new THREE.InstancedBufferAttribute(camDist, 1));
+instancedMesh.instanceMatrix.needsUpdate = true;
+
+scene.add(instancedMesh);
 //Renderer
 const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -21,10 +80,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 //Passes
-const idRender = new THREE.WebGLRenderTarget(
-    window.innerWidth,
-    window.innerHeight,
-)
+const idRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+const depthRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+
+depthRender.depthTexture = new THREE.DepthTexture();
+depthRender.depthTexture.type = THREE.UnsignedShortType;
+depthRender.depthTexture.format = THREE.DepthFormat;
+depthRender.depthBuffer = true;
 
 const composer = new EffectComposer(renderer);
 
@@ -35,12 +97,12 @@ const outlineShader = new THREE.ShaderMaterial({
 
     uniforms: {
         tDiffuse: {value: beautyPass.texture},
-        uTexture: {value: idRender.texture},
+        tDepth: { value: depthRender.depthTexture },
+        tId: {value: idRender.texture},
 
         width: {value: window.innerWidth},
         height: {value: window.innerHeight},
 
-        outlineThickness: {value: 2},
         outlineColor: {value: new THREE.Color(0x00ff00)},
     },
 
@@ -58,12 +120,12 @@ const outlineShader = new THREE.ShaderMaterial({
     fragmentShader: `
 
         uniform sampler2D tDiffuse;
-        uniform sampler2D uTexture;
+        uniform sampler2D tDepth;
+        uniform sampler2D tId;
 
         uniform float width;
         uniform float height;
 
-        uniform float outlineThickness;
         uniform vec3 outlineColor;
 
         varying vec2 vUv;
@@ -71,8 +133,8 @@ const outlineShader = new THREE.ShaderMaterial({
         void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
         {
 
-            float w = outlineThickness / width;
-            float h = outlineThickness / height;
+            float w = (1. - texture2D(tDepth, vUv).r) * (400. / width);
+            float h = (1. - texture2D(tDepth, vUv).r) * (400. / height);
 
             n[0] = texture2D(tex, coord + vec2(-w, -h));
             n[1] = texture2D(tex, coord + vec2(0.0, -h));
@@ -89,7 +151,7 @@ const outlineShader = new THREE.ShaderMaterial({
         void main() {
 
             vec4 n[9];
-            make_kernel(n, uTexture, vUv);
+            make_kernel(n, tId, vUv);
 
             vec4 sobel_h = n[2] + 2.0*n[5] + n[8] - (n[0] + 2.0*n[3] + n[6]);
             vec4 sobel_v = n[0] + 2.0*n[1] + n[2] - (n[6] + 2.0*n[7] + n[8]);
@@ -102,7 +164,7 @@ const outlineShader = new THREE.ShaderMaterial({
             vec3 finalColor = mix(beauty, outlineColor, edge);
 
             gl_FragColor = vec4(finalColor, 1.0);
-
+        
         }
 
     `,
@@ -118,6 +180,12 @@ function animate() {
     renderer.setRenderTarget(idRender);
     renderer.clear();
     renderer.render(scene, camera);
+
+    renderer.setRenderTarget(depthRender);
+    renderer.clear();
+    renderer.render(scene, camera);
+
+    renderer.setRenderTarget(null);
 
     composer.render();
 
