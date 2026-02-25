@@ -8,7 +8,7 @@ export const TIME_STEP = 0.25;
 //Steering
 export const FEELER_ANGLE = 45;
 //DayNight
-export const START_TIME_SECS = 5;
+export const START_TIME_SECS = 9;
 export const SUN_SPEED = -20;
 export const DAY_EVENTS = [
     { //Sunrise

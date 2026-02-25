@@ -43,7 +43,13 @@ export default class {
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, agent_shader, MAX_AGENTS);
         this.objects.add(this.instancedMesh);
         //Link each instance to their individual agent
+        const color = new Float32Array(MAX_AGENTS * 3);
+
         for (let i = 0; i < MAX_AGENTS; i++) {
+
+            color[i * 3 + 0] = Math.random();
+            color[i * 3 + 1] = Math.random();
+            color[i * 3 + 2] = Math.random();
 
             const agent = new Agent(navMesh, i);
             agent.setRenderComponent(this.instancedMesh);
@@ -64,6 +70,8 @@ export default class {
             this.entityManager.addAgent(agent);
 
         }
+
+        this.instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
         //ORCA Obstacles TODO
         this.entityManager.addObstacle([
             new THREE.Vector2(-5, 10),

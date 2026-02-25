@@ -21,6 +21,8 @@ async function PictogramGeo(loadingManager) {
 
                 const geo = mesh.geometry;
                 //For VAT setup
+                geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+
                 geo.setAttribute('current_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
                 geo.setAttribute('length', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
                 geo.setAttribute('origin', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
@@ -45,6 +47,10 @@ async function PictogramShader(loadingManager) {
 
             const shader = new THREE.ShaderMaterial({
                 vertexShader: `
+
+                    varying vec3 vColor;
+
+                    attribute vec3 instance_id;
                     attribute float current_frame;
                     attribute float length;
                     attribute float origin;
@@ -54,6 +60,8 @@ async function PictogramShader(loadingManager) {
                     uniform vec2 atlasSize;
 
                     void main() {
+
+                        vColor = instance_id;
 
                         vec3 rest = vec3(0.5059214058523709);
                         float amplitude = 0.9067607074975969;
@@ -74,8 +82,11 @@ async function PictogramShader(loadingManager) {
                     }
                 `,
                 fragmentShader: `
+
+                    varying vec3 vColor;
+
                     void main() {
-                        gl_FragColor = vec4(0., 0., 0., 1.0);
+                        gl_FragColor = vec4(vColor, 1.0);
                     }
                 `,
                 uniforms: {
