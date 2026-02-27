@@ -22,7 +22,6 @@ geometry.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new F
 const instancedMesh = new THREE.InstancedMesh(geometry, new idMaterial(), AGENT_NUM);
 
 const color = new Float32Array(AGENT_NUM * 3);
-const camDist = new Float32Array(AGENT_NUM);
 
 for (let i = 0; i < AGENT_NUM; i++) {
 
