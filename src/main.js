@@ -7,6 +7,7 @@ import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import idMaterial from '/src/shaders/idMaterial.js';
 import depthMaterial from '/src/shaders/depthMaterial.js';
 import outlineShader from '/src/shaders/outlineShader.js';
+import outlineDilationShader from '/src/shaders/outlineDilationShader.js';
 
 const AGENT_NUM = 10;
 //Scene
@@ -40,7 +41,7 @@ for (let i = 0; i < AGENT_NUM; i++) {
         color[i * 3 + 2] = Math.random();
     }
 
-    camDist[i] = trans.clone().sub(camera.position).length();
+    camDist[i] = camera.position.distanceTo(trans);
 
 }
 
@@ -62,11 +63,12 @@ const composer = new EffectComposer(renderer);
 const idRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 const depthRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 
-const beautyPass = new RenderPass(scene, camera);
-composer.addPass(beautyPass);
+const outlinePass = new ShaderPass(new outlineShader(idRender, depthRender));
 
-const outlinePass = new ShaderPass(new outlineShader(idRender));
+const outlineDilationPass = new ShaderPass(new outlineDilationShader(depthRender));
+
 composer.addPass(outlinePass);
+composer.addPass(outlineDilationPass);
 
 animate();
 

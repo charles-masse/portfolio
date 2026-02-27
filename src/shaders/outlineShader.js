@@ -3,11 +3,13 @@ import * as THREE from 'three';
 
 export default class extends THREE.ShaderMaterial {
 
-    constructor(idRender){
+    constructor(id, depth){
         super({
 
             uniforms: {
-                tId: {value: idRender.texture},       
+                tDiffuse: {value: null},
+                tId: {value: id.texture},  
+                tDepth: {value: depth.texture},     
             },
 
             vertexShader: `
@@ -25,8 +27,9 @@ export default class extends THREE.ShaderMaterial {
                 varying vec2 vUv;
 
                 uniform sampler2D tId;
+                uniform sampler2D tDepth;
 
-                void create_kernel(inout vec4 n[9], sampler2D idTex, vec2 coord) {
+                void create_kernel(inout vec4 n[9], inout float d[9], sampler2D idTex, sampler2D depthTex, vec2 coord) {
 
                     float width = float(textureSize(idTex, 0).x);
                     float height = float(textureSize(idTex, 0).y);
@@ -47,6 +50,7 @@ export default class extends THREE.ShaderMaterial {
 
                     for (int i = 0; i < 9; i++) {
                         n[i] = texture2D(idTex, coord + offsets[i]);
+                        d[i] = texture2D(depthTex, coord + offsets[i]).r;
                     }
 
                 }
@@ -54,7 +58,8 @@ export default class extends THREE.ShaderMaterial {
                 void main() {
 
                     vec4 n[9];
-                    create_kernel(n, tId, vUv);
+                    float d[9];
+                    create_kernel(n, d, tId, tDepth, vUv);
 
                     bool edge = false;
 
@@ -62,7 +67,7 @@ export default class extends THREE.ShaderMaterial {
                         //Skip middle
                         if (i == 4) continue;
 
-                        if (n[i] != n[4]) {
+                        if (n[i] != n[4] && d[i] < d[4]) {
                             edge = true;
                             break;
                         }
@@ -70,7 +75,7 @@ export default class extends THREE.ShaderMaterial {
                     }
 
                     if (edge) {
-                        gl_FragColor = vec4(vec3(1.), 1.);
+                        gl_FragColor = vec4(1.);
                     } 
 
                     else {

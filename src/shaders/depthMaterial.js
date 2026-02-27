@@ -22,7 +22,7 @@ export default class extends THREE.ShaderMaterial {
                 varying float distance;
 
                 void main() {
-                    gl_FragColor = vec4(vec3(clamp(1. - distance / 100., 0., 1.)), 1.);
+                    gl_FragColor = vec4(vec3(1. - clamp(distance / 100., 0., 1.)), 1.);
                 }
             `,
             
