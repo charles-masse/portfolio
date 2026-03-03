@@ -63,23 +63,29 @@ export default class extends THREE.ShaderMaterial {
 
                     bool edge = false;
 
-                    for (int i = 0; i < 9; i++) {
-                        //Skip middle
-                        if (i == 4) continue;
+                    if (d[4] != 0.) {
 
-                        if (n[i] != n[4] && d[i] < d[4]) {
-                            edge = true;
-                            break;
+                        for (int i = 0; i < 9; i++) {
+                            //Skip middle
+                            if (i == 4) continue;
+
+                            if (n[i] != n[4] && (d[i] > d[4] || d[i] == 0.)) {
+                                edge = true;
+                                break;
+                            }
+
                         }
 
                     }
 
                     if (edge) {
-                        gl_FragColor = vec4(1.);
-                    } 
+                        gl_FragColor = vec4(vec3(1.), 1.);
+                        // gl_FragColor = texture2D(tDepth, vUv);
+                    }
 
                     else {
                         gl_FragColor = vec4(vec3(0.), 1.);
+                        // gl_FragColor = texture2D(tId, vUv);
                     }
                     
                 }
