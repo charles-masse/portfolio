@@ -7,7 +7,6 @@ export default class extends THREE.ShaderMaterial {
         super({
 
             uniforms: {
-                tDiffuse: {value: null},
                 tId: {value: id.texture},  
                 tDepth: {value: depth.texture},     
             },

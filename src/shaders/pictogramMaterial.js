@@ -10,16 +10,18 @@ export default class extends THREE.ShaderMaterial {
 
             uniforms: {
                 animationAtlas: {value: animation_texture},
-                atlasSize: {value: new THREE.Vector2(
-                    animation_texture.image.width,
-                    animation_texture.image.height
-                )}
+                atlasSize: {
+                    value: new THREE.Vector2(
+                        animation_texture.image.width,
+                        animation_texture.image.height
+                    )
+                }
             },
 
             vertexShader: `
-                varying vec3 vColor;
-                varying float distance;
-
+                //For outline passes
+                varying vec3 color_id;
+                varying float color_depth;
                 attribute vec3 instance_id;
                 attribute float instance_depth;
 
@@ -33,8 +35,8 @@ export default class extends THREE.ShaderMaterial {
 
                 void main() {
 
-                    distance = instance_depth;
-                    vColor = instance_id;
+                    color_id = instance_id;
+                    color_depth = instance_depth;
 
                     vec3 rest = vec3(0.5059214058523709);
                     float amplitude = 0.9067607074975969;
@@ -53,10 +55,8 @@ export default class extends THREE.ShaderMaterial {
             `,
 
             fragmentShader: `
-                varying vec3 vColor;
-
                 void main() {
-                    gl_FragColor = vec4(vColor, 1.0);
+                    gl_FragColor = vec4(vec3(0.), 1.0);
                 }
             `,
             

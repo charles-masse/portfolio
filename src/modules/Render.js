@@ -31,29 +31,61 @@ export default class {
         this.originalMaterials = {};
         this.materialCache = {};
         //Passes
+        this.beautyRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         this.idRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         this.depthRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         //Comp
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new ShaderPass(new outlineShader(this.idRender, this.depthRender)));
-        this.composer.addPass(new ShaderPass(new outlineDilationShader(this.depthRender)));
-        // this.composer.addPass(new RenderPass(scene, camera));
+        this.composer.addPass(new ShaderPass(new outlineDilationShader(this.depthRender, this.beautyRender)));
 
     }
 
     update() {
-        //Create mask
+        //Beauty
+        this.renderer.setRenderTarget(this.beautyRender);
+        this.renderer.render(this.scene, this.camera);
+        //Create object mask
         this.scene.traverse((object) => {this.objectMask(object)});
         //ID Pass
+        this.scene.traverse((object) => {this.overrideFragment(
+            object, 
+            `
+                varying vec3 color_id;
+
+                void main() {
+                    gl_FragColor = vec4(color_id, 1.0);
+                }
+            `
+        )});
+
         this.renderer.setRenderTarget(this.idRender);
         this.renderer.render(this.scene, this.camera);
         //Depth Pass
-        this.scene.traverse((object) => {this.setDepthMaterial(object)});
+        this.scene.traverse((object) => {this.overrideFragment(
+            object, 
+            `
+                varying float color_depth;
+
+                void main() {
+                    gl_FragColor = vec4(vec3(clamp(color_depth / 75., 0., 1.)), 1.);
+                }
+            `
+        )});
+
         this.renderer.setRenderTarget(this.depthRender);
         this.renderer.render(this.scene, this.camera);
-        //Put the materials back
+        //Put the original materials back
         this.scene.traverse((object) => {this.disableMask(object)});
-        //Final render
+        this.scene.traverse((object) => {this.overrideFragment(
+            object, 
+            `
+                void main() {
+                    gl_FragColor = vec4(vec3(0.), 1.0);
+                }
+            `
+        )});
+        //Comp
         this.composer.render();
 
     }
@@ -94,17 +126,11 @@ export default class {
 
     }
 
-    setDepthMaterial(object) {
+    overrideFragment(object, override) {
 
         if (object instanceof THREE.InstancedMesh) {
 
-            object.material.fragmentShader = `
-                varying float distance;
-
-                void main() {
-                    gl_FragColor = vec4(vec3(clamp(distance / 75., 0., 1.)), 1.);
-                }
-            `;
+            object.material.fragmentShader = override;
             object.material.needsUpdate = true;
 
         }
