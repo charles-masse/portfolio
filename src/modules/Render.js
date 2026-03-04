@@ -32,12 +32,11 @@ export default class {
         this.materialCache = {};
         //Passes
         this.beautyRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-        this.idRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-        this.depthRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+        this.depthidRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         //Comp
         this.composer = new EffectComposer(renderer);
-        this.composer.addPass(new ShaderPass(new outlineShader(this.idRender, this.depthRender)));
-        this.composer.addPass(new ShaderPass(new outlineDilationShader(this.depthRender, this.beautyRender)));
+        this.composer.addPass(new ShaderPass(new outlineShader(this.depthidRender, this.beautyRender)));
+        // this.composer.addPass(new ShaderPass(new outlineDilationShader(this.depthRender, this.beautyRender)));
 
     }
 
@@ -47,33 +46,20 @@ export default class {
         this.renderer.render(this.scene, this.camera);
         //Create object mask
         this.scene.traverse((object) => {this.objectMask(object)});
-        //ID Pass
+        //Depth/ID Pass
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
             `
                 varying vec3 color_id;
-
-                void main() {
-                    gl_FragColor = vec4(color_id, 1.0);
-                }
-            `
-        )});
-
-        this.renderer.setRenderTarget(this.idRender);
-        this.renderer.render(this.scene, this.camera);
-        //Depth Pass
-        this.scene.traverse((object) => {this.overrideFragment(
-            object, 
-            `
                 varying float color_depth;
 
                 void main() {
-                    gl_FragColor = vec4(vec3(clamp(color_depth / 75., 0., 1.)), 1.);
+                    gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / 50.), 1.0);
                 }
             `
         )});
 
-        this.renderer.setRenderTarget(this.depthRender);
+        this.renderer.setRenderTarget(this.depthidRender);
         this.renderer.render(this.scene, this.camera);
         //Put the original materials back
         this.scene.traverse((object) => {this.disableMask(object)});

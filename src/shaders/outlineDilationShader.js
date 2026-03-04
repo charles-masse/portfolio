@@ -10,7 +10,7 @@ export default class extends THREE.ShaderMaterial {
                 tDiffuse: {value: null},
                 tDepth: {value: depth.texture},
                 tBeauty: {value: beauty.texture},
-                thickness: {value: 2},
+                thickness: {value: 1},
             },
 
             vertexShader: `
@@ -27,7 +27,7 @@ export default class extends THREE.ShaderMaterial {
             fragmentShader: `
                 varying vec2 vUv;
 
-                uniform sampler2D tDiffuse; //previous pass
+                uniform sampler2D tDiffuse;
                 uniform sampler2D tDepth;
                 uniform sampler2D tBeauty;
                 
@@ -35,23 +35,30 @@ export default class extends THREE.ShaderMaterial {
 
                 void main() {
 
+                    // gl_FragColor = texture2D(tDiffuse, vUv); //DEBUG
+
                     bool edge = false;
 
                     for (int x = -thickness; x <= thickness; x++) {
                         for (int y = -thickness; y <= thickness; y++) {
 
                             vec2 texel = 1. / vec2(textureSize(tDiffuse, 0));
-
                             vec2 offset = vec2(float(x), float(y)) * texel;
                             vec2 sampleUv = vUv + offset;
 
-                            if (texture2D(tDiffuse, sampleUv).r == 1.) {
+                            float outline = texture2D(tDiffuse, sampleUv).r;
 
-                                float depth = 1. - texture2D(tDepth, sampleUv).r;
-                                float radius = float(thickness) * depth;
+                            if (outline == 1.) {
 
-                                if (length(vec2(x, y)) < radius) {
+                                float inverse_depth = 1. - texture2D(tDepth, sampleUv).r;
+                                float radius = float(thickness) * inverse_depth;
+
+                                float distance = length(vec2(x, y));
+
+                                if (distance <= radius) {
                                     edge = true;
+                                    gl_FragColor = vec4(vec3(clamp(radius, 0., 1.)), 1.);
+                                    
                                     break;
                                 }
 
@@ -60,11 +67,7 @@ export default class extends THREE.ShaderMaterial {
                         }
                     }
 
-                    if (edge) {
-                        gl_FragColor = vec4(vec3(1.), 1.);
-                    }
-
-                    else {
+                    if (!edge) {
                         gl_FragColor = texture2D(tBeauty, vUv);
                     }
                     

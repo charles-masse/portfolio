@@ -3,12 +3,12 @@ import * as THREE from 'three';
 
 export default class extends THREE.ShaderMaterial {
 
-    constructor(id, depth) {
+    constructor(depthid, beauty) {
         super({
 
             uniforms: {
-                tId: {value: id.texture},  
-                tDepth: {value: depth.texture},     
+                tDepthid: {value: depthid.texture},  
+                tBeauty: {value: beauty.texture},     
             },
 
             vertexShader: `
@@ -25,10 +25,10 @@ export default class extends THREE.ShaderMaterial {
             fragmentShader: `
                 varying vec2 vUv;
 
-                uniform sampler2D tId;
-                uniform sampler2D tDepth;
+                uniform sampler2D tDepthid;
+                uniform sampler2D tBeauty;
 
-                void create_kernel(inout vec4 n[9], inout float d[9], sampler2D idTex, sampler2D depthTex, vec2 coord) {
+                void create_kernel(inout vec4 n[9], sampler2D idTex, vec2 coord) {
 
                     float width = float(textureSize(idTex, 0).x);
                     float height = float(textureSize(idTex, 0).y);
@@ -49,7 +49,6 @@ export default class extends THREE.ShaderMaterial {
 
                     for (int i = 0; i < 9; i++) {
                         n[i] = texture2D(idTex, coord + offsets[i]);
-                        d[i] = texture2D(depthTex, coord + offsets[i]).r;
                     }
 
                 }
@@ -57,19 +56,21 @@ export default class extends THREE.ShaderMaterial {
                 void main() {
 
                     vec4 n[9];
-                    float d[9];
-                    create_kernel(n, d, tId, tDepth, vUv);
+                    create_kernel(n, tDepthid, vUv);
 
                     bool edge = false;
 
-                    if (d[4] != 0.) {
+                    if (n[4].z != 0.) {
 
                         for (int i = 0; i < 9; i++) {
                             //Skip middle
                             if (i == 4) continue;
 
-                            if (n[i] != n[4] && (d[i] > d[4] || d[i] == 0.)) {
+                            if (n[i] != n[4] && (n[i].z > n[4].z || n[i].z == 0.)) {
+
                                 edge = true;
+                                gl_FragColor = vec4(vec3(1. - n[4].z), 1.);
+
                                 break;
                             }
 
@@ -77,14 +78,9 @@ export default class extends THREE.ShaderMaterial {
 
                     }
 
-                    if (edge) {
-                        gl_FragColor = vec4(vec3(1.), 1.);
-                        // gl_FragColor = texture2D(tDepth, vUv);
-                    }
-
-                    else {
-                        gl_FragColor = vec4(vec3(0.), 1.);
-                        // gl_FragColor = texture2D(tId, vUv);
+                    if (!edge) {
+                        // gl_FragColor = vec4(vec3(0.), 1.);
+                        gl_FragColor = texture2D(tBeauty, vUv);
                     }
                     
                 }
