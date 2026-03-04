@@ -45,7 +45,6 @@ for (let i = 0; i < AGENT_NUM; i++) {
         color[i * 3 + 2] = Math.random();
     }
 
-    console.log(camera.position.distanceTo(trans));
     camDist[i] = camera.position.distanceTo(trans);
 
 }
@@ -66,7 +65,6 @@ document.body.appendChild(renderer.domElement);
 const composer = new EffectComposer(renderer);
 
 const idRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-
 const depthRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 
 composer.addPass(new ShaderPass(new outlineShader(idRender, depthRender)));
@@ -79,16 +77,12 @@ function animate() {
     stats.update();
     
     renderer.setRenderTarget(idRender);
-    renderer.clear();
     renderer.render(scene, camera);
 
     instancedMesh.material = new depthMaterial();
 
     renderer.setRenderTarget(depthRender);
-    renderer.clear();
     renderer.render(scene, camera);
-
-    renderer.setRenderTarget(null);
 
     composer.render();
 
