@@ -9,14 +9,12 @@ import {COLORS, MAX_NEIGHBORS,} from '../settings.js';
 
 export default class {
 
-    constructor(entityManager) {
+    constructor(entityManager, camera) {
 
         this.entities = entityManager.entities;
+        this.camera = camera;
 
         this.selected_agent = null;
-        //Scene objects
-        this.objects = new THREE.Group();
-        this.initLines();
         //UI
         this.gui = new GUI({title:'Agent Info'});
         this.gui.domElement.style.position = 'static';
@@ -53,6 +51,14 @@ export default class {
         this.test = anims.addDelaunay(this.entities[0].blendSpaces, 'Blend Spaces');
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
+        //Listener
+        window.addEventListener('pointerdown', (event) => {
+            const click = this.getClick(event);
+            if (click) this.selectAgent(click.point);
+        });
+        //Scene objects
+        this.objects = new THREE.Group();
+        this.initLines();
 
     }
 
@@ -71,6 +77,19 @@ export default class {
 
         }
 
+    }
+
+    getClick(event) {
+
+        const mouse = new THREE.Vector2();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+        // const intersection = raycaster.intersectObject(this.entities, false)[0];
+
+        return /*intersection*/; //FIX ME
     }
 
     selectAgent(point) {
@@ -134,15 +153,26 @@ export default class {
             this.posZ.setValue(agent.position.z.toFixed(4));
 
             const direction = agent.getDirection(new YUKA.Vector3());
+            
             this.dirX.setValue(direction.x.toFixed(4));
             this.dirY.setValue(direction.y.toFixed(4));
             this.dirZ.setValue(direction.z.toFixed(4));
             //Lines
             for (const line in this.neighbor_lines) {
+
                 if (line in agent.neighbors) {
-                    this.neighbor_lines[line].geometry.setFromPoints([new YUKA.Vector3(0, 0.05, 0).add(agent.position), new YUKA.Vector3(0, 0.05, 0).add(agent.neighbors[line].position)])
-                } else {
-                    this.neighbor_lines[line].geometry.setFromPoints([new YUKA.Vector3(0, -9999, 0), new YUKA.Vector3(0, -9999, 0)])
+                    this.neighbor_lines[line].geometry.setFromPoints([
+                        new YUKA.Vector3(0, 0.05, 0).add(agent.position),
+                        new YUKA.Vector3(0, 0.05, 0).add(agent.neighbors[line].position)
+                    ]);
+                }
+
+                else {
+                    this.neighbor_lines[line].geometry.setFromPoints([
+                        new YUKA.Vector3(0, -9999, 0),
+                        new YUKA.Vector3(0, -9999, 0)
+                    ]);
+
                 }
 
             }
@@ -150,5 +180,5 @@ export default class {
         }
 
     }
-    
+
 }

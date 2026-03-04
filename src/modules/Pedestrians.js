@@ -8,6 +8,8 @@ import AgentManager from '../extensions/AgentManager.js';
 import {AgentState,} from '../extensions/States.js';
 import {WallAvoidanceBehavior,} from '../extensions/Steering.js'
 
+import pictogramMaterial from '../shaders/pictogramMaterial.js'
+
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
@@ -31,7 +33,7 @@ import {MAX_AGENTS,} from '../settings.js';
 
 export default class {
 
-    constructor(agent_geo, agent_shader, navMesh) {
+    constructor(agent_geo, agent_texture, navMesh) {
 
         this.entityManager = new AgentManager();
 
@@ -40,16 +42,12 @@ export default class {
         const navMeshHelper = createConvexRegionHelper(navMesh);
         // this.objects.add(navMeshHelper);
         //Instance
-        this.instancedMesh = new THREE.InstancedMesh(agent_geo, agent_shader, MAX_AGENTS);
+        this.instancedMesh = new THREE.InstancedMesh(agent_geo, new pictogramMaterial(agent_texture), MAX_AGENTS);
         this.objects.add(this.instancedMesh);
         //Link each instance to their individual agent
         const color = new Float32Array(MAX_AGENTS * 3);
-
+        
         for (let i = 0; i < MAX_AGENTS; i++) {
-
-            color[i * 3 + 0] = Math.random();
-            color[i * 3 + 1] = Math.random();
-            color[i * 3 + 2] = Math.random();
 
             const agent = new Agent(navMesh, i);
             agent.setRenderComponent(this.instancedMesh);
@@ -68,6 +66,10 @@ export default class {
             agent.steering.add(wall);
 
             this.entityManager.addAgent(agent);
+
+            color[i * 3 + 0] = Math.random();
+            color[i * 3 + 1] = Math.random();
+            color[i * 3 + 2] = Math.random();
 
         }
 

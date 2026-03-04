@@ -127,36 +127,6 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
 
 }
 
-class NonPenetrationBehavior extends YUKA.SteeringBehavior {
-
-    calculate(vehicle, force) {
-        //Iterate over all neighbors checking for any overlap of bounding radii
-        const neighbors = vehicle.neighbors;
-        for (const neighbor of neighbors) {
-            //Calculate the distance between the positions of the entities
-            const toAgent = new YUKA.Vector3()
-                .subVectors(vehicle.position, neighbor.position);
-            const length = toAgent.length();
-            //If this distance is smaller than the sum of their radii then this entity must be moved
-            //away in the direction parallel to the toAgent vector
-            const amount_of_overlap = vehicle.boundingRadius + neighbor.boundingRadius - length;
-
-            if (amount_of_overlap >= 0) {
-
-                const away = toAgent.clone()
-                    .divideScalar(length)
-                    .multiplyScalar(amount_of_overlap);
-
-                force.add(away);
-
-            }
-        }
-
-        return force;
-    }
-
-}
-
 export {
     WallAvoidanceBehavior,
 };

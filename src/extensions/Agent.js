@@ -42,9 +42,9 @@ function renderAgent(vehicle, renderComponent) {
     //Geo
     renderComponent.setMatrixAt(vehicle.agentId, vehicle.worldMatrix);
     //Attributes
-    const instance_frame_attribute = renderComponent.geometry.getAttribute('current_frame');
-    // instance_frame_attribute.array[vehicle.agentId] = vehicle.stateMachine.currentState.current_frame;
-    instance_frame_attribute.needsUpdate = true;
+    const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
+    instance_depth.array[vehicle.agentId] = new YUKA.Vector3(15, 7.5, 25).sub(vehicle.position).length(); //FIX ME
+    instance_depth.needsUpdate = true;
 
     renderComponent.instanceMatrix.needsUpdate = true;
 
