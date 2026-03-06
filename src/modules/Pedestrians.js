@@ -5,12 +5,12 @@ import * as YUKA from 'yuka';
 
 import Agent from '../extensions/Agent.js';
 import AgentManager from '../extensions/AgentManager.js';
-import {AgentState,} from '../extensions/States.js';
+// import {AgentState,} from '../extensions/States.js';
 import {WallAvoidanceBehavior,} from '../extensions/Steering.js'
 
 import pictogramMaterial from '../shaders/pictogramMaterial.js'
 
-import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
+// import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
 
@@ -39,8 +39,7 @@ export default class {
 
         this.objects = new THREE.Group();
         //Helpers
-        const navMeshHelper = createConvexRegionHelper(navMesh);
-        // this.objects.add(navMeshHelper);
+        // this.objects.add(createConvexRegionHelper(navMesh));
         //Instance
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new pictogramMaterial(agent_texture), MAX_AGENTS);
         this.objects.add(this.instancedMesh);

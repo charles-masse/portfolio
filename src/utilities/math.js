@@ -1,6 +1,4 @@
 
-import * as THREE from 'three';
-
 import * as YUKA from 'yuka';
 
 function radiansToDegrees(radians) {

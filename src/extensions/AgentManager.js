@@ -19,7 +19,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {absSq, det, leftOf, sqr, distSqPointLineSegment, abs,} from '../utilities/RVO2.js';
+import {absSq, det, leftOf, sqr,} from '../utilities/RVO2.js';
 
 import {MAX_LEAF_SIZE, RVO_EPSILON,} from '../settings.js';
 

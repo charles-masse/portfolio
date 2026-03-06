@@ -23,7 +23,7 @@ import {LocomotionClip, BlendSpaces} from '../core/BlendSpaces.js';
 
 // import {AgentStateMachine,} from '../extensions/States.js';
 
-import {absSq, det, leftOf, sqr, distSqPointLineSegment, abs,} from '../utilities/RVO2.js';
+import {absSq, det, sqr, distSqPointLineSegment, abs,} from '../utilities/RVO2.js';
 
 import {MAX_NEIGHBORS, TIME_STEP, RVO_EPSILON,} from '../settings.js';
 

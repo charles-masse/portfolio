@@ -1,8 +1,6 @@
 
 import * as YUKA from 'yuka';
 
-import {radiansToDegrees,} from '../utilities/math.js';
-
 class AgentStateMachine extends YUKA.StateMachine {
 
     update() {

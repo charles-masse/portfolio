@@ -18,7 +18,7 @@ export function colorToString(color) {
 
 export default class {
 
-    constructor(canvas, emissives, debug=false) {
+    constructor(canvas, emissives, /*debug=false*/) {
 
         this.canvas = canvas;
         this.emissives = emissives;
@@ -117,7 +117,7 @@ export default class {
 
     update(time) {
 
-        const time_offset = /*time.getElapsed() +*/ START_TIME_SECS;
+        const time_offset = time.getElapsed() + START_TIME_SECS;
         //Sun
         this.sun.position.copy(this.sunOrbit(time_offset));
         this.sun_helper.update();

@@ -19,20 +19,20 @@ export default function (
             side: THREE.DoubleSide,
         });
 
-        const objLoader = new OBJLoader(loadingManager)
-            .load(model_path, (mesh) => {
-                mesh.traverse((child) => {
+        new OBJLoader(loadingManager).load(model_path, (mesh) => {
+            
+            mesh.traverse((child) => {
 
-                    if (child.isMesh) {
-                        child.material = material;
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
+                if (child.isMesh) {
+                    child.material = material;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
 
-                });
-
-                resolve(mesh);
             });
+
+            resolve(mesh);
+        });
 
     });
 
