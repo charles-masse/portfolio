@@ -20,11 +20,12 @@ export default class extends THREE.ShaderMaterial {
 
             vertexShader: `
                 //For outline passes
-                varying vec3 color_id;
-                varying float color_depth;
                 attribute vec3 instance_id;
                 attribute float instance_depth;
 
+                varying vec3 color_id;
+                varying float color_depth;
+                //Animation player
                 attribute float current_frame;
                 attribute float length;
                 attribute float origin;

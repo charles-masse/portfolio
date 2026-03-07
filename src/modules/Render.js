@@ -2,10 +2,9 @@
 import * as THREE from 'three';
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
 import outlineShader from '../shaders/outlineShader.js'
-// import outlineDilationShader from '../shaders/outlineDilationShader.js'
-
 
 function isCompatible(object) {
 
@@ -35,7 +34,7 @@ export default class {
         //Comp
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new ShaderPass(new outlineShader(this.depthidRender, this.beautyRender)));
-        // this.composer.addPass(new ShaderPass(new outlineDilationShader(this.depthRender, this.beautyRender)));
+        this.composer.addPass(new SMAAPass(window.innerWidth * 8, window.innerHeight * 8));
 
     }
 

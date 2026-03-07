@@ -51,17 +51,16 @@ export default class {
             const agent = new Agent(navMesh, i);
             agent.setRenderComponent(this.instancedMesh);
             //Settings
-            agent.neighborhoodRadius = 2;
-            agent.boundingRadius = 0.35;
+            agent.neighborhoodRadius = 2.5;
+            agent.boundingRadius = 0.5;
             //ORCA
-            agent.timeHorizon = 4;
-            agent.timeHorizonObst = 1;
+            agent.timeHorizon = 3;
+            agent.timeHorizonObst = 6;
             //Steering
             const follow = new YUKA.FollowPathBehavior();
             agent.steering.add(follow);
 
             const wall = new WallAvoidanceBehavior(navMesh);
-            wall.weight = 0.75;
             agent.steering.add(wall);
 
             this.entityManager.addAgent(agent);

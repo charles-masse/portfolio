@@ -1,7 +1,7 @@
 //Crowd
 export const MAX_AGENTS = 2000;
 //RVO2
-export const MAX_NEIGHBORS = 10;
+export const MAX_NEIGHBORS = 15;
 export const MAX_LEAF_SIZE = 10;
 export const RVO_EPSILON = 1e-8;
 export const TIME_STEP = 0.25;

@@ -58,6 +58,8 @@ export default class extends THREE.ShaderMaterial {
                     vec4 n[9];
                     create_kernel(n, tDepthid, vUv);
 
+                    vec4 beauty = texture2D(tBeauty, vUv);
+
                     bool edge = false;
 
                     if (n[4].z != 0.) {
@@ -69,7 +71,10 @@ export default class extends THREE.ShaderMaterial {
                             if (n[i] != n[4] && (n[i].z > n[4].z || n[i].z == 0.)) {
 
                                 edge = true;
-                                gl_FragColor = vec4(vec3(1. - n[4].z), 1.);
+                                gl_FragColor = vec4(
+                                    mix(vec3(1.), beauty.rgb, n[4].z),
+                                    1.
+                                );
 
                                 break;
                             }
@@ -79,8 +84,7 @@ export default class extends THREE.ShaderMaterial {
                     }
 
                     if (!edge) {
-                        // gl_FragColor = vec4(vec3(0.), 1.);
-                        gl_FragColor = texture2D(tBeauty, vUv);
+                        gl_FragColor = beauty;
                     }
                     
                 }
