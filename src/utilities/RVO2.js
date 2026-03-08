@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * brief      Computes the squared length of a specified two-dimensional vector.
  * param      vector          The two-dimensional vector whose squared length is to be computed.

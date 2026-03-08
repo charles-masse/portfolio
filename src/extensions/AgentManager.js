@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
@@ -69,6 +70,8 @@ export default class extends YUKA.EntityManager {
         super();
 
         this.obstacles = new Array();
+
+        this.buildObstacleTree();
 
     }
 
@@ -409,7 +412,6 @@ export default class extends YUKA.EntityManager {
 
     update(delta ) {
 
-        this.buildObstacleTree();
         this.buildAgentTree();
 
         super.update(delta);

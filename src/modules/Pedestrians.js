@@ -6,7 +6,6 @@ import * as YUKA from 'yuka';
 import Agent from '../extensions/Agent.js';
 import AgentManager from '../extensions/AgentManager.js';
 // import {AgentState,} from '../extensions/States.js';
-import {WallAvoidanceBehavior,} from '../extensions/Steering.js'
 
 import pictogramMaterial from '../shaders/pictogramMaterial.js'
 
@@ -51,17 +50,15 @@ export default class {
             const agent = new Agent(navMesh, i);
             agent.setRenderComponent(this.instancedMesh);
             //Settings
-            agent.neighborhoodRadius = 2.5;
-            agent.boundingRadius = 0.5;
+            agent.maxSpeed = 0.75;
+            agent.neighborhoodRadius = 1.8;
+            agent.boundingRadius = 0.4;
             //ORCA
             agent.timeHorizon = 3;
             agent.timeHorizonObst = 6;
             //Steering
             const follow = new YUKA.FollowPathBehavior();
             agent.steering.add(follow);
-
-            const wall = new WallAvoidanceBehavior(navMesh);
-            agent.steering.add(wall);
 
             this.entityManager.addAgent(agent);
 
