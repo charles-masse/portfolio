@@ -7,20 +7,17 @@ export default class {
 
     constructor(entityManager) {
 
-        this.entityManager = entityManager;
-
         const gui = new GUI({title:'Crowd Spawner'});
         gui.domElement.style.position = 'static';
 
         const data = {Population: MAX_AGENTS / 2.0};
+        entityManager.population = data.Population;
 
-        gui.add(data, 'Population', 1, MAX_AGENTS, 1).onFinishChange( value => {
-            this.entityManager.activateAgents(value);
+        gui.add(data, 'Population', 1, MAX_AGENTS, 1).onFinishChange(value => {
+            entityManager.population = value;
         });
         
         document.getElementById('gui-container').appendChild(gui.domElement);
-
-        this.entityManager.activateAgents(data.Population);
 
     }
 

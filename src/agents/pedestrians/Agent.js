@@ -20,73 +20,67 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {computeNewVelocity,} from '../core/RVO2.js';
-import {LocomotionClip, BlendSpaces,} from '../core/BlendSpaces.js';
-// import {AgentStateMachine,} from '../extensions/States.js';
+import {computeNewVelocity,} from '../../core/ORCA.js';
+// import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
+import {GoToState, DeadState,} from './States.js';
 
-import {absSq, distSqPointLineSegment,} from '../utilities/RVO2.js';
+import {absSq, distSqPointLineSegment,} from '../../utilities/RVO2.js';
 
-import {MAX_NEIGHBORS,} from '../settings.js';
-
-function renderAgent(vehicle, renderComponent) {
-    //Geo
-    renderComponent.setMatrixAt(vehicle.agentId, vehicle.worldMatrix);
-    //Attributes
-    const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[vehicle.agentId] = new YUKA.Vector3(15, 7.5, 25).sub(vehicle.position).length(); //FIX ME
-    instance_depth.needsUpdate = true;
-
-    const current_frame = renderComponent.geometry.getAttribute('current_frame');
-    current_frame.array[vehicle.agentId] = current_frame.array[vehicle.agentId] + 1;
-    current_frame.needsUpdate = true;
-
-    renderComponent.instanceMatrix.needsUpdate = true;
-
-}
+import {MAX_NEIGHBORS,} from '../../settings.js';
 
 export default class extends YUKA.Vehicle {
 
-    constructor(navMesh, id) {
+    constructor(id) {
         super();
 
-        this.navMesh = navMesh
         this.agentId = id
 
         this.active = false;
 
+        this.neighborhoodRadius = 1.8;
+        this.boundingRadius = 0.4;
+
         this.smoother = new YUKA.Smoother(20);
+        
+        this.stateMachine = new YUKA.StateMachine(this);
+        this.stateMachine.add('GoTo', new GoToState());
+        this.stateMachine.add('Dead', new DeadState());
+        
+        // agent.blendSpaces = new BlendSpaces(this);
 
-        // this.stateMachine = new AgentStateMachine(this);
+        // const idle = new LocomotionClip('idle');
+        // agent.blendSpaces.add(idle);
 
-        this.blendSpaces = new BlendSpaces(this);
+        // const walk = new LocomotionClip('walk');
+        // walk.locomotion.set(0, 0, 1.75);
+        // agent.blendSpaces.add(walk);
 
-        const idle = new LocomotionClip('idle');
-        this.blendSpaces.add(idle);
+        // const walk45R = new LocomotionClip('walk45R');
+        // walk45R.locomotion.set(-1.125, 0, 1.125);
+        // agent.blendSpaces.add(walk45R);
 
-        const walk = new LocomotionClip('walk');
-        walk.locomotion.set(0, 0, 1.75);
-        this.blendSpaces.add(walk);
+        // const walk45L = new LocomotionClip('walk45L');
+        // walk45L.locomotion.set(1.125, 0, 1.125);
+        // agent.blendSpaces.add(walk45L);
 
-        const walk45R = new LocomotionClip('walk45R');
-        walk45R.locomotion.set(-1.125, 0, 1.125);
-        this.blendSpaces.add(walk45R);
+        // const walk90L = new LocomotionClip('walk90L');
+        // walk90L.locomotion.set(1, 0, 0);
+        // agent.blendSpaces.add(walk90L);
 
-        const walk45L = new LocomotionClip('walk45L');
-        walk45L.locomotion.set(1.125, 0, 1.125);
-        this.blendSpaces.add(walk45L);
+        // const walk90R = new LocomotionClip('walk90R');
+        // walk90R.locomotion.set(-1, 0, 0);
+        // agent.blendSpaces.add(walk90R);
 
-        const walk90L = new LocomotionClip('walk90L');
-        walk90L.locomotion.set(1, 0, 0);
-        this.blendSpaces.add(walk90L);
+        // const walk180R = new LocomotionClip('walk180R');
+        // walk180R.locomotion.set(0, 0, -0.5);
+        // agent.blendSpaces.add(walk180R);
+        //Steering
+        const follow = new YUKA.FollowPathBehavior();
+        this.steering.add(follow);
+        //ORCA
+        this.timeHorizon = 3;
+        this.timeHorizonObst = 6;
 
-        const walk90R = new LocomotionClip('walk90R');
-        walk90R.locomotion.set(-1, 0, 0);
-        this.blendSpaces.add(walk90R);
-
-        const walk180R = new LocomotionClip('walk180R');
-        walk180R.locomotion.set(0, 0, -0.5);
-        this.blendSpaces.add(walk180R);
-        //KdTree neighbors
         this._agentNeighbors = [];
         this._obstacleNeighbors = [];
 
@@ -98,58 +92,16 @@ export default class extends YUKA.Vehicle {
 
         if (bool) {
 
-            const spawn_position = this.bestCandidate();
-            this.position.copy(spawn_position);
+            this.stateMachine.changeTo('GoTo');
 
-            const pos = this.position;
-            const {x, y} = this.navMesh.randomPoint();
-            //Path
-            const points = this.navMesh.findPath(new YUKA.Vector3(pos.x, 0, pos.z), new YUKA.Vector3(x, 0, y));
-            const path = new YUKA.Path();
-            for (const point of points) {
-                path.add(point);
-            }
+        } 
 
-            this.steering.behaviors[0].path = path;
+        else {
 
-        } else {
-            this.position.set(0, -9999, 0); //Shadow Realm
-            renderAgent(this, this._renderComponent);
-        }
-
-    }
-
-    bestCandidate() {
-
-        const entities = this.manager.entities.filter(entity => entity.active);
-
-        let best;
-        let maxDist = -Infinity;
-        for (let i = 0; i < 10; i++) {
-
-            const {x, y} = this.navMesh.randomPoint();
-            const pos = new YUKA.Vector3(x, 0, y);
-
-            const minDist = Math.min(...entities.map(entity => pos.distanceTo(entity.position)));
-
-            if (minDist > maxDist) {
-
-                maxDist = minDist;
-                best = pos;
-
-            }
+            this.stateMachine.changeTo('Dead');
+            this._renderComponentCallback(this, this._renderComponent);
 
         }
-
-        return best;
-    }
-
-    setRenderComponent(renderComponent) {
-
-        this._renderComponent = renderComponent;
-        this._renderComponentCallback = renderAgent;
-
-        return this;
 
     }
 
@@ -223,10 +175,8 @@ export default class extends YUKA.Vehicle {
             this.velocity.multiplyScalar(this.maxSpeed);
         }
         //Search for the best new velocity.
-        const optimal_velocity = computeNewVelocity(this);
+        const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
         this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
-        //Find best clip for the job
-        //TODO
         //Calculate displacement
         const displacement = new YUKA.Vector3();
         displacement.copy(this.velocity).multiplyScalar(delta);
@@ -252,6 +202,8 @@ export default class extends YUKA.Vehicle {
             this.lookAt(target);
 
         }
+
+        this.stateMachine.update();
 
         return this;
     }

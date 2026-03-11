@@ -26,7 +26,7 @@ export default class extends THREE.ShaderMaterial {
                 varying vec3 color_id;
                 varying float color_depth;
                 //Animation player
-                attribute float current_frame;
+                attribute float instance_frame;
                 attribute float length;
                 attribute float origin;
                 attribute float amplitude;
@@ -45,7 +45,7 @@ export default class extends THREE.ShaderMaterial {
                     float vertex_id = float(gl_VertexID);
                     vec3 anim_data = texture2D(
                         animationAtlas,
-                        vec2( (vertex_id + 0.5) / atlasSize.x, 1. - mod((current_frame + 0.5), atlasSize.y) / atlasSize.y)
+                        vec2( (vertex_id + 0.5) / atlasSize.x, 1. - mod((instance_frame + 0.5), atlasSize.y) / atlasSize.y)
                     ).rgb;
 
                     vec3 anim_data_scaled = (anim_data - rest) * amplitude;

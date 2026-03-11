@@ -20,16 +20,15 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {absSq, det, leftOf, sqr,} from '../utilities/RVO2.js';
+import {absSq, det, leftOf, sqr,} from '../../utilities/RVO2.js';
 
-import {MAX_LEAF_SIZE, RVO_EPSILON,} from '../settings.js';
+import {MAX_LEAF_SIZE, RVO_EPSILON,} from '../../settings.js';
 
 class Obstacle {
 
     constructor() {
 
         this.point = null;
-        // this.manager = null;
         this.prevObstacle = null;
         this.nextObstacle = null;
         this.unitDir = null;
@@ -69,8 +68,9 @@ export default class extends YUKA.EntityManager {
     constructor() {
         super();
 
-        this.obstacles = new Array();
+        this.population = -1;
 
+        this.obstacles = new Array();
         this.buildObstacleTree();
 
     }
@@ -122,18 +122,21 @@ export default class extends YUKA.EntityManager {
         return obstacleNo;
     }
 
-    activateAgents(nb) {
+    activateAgents() {
 
         let active_agents = this.entities.filter(agent => agent.active);
-        while (active_agents.length != nb) {
+        let inactive_agents = this.entities.filter(agent => !agent.active);
+        
+        while (active_agents.length != this.population) {
 
-            if (active_agents.length < nb) {
-                this.entities[active_agents.length].setActive(true);
+            if (active_agents.length < this.population) {
+                inactive_agents[0].setActive(true);
             } else {
-                this.entities[active_agents.length - 1].setActive(false);
+                active_agents[0].setActive(false);
             }
 
             active_agents = this.entities.filter(agent => agent.active);
+            inactive_agents = this.entities.filter(agent => !agent.active);
 
         }
 
@@ -410,8 +413,10 @@ export default class extends YUKA.EntityManager {
 
     }
 
-    update(delta ) {
+    update(delta) {
 
+        this.activateAgents();
+        
         this.buildAgentTree();
 
         super.update(delta);

@@ -71,10 +71,7 @@ export default class extends THREE.ShaderMaterial {
                             if (n[i] != n[4] && (n[i].z > n[4].z || n[i].z == 0.)) {
 
                                 edge = true;
-                                gl_FragColor = vec4(
-                                    mix(vec3(1.), beauty.rgb, n[4].z),
-                                    1.
-                                );
+                                gl_FragColor = vec4(vec3(1. - n[4].z), 1.);
 
                                 break;
                             }
