@@ -15,6 +15,7 @@ export default class {
 
         gui.add(data, 'Population', 1, MAX_AGENTS, 1).onFinishChange(value => {
             entityManager.population = value;
+            entityManager.user_input = true; //TODO find a better way
         });
         
         document.getElementById('gui-container').appendChild(gui.domElement);

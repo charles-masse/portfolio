@@ -93,7 +93,7 @@ class NavMesh extends YUKA.NavMesh {
     }
 
     randomPoint() {
-        //TODO add underscan to prevent agents from spawning inside walls
+        
         const triangles = this.triangles;
         const tri = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)];
 

@@ -43,8 +43,8 @@ const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
 camera.setFocalLength(14.872)
-camera.position.set(15, 7.5, 25);
-camera.lookAt(0, 0, 0);
+camera.position.set(0, 20, 30);
+camera.lookAt(0, 0, 15);
 //Modules
 const pedestrians = await new Pedestrians(loadingManager).init();
 scene.add(pedestrians.objects);

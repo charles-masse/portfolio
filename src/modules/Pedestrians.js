@@ -5,12 +5,13 @@ import {GLTFLoader,} from 'three/addons/loaders/GLTFLoader.js';
 import * as YUKA from 'yuka';
 
 import {NavMeshLoader,} from '../extensions/NavMesh.js'
+import {WallAvoidanceBehavior,} from '../extensions/Steering.js';
 
 import Agent from '../agents/pedestrians/Agent.js';
 import AgentManager from '../agents/pedestrians/AgentManager.js';
 import Shader from '../agents/pedestrians/Shader.js'
 
-// import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
+import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
 
@@ -87,7 +88,7 @@ function renderInstance(vehicle, renderComponent) {
     renderComponent.setMatrixAt(vehicle.agentId, vehicle.worldMatrix);
     //Attributes
     const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[vehicle.agentId] = new YUKA.Vector3(15, 7.5, 25).sub(vehicle.position).length(); //FIX ME
+    instance_depth.array[vehicle.agentId] = new YUKA.Vector3(0, 20, 30).sub(vehicle.position).length(); //TO DO
 
     const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
     instance_frame.array[vehicle.agentId] = instance_frame.array[vehicle.agentId] + 1;
@@ -106,10 +107,11 @@ export default class {
 
     async init() {
 
+        const navMesh = await loadNavMesh(this.loadingManager);
         // this.objects.add(createConvexRegionHelper(navMesh));
 
         this.entityManager = new AgentManager();
-        this.entityManager.navMesh = await loadNavMesh(this.loadingManager);
+        this.entityManager.navMesh = navMesh;
         //Loaders
         const geo = await loadGeo(this.loadingManager);
         const texture = await loadTexture(this.loadingManager);
@@ -122,6 +124,13 @@ export default class {
         for (let i = 0; i < MAX_AGENTS; i++) {
 
             const agent = new Agent(i);
+            //Steering
+            const wall = new WallAvoidanceBehavior(navMesh); //Might not need, have the pathfinder return center of regions instead
+            agent.steering.add(wall);
+
+            const follow = new YUKA.FollowPathBehavior();
+            agent.steering.add(follow);
+
             agent.setRenderComponent(this.instancedMesh, renderInstance);
             this.entityManager.addAgent(agent);
 
@@ -142,17 +151,17 @@ export default class {
         ]);
 
         this.entityManager.addObstacle([
-            new THREE.Vector2(-5, -5),
-            new THREE.Vector2(20, -5),
+            new THREE.Vector2(10, 5),
             new THREE.Vector2(20, 5),
-            new THREE.Vector2(-5, 5),
+            new THREE.Vector2(20, 20),
+            new THREE.Vector2(10, 20),
         ]);
 
         this.entityManager.addObstacle([
-            new THREE.Vector2(-25, -25),
-            new THREE.Vector2(25, -25),
-            new THREE.Vector2(25, -30),
-            new THREE.Vector2(-25, -30),
+            new THREE.Vector2(-20, 20),
+            new THREE.Vector2(-10, 20),
+            new THREE.Vector2(-10, 5),
+            new THREE.Vector2(-20, 5),
         ]);
 
         return this;
