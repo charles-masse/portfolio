@@ -22,8 +22,9 @@ import * as YUKA from 'yuka';
 
 import {computeNewVelocity,} from '../../core/ORCA.js';
 // import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
-import {GoToState, InteractState, CheerState,} from './States.js';
+import {GoToState, CheerState, InteractState, DeadState} from './States.js';
 
+import {StateMachine,} from '../../extensions/States.js';
 import {absSq, distSqPointLineSegment,} from '../../utilities/RVO2.js';
 
 import {MAX_NEIGHBORS,} from '../../settings.js';
@@ -69,10 +70,14 @@ export default class extends YUKA.Vehicle {
         // walk180R.locomotion.set(0, 0, -0.5);
         // agent.blendSpaces.add(walk180R);
         //States
-        this.stateMachine = new YUKA.StateMachine(this);
+        this.stateMachine = new StateMachine(this);
+
         this.stateMachine.add('GoTo', new GoToState());
         this.stateMachine.add('Interact', new InteractState());
         this.stateMachine.add('Cheer', new CheerState());
+        this.stateMachine.add('Dead', new DeadState());
+
+        this.stateMachine.changeTo('Dead');
 
         this.smoother = new YUKA.Smoother(20);
         //ORCA
@@ -93,9 +98,14 @@ export default class extends YUKA.Vehicle {
         } 
 
         else {
+            this.stateMachine.changeTo('Dead');
             this._renderComponentCallback(this, this._renderComponent);
         }
 
+    }
+
+    handleMessage(telegram) {
+        this.stateMachine.handleMessage(telegram);
     }
 
     insertAgentNeighbor(agent) {

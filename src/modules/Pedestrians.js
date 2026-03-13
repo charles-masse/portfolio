@@ -83,15 +83,15 @@ async function loadNavMesh(loadingManager) {
     return navMesh;
 }
 //Render
-function renderInstance(vehicle, renderComponent) {
+function renderInstance(agent, renderComponent) {
     //Geo
-    renderComponent.setMatrixAt(vehicle.agentId, vehicle.worldMatrix);
+    renderComponent.setMatrixAt(agent.agentId, agent.worldMatrix);
     //Attributes
     const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[vehicle.agentId] = new YUKA.Vector3(0, 20, 30).sub(vehicle.position).length(); //TO DO
+    instance_depth.array[agent.agentId] = new YUKA.Vector3(0, 20, 30).sub(agent.position).length(); //TO DO
 
     const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
-    instance_frame.array[vehicle.agentId] = instance_frame.array[vehicle.agentId] + 1;
+    instance_frame.array[agent.agentId] = agent.stateMachine.currentState.current_frame;
 
 }
 

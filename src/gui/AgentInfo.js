@@ -9,10 +9,9 @@ import {COLORS, MAX_NEIGHBORS,} from '../settings.js';
 
 export default class {
 
-    constructor(entityManager, camera) {
+    constructor(entityManager,) {
 
         this.entities = entityManager.entities;
-        this.camera = camera;
 
         this.selected_agent = null;
         //UI
@@ -51,11 +50,7 @@ export default class {
         this.test = anims.addDelaunay(this.entities[0].blendSpaces, 'Blend Spaces');
 
         this.gui.add(controller_values, 'Variation', ['pants', 'skirt', 'tie']).hide();
-        //Listener
-        window.addEventListener('pointerdown', (event) => {
-            const click = this.getClick(event);
-            if (click) this.selectAgent(click.point);
-        });
+
         //Scene objects
         this.objects = new THREE.Group();
         this.initLines();
@@ -77,19 +72,6 @@ export default class {
 
         }
 
-    }
-
-    getClick(event) {
-
-        const mouse = new THREE.Vector2();
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, this.camera);
-        // const intersection = raycaster.intersectObject(this.entities, false)[0];
-
-        return /*intersection*/; //FIX ME
     }
 
     selectAgent(point) {

@@ -23,7 +23,7 @@ const loadingManager = new THREE.LoadingManager(
     },
 
     (itemUrl, itemsLoaded, itemsTotal) => {
-        console.log(`Loading '${itemUrl}' (${itemsLoaded}/${itemsTotal})`);
+        console.log(`Loading '${itemUrl}'`);
     },
 
     (url) => {
@@ -34,7 +34,7 @@ const loadingManager = new THREE.LoadingManager(
 //Renderer
 const canvas = document.querySelector('#canvas');
 
-const renderer = new THREE.WebGLRenderer({canvas, alpha: true,}); //Change to full DMP
+const renderer = new THREE.WebGLRenderer({canvas,/* alpha: true,*/}); //Change to full DMP
 renderer.setSize(window.innerWidth, window.innerHeight);
 // renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
@@ -49,7 +49,7 @@ camera.lookAt(0, 0, 15);
 const pedestrians = await new Pedestrians(loadingManager).init();
 scene.add(pedestrians.objects);
 
-const movieScreen = new MovieScreen();
+const movieScreen = new MovieScreen(pedestrians);
 scene.add(movieScreen.objects);
 
 const city = await City(loadingManager); //TODO Combine with module
@@ -110,4 +110,29 @@ function onWindowResize() {
 
 function onTransitionEnd(event) {
     event.target.remove();
+}
+
+window.addEventListener('pointerdown', (event) => {
+
+    const intersection = getIntersection();
+
+    if (intersection) {
+        movieScreen.update();
+    }
+
+});
+
+function getIntersection() {
+
+    const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+    
+    const intersection = raycaster.intersectObjects(movieScreen.objects.children, true)[0];
+
+    return intersection;
 }

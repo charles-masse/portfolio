@@ -1,27 +1,27 @@
 
 import * as YUKA from 'yuka';
 
-class AgentStateMachine extends YUKA.StateMachine {
+class StateMachine extends YUKA.StateMachine {
 
     update() {
         super.update();
         //Still execute state if it's transitioning out
         if (this.previousState !== null && this.previousState.current_blendFrame) {
-            this.previousState.execute();
+            this.previousState.execute(this.owner);
         }
         
     }
 
 }
 
-class AgentState extends YUKA.State {
+class State extends YUKA.State {
 
-    constructor(locomotion) {
+    constructor() {
         super();
         //Accumulators
         this.current_frame = 0;
         this.current_blendFrame = 0;
-        //Clip
+        
         this.blendFrames = 3; //How many transition frames
 
     }
@@ -38,7 +38,7 @@ class AgentState extends YUKA.State {
 
         this.current_frame += 1;
         //Blend frames
-        if (this.current_blendFrame && owner.stateMachine.previousState) {
+        if (this.current_blendFrame != 0 && owner.stateMachine.previousState) {
             this.current_blendFrame -= 1;
         }
 
@@ -51,6 +51,6 @@ class AgentState extends YUKA.State {
 }
 
 export {
-    AgentStateMachine,
-    AgentState,
+    StateMachine,
+    State,
 };

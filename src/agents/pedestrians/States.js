@@ -1,11 +1,63 @@
 
 import * as YUKA from 'yuka';
 
-class GoToState extends YUKA.State {
+import {State,} from '../../extensions/States.js';
+
+class GoToState extends State {
 
     enter(owner) {
+        super.enter(owner);
 
         owner.maxSpeed = 0.75;
+
+    }
+
+    execute(owner) {
+        super.execute(owner);
+        //Reached exit
+        const path = owner.steering.behaviors[1].path;
+        if (path.finished()) {
+            owner.setActive(false);
+        }
+
+    }
+
+    onMessage(owner, telegram) {
+        owner.stateMachine.changeTo('Cheer')
+    }
+
+}
+
+class InteractState extends State {
+
+}
+
+class CheerState extends State {
+
+    enter(owner) {
+        super.enter(owner);
+
+        owner.maxSpeed = 0;
+
+    }
+
+    onMessage(owner, telegram) {
+        owner.stateMachine.changeTo('GoTo')
+    }
+
+}
+
+class DeadState extends State {
+
+    constructor(){
+        super();
+
+        this.blendFrames = 0;
+
+    }
+
+    exit(owner) {
+        super.enter(owner);
         //Path
         let x;
         let y;
@@ -24,39 +76,21 @@ class GoToState extends YUKA.State {
         const navMesh = owner.manager.navMesh;
         
         const points = navMesh.findPath(new YUKA.Vector3(pos.x, 0, pos.z), new YUKA.Vector3(x, 0, y));
-        this.path = new YUKA.Path();
+        const path = new YUKA.Path();
         for (const point of points) {
-            this.path.add(point);
+            path.add(point);
         }
 
-        owner.steering.behaviors[1].path = this.path; //TODO
+        owner.steering.behaviors[1].path = path; //TODO find the pathbehavior instance
 
     }
 
-    execute(owner) {
-        //Reached exit
-        if (this.path.finished()) {
-            owner.setActive(false);
-        }
-
-    }
-
-    exit(/*owner*/) {
-        this.path = null;
-    }
-
-}
-
-class InteractState extends YUKA.State {
-
-}
-
-class CheerState extends YUKA.State {
 
 }
 
 export {
     GoToState,
-    InteractState,
     CheerState,
+    InteractState,
+    DeadState,
 };
