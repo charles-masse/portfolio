@@ -6,16 +6,14 @@ import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
 import outlineShader from '../shaders/outlineShader.js'
 
+const MAX_DEPTH = "100.";
+
 function isCompatible(object) {
 
     const geometry = object.geometry;
     const hasNormals = (geometry !== undefined) && (geometry.attributes.normal !== undefined);
 
-    return (
-        object.isMesh === true &&
-        object.material !== undefined &&
-        hasNormals === true
-    );
+    return (object.isMesh === true && object.material !== undefined && hasNormals === true);
 }
 
 export default class {
@@ -52,7 +50,7 @@ export default class {
                 varying float color_depth;
 
                 void main() {
-                    gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / 50.), 1.0);
+                    gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / ${MAX_DEPTH}), 1.0);
                 }
             `
         )});

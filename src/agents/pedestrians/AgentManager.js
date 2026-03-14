@@ -67,10 +67,13 @@ export default class extends YUKA.EntityManager {
 
     constructor() {
         super();
-
+        //Spawner
         this.population = -1;
+        this.active_agents = [];
+        this.inactive_agents = [];
         this.user_input = true;
-
+        //KdTree
+        this.agents = [];
         this.obstacles = new Array();
         this.buildObstacleTree();
 
@@ -78,6 +81,7 @@ export default class extends YUKA.EntityManager {
 
     addAgent(agent) {
         super.add(agent);
+        this.inactive_agents.push(agent);
     }
 
     removeAgent(agent) {
@@ -123,89 +127,39 @@ export default class extends YUKA.EntityManager {
         return obstacleNo;
     }
 
-    removeObstacle() {
-        //TODO
-    }
-
-    bestCandidate() {
-
-        const entities = this.entities.filter(entity => entity.active);
-
-        let best;
-        let maxDist = -Infinity;
-        for (let i = 0; i < 10; i++) {
-
-            const {x, y} = this.navMesh.randomPoint();
-            const pos = new YUKA.Vector3(x, 0, y);
-
-            const minDist = Math.min(...entities.map(entity => pos.distanceTo(entity.position)));
-
-            if (minDist > maxDist) {
-
-                maxDist = minDist;
-                best = pos;
-
-            }
-
-        }
-
-        return best;
-    }
-
-    activateAgents() {
-
-        let active_agents = this.entities.filter(agent => agent.active);
-        let inactive_agents = this.entities.filter(agent => !agent.active);
-        
-        while (active_agents.length != this.population) {
-
-            if (active_agents.length < this.population) {
-
-                if (this.user_input) {
-                    inactive_agents[0].position.copy(this.bestCandidate());
-                } else {
-                    //TODO Make this better
-                    let x;
-                    let y;
-
-                    if (Math.random() > 0.5) {
-                        x = -22.5;
-                        y = 12.5;
-                    }
-
-                    else {
-                        x = 22.5;
-                        y = 12.5;
-                    }
-
-                    inactive_agents[0].position.copy(new YUKA.Vector3(x, 0, y));
-
-                }
-                
-                inactive_agents[0].setActive(true);
-
-            } else if (active_agents.length > this.population) {
-                
-                active_agents[0].position.set(0, -9999, 0); //Shadow Realm
-                active_agents[0].setActive(false);
-                
-            }
-
-            active_agents = this.entities.filter(agent => agent.active);
-            inactive_agents = this.entities.filter(agent => !agent.active);
-
-        }
-
-        this.user_input = false;
-
-    }
-
     removeObstacle(obstacle) {
 
         const index = this.obstacles.indexOf(obstacle);
         this.obstacles.splice(index, 1);
 
         return this;
+    }
+
+    activateAgents() {
+        
+        while (this.active_agents.length != this.population) {
+
+            if (this.active_agents.length < this.population) {
+
+                const agent = this.inactive_agents[0];
+
+                agent.setActive(true);
+
+            }
+
+            else if (this.active_agents.length > this.population) {
+                //Pick random agent
+                const random_idx = Math.floor(Math.random() * this.active_agents.length);
+                const agent = this.active_agents[random_idx];
+
+                agent.setActive(false);
+
+            }
+
+        }
+
+        this.user_input = false;
+
     }
 
     buildAgentTree() {
@@ -474,9 +428,8 @@ export default class extends YUKA.EntityManager {
     update(delta) {
 
         this.activateAgents();
-        
         this.buildAgentTree();
-
+        
         super.update(delta);
 
     }

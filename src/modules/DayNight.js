@@ -23,16 +23,16 @@ export default class {
         this.canvas = canvas;
         this.emissives = emissives;
 
-        this.sun = new THREE.DirectionalLight(0xffffff, 20)
+        this.sun = new THREE.DirectionalLight(0xffffff, 15)
         this.sun.castShadow = true
         // this.sun.shadow.radius = 2
         this.sun.shadow.bias = -0.001
-        this.sun.shadow.mapSize.set(2048, 2048);
+        this.sun.shadow.mapSize.set(1024, 1024);
 
         this.sun_helper = new THREE.DirectionalLightHelper(this.sun, 1);
         this.sun_helper.visible = false; // debug
 
-        this.ambient = new THREE.AmbientLight(0xffffff, 10);
+        this.ambient = new THREE.AmbientLight(0xffffff, 7.5);
 
         this.objects = new THREE.Group();
         this.objects.add(this.sun, this.sun_helper, this.ambient);
@@ -123,7 +123,7 @@ export default class {
         this.sun_helper.update();
         //Sky color
         const {top_color, bot_color, ambient_color} = this.colorChange(time_offset);
-        this.canvas.style.background = `linear-gradient(to bottom, ${top_color}, ${bot_color})`;
+        // this.canvas.style.background = `linear-gradient(to bottom, ${top_color}, ${bot_color})`;
         this.ambient.color.set(ambient_color);
         //Emissives--TODO From array
         this.emissives.children[0].material.emissiveIntensity = this.cityLights(time_offset);

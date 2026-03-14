@@ -25,9 +25,20 @@ import {computeNewVelocity,} from '../../core/ORCA.js';
 import {GoToState, CheerState, InteractState, DeadState} from './States.js';
 
 import {StateMachine,} from '../../extensions/States.js';
+import Path from '../../extensions/Path.js';
+import {pickChoice,} from '../../utilities/misc.js';
 import {absSq, distSqPointLineSegment,} from '../../utilities/RVO2.js';
 
 import {MAX_NEIGHBORS,} from '../../settings.js';
+
+const EXITS = [
+    new YUKA.Vector3(-23, 0, -20),
+    new YUKA.Vector3(23, 0, -20),
+    new YUKA.Vector3(-40, 0, -20),
+    new YUKA.Vector3(40, 0, -20),
+    new YUKA.Vector3(-10, 0, 50),
+    new YUKA.Vector3(10, 0, 50),
+];
 
 export default class extends YUKA.Vehicle {
 
@@ -89,17 +100,69 @@ export default class extends YUKA.Vehicle {
 
     }
 
+    bestCandidate() {
+
+        let best;
+        let maxDist = -Infinity;
+        for (let i = 0; i < 10; i++) {
+
+            const {x, y} = this.manager.navMesh.randomPoint();
+            const pos = new YUKA.Vector3(x, 0, y);
+
+            const minDist = Math.min(...this.manager.agents.map(entity => pos.distanceTo(entity.position)));
+
+            if (minDist > maxDist) {
+
+                maxDist = minDist;
+                best = pos;
+
+            }
+
+        }
+
+        return best;
+    }
+
     setActive(bool) {
 
         this.active = bool;
 
         if (bool) {
+
+            if (this.manager.user_input) {
+                this.position.copy(this.bestCandidate());
+            }
+
+            else {
+                this.position.copy(pickChoice(EXITS));
+            }
+            //Goal
+            const path = new Path();
+            for (const point of this.manager.navMesh.findPath(this.position, pickChoice(EXITS))) {
+                path.add(point);
+            }
+
+            this.steering.behaviors[1].path = path; //TODO find the pathbehavior instance
+
             this.stateMachine.changeTo('GoTo');
-        } 
+
+            const index = this.manager.inactive_agents.indexOf(this);
+            this.manager.inactive_agents.splice(index, 1);
+            this.manager.active_agents.push(this);
+
+        }
 
         else {
+
             this.stateMachine.changeTo('Dead');
+
+            this.position.set(0, -9999, 0); //Shadow Realm
             this._renderComponentCallback(this, this._renderComponent);
+
+            const index = this.manager.active_agents.indexOf(this);
+            this.manager.active_agents.splice(index, 1);
+            this.manager.inactive_agents.push(this);
+            
         }
 
     }

@@ -16,14 +16,14 @@ export default class {
         const videoMaterial =  new THREE.MeshBasicMaterial({
             map: new THREE.VideoTexture(this.video),
         });
-        const screen = new THREE.PlaneGeometry(9.6, 5.4);
+        const screen = new THREE.PlaneGeometry(19.2, 10.8);
         const videoScreen = new THREE.Mesh(screen, videoMaterial);
-        videoScreen.position.set(0, 6.5, 5.01);
+        videoScreen.position.set(1.25, 11.5, 7);
 
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
         const material = new THREE.MeshBasicMaterial();
         this.playButton = new THREE.Mesh(geometry, material);
-        this.playButton.position.set(0, 6.5, 5.01)
+        this.playButton.position.set(1.25, 11.5, 7)
 
         this.objects = new THREE.Group();
         this.objects.add(videoScreen);

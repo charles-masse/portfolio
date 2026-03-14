@@ -15,7 +15,7 @@ class GoToState extends State {
     execute(owner) {
         super.execute(owner);
         //Reached exit
-        const path = owner.steering.behaviors[1].path;
+        const path = owner.steering.behaviors[1].path; //TODO Find followPath instance
         if (path.finished()) {
             owner.setActive(false);
         }
@@ -28,15 +28,12 @@ class GoToState extends State {
 
 }
 
-class InteractState extends State {
-
-}
-
 class CheerState extends State {
 
     enter(owner) {
         super.enter(owner);
 
+        this.blendFrames = 0;
         owner.maxSpeed = 0;
 
     }
@@ -44,6 +41,10 @@ class CheerState extends State {
     onMessage(owner, telegram) {
         owner.stateMachine.changeTo('GoTo')
     }
+
+}
+
+class InteractState extends State {
 
 }
 
@@ -55,36 +56,6 @@ class DeadState extends State {
         this.blendFrames = 0;
 
     }
-
-    exit(owner) {
-        super.enter(owner);
-        //Path
-        let x;
-        let y;
-        //TODO make this better
-        if (Math.random() > 0.5) {
-            x = -22.5;
-            y = 12.5;
-        }
-
-        else {
-            x = 22.5;
-            y = 12.5;
-        }
-
-        const pos = owner.position;
-        const navMesh = owner.manager.navMesh;
-        
-        const points = navMesh.findPath(new YUKA.Vector3(pos.x, 0, pos.z), new YUKA.Vector3(x, 0, y));
-        const path = new YUKA.Path();
-        for (const point of points) {
-            path.add(point);
-        }
-
-        owner.steering.behaviors[1].path = path; //TODO find the pathbehavior instance
-
-    }
-
 
 }
 

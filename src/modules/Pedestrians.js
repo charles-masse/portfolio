@@ -4,13 +4,12 @@ import {GLTFLoader,} from 'three/addons/loaders/GLTFLoader.js';
 
 import * as YUKA from 'yuka';
 
-import {NavMeshLoader,} from '../extensions/NavMesh.js'
-import {WallAvoidanceBehavior,} from '../extensions/Steering.js';
-
 import Agent from '../agents/pedestrians/Agent.js';
 import AgentManager from '../agents/pedestrians/AgentManager.js';
 import Shader from '../agents/pedestrians/Shader.js'
 
+import {NavMeshLoader,} from '../extensions/NavMesh.js'
+import {WallAvoidanceBehavior,} from '../extensions/Steering.js';
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
@@ -51,11 +50,6 @@ async function loadGeo(loadingManager) {
             geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
             geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
             geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            
-            // geo.setAttribute('length', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            // geo.setAttribute('origin', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            // geo.setAttribute('amplitude', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            // geo.setAttribute('textureStart', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
 
             resolve(geo);
 
@@ -83,23 +77,24 @@ async function loadNavMesh(loadingManager) {
     return navMesh;
 }
 //Render
-function renderInstance(agent, renderComponent) {
+function renderInstance(entity, renderComponent, camera) {
     //Geo
-    renderComponent.setMatrixAt(agent.agentId, agent.worldMatrix);
+    renderComponent.setMatrixAt(entity.agentId, entity.worldMatrix);
     //Attributes
     const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[agent.agentId] = new YUKA.Vector3(0, 20, 30).sub(agent.position).length(); //TO DO
+    instance_depth.array[entity.agentId] = camera.position.clone().sub(entity.position).length();
 
     const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
-    instance_frame.array[agent.agentId] = agent.stateMachine.currentState.current_frame;
+    instance_frame.array[entity.agentId] = entity.stateMachine.currentState.current_frame;
 
 }
 
 export default class {
 
-    constructor(loadingManager) {
+    constructor(loadingManager, camera) {
 
         this.loadingManager = loadingManager;
+        this.camera = camera;
 
         this.objects = new THREE.Group();
  
@@ -125,13 +120,16 @@ export default class {
 
             const agent = new Agent(i);
             //Steering
-            const wall = new WallAvoidanceBehavior(navMesh); //Might not need, have the pathfinder return center of regions instead
+            const wall = new WallAvoidanceBehavior(navMesh); //TODO Remove after Path rework
             agent.steering.add(wall);
 
             const follow = new YUKA.FollowPathBehavior();
             agent.steering.add(follow);
 
-            agent.setRenderComponent(this.instancedMesh, renderInstance);
+            agent.setRenderComponent(
+                this.instancedMesh,
+                (entity, renderComponent) => renderInstance(entity, renderComponent, this.camera)
+            );
             this.entityManager.addAgent(agent);
 
             color[i * 3 + 0] = Math.random();
@@ -142,27 +140,27 @@ export default class {
 
         this.instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
         this.instancedMesh.acti
-        //Obstacles TODO
-        this.entityManager.addObstacle([
-            new THREE.Vector2(-5, 10),
-            new THREE.Vector2(5, 10),
-            new THREE.Vector2(5, 25),
-            new THREE.Vector2(-5, 25),
-        ]);
+        //TODO Obstacles
+        // this.entityManager.addObstacle([
+        //     new THREE.Vector2(-5, 10),
+        //     new THREE.Vector2(5, 10),
+        //     new THREE.Vector2(5, 25),
+        //     new THREE.Vector2(-5, 25),
+        // ]);
 
-        this.entityManager.addObstacle([
-            new THREE.Vector2(10, 5),
-            new THREE.Vector2(20, 5),
-            new THREE.Vector2(20, 20),
-            new THREE.Vector2(10, 20),
-        ]);
+        // this.entityManager.addObstacle([
+        //     new THREE.Vector2(10, 5),
+        //     new THREE.Vector2(20, 5),
+        //     new THREE.Vector2(20, 20),
+        //     new THREE.Vector2(10, 20),
+        // ]);
 
-        this.entityManager.addObstacle([
-            new THREE.Vector2(-20, 20),
-            new THREE.Vector2(-10, 20),
-            new THREE.Vector2(-10, 5),
-            new THREE.Vector2(-20, 5),
-        ]);
+        // this.entityManager.addObstacle([
+        //     new THREE.Vector2(-20, 20),
+        //     new THREE.Vector2(-10, 20),
+        //     new THREE.Vector2(-10, 5),
+        //     new THREE.Vector2(-20, 5),
+        // ]);
 
         return this;
     }
