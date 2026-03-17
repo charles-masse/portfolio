@@ -7,7 +7,7 @@ I always wanted an interactive Crowd portfolio where, instead of being just a fe
 
 ## How to manage lots of characters on screen
 Obviously, it's Crowd—you need a lot of characters, but it's also the scariest part.
-My website needs to run well on most computers and smartphones and the last thing I want is to lose an opportunity because my website was lagging on a recruiters' phone.
+My website needs to run well on most computers and smartphones because the last thing I want is to lose an opportunity as a result of a laggy portfolio on a recruiter's phone.
 
 
 Here's what I did to overcome these hurdles :
@@ -17,11 +17,11 @@ The *Uncanny Valley* is a tough hill to climb and the results often age badly. I
 
 I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
 
-![A pictogram character from the Portal 2 trailers waving to the camera](/../gh-images/portal2.gif)
+![Pictogram character from the Portal 2 trailers waving at the camera](/../gh-images/portal2.gif)
 
 For the environment, I went with something similar. Super minimalistic shapes to keep it low poly and white textures not to distract too much from the crowd. The only compromise I opted for is enabling shadows to create depth and contrast.
 
-![A minimalist city with hard shadows](/../gh-images/city.jpg)
+![Minimalist city with hard shadows reference](/../gh-images/city.jpg)
 
 ### Instanced characters
 A more technical way to handle a large number of objects in **Three.js** is to use a single *Instanced Mesh* with X instances, instead of cloning the same object X times.
@@ -39,7 +39,7 @@ As you can see, the max FPS is nearly doubled with the instances, they load 10x 
 The only problem, every instanced characters must look the same and play the same animation...
 
 ### GL Shaders
-Like I mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same animation. This is where custom shaders come into play.
+Like I mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where custom shaders come into play.
 
 By overriding each agent's vertices position in the *Vertex Shader*, you can have everyone play a different clip. Additionally, to lower the CPU's calculation load, the vertex animations can be read by the GPU through a texture where each pixel's RGB values represent a XYZ transforms :
 
@@ -47,14 +47,15 @@ By overriding each agent's vertices position in the *Vertex Shader*, you can hav
 
 ## An interesting environment
 
+
 ### Showcase the typical crowd behaviors
 - Pedestrians
-- Stairs
 - Spectators
 - Flock
 - Traffic
 
 ### Be interesting on phones and computers
+
 
 ## Special Thanks
 - [Mugen87](https://github.com/Mugen87) for the [Yuka Game AI library](https://github.com/Mugen87/yuka)

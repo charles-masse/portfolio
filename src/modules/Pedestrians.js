@@ -48,6 +48,7 @@ async function loadGeo(loadingManager) {
             const geo = mesh.geometry;
             
             geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+            geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
             geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
             geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
 
@@ -60,10 +61,19 @@ async function loadGeo(loadingManager) {
     return geo;
 }
 
-async function loadTexture(loadingManager) {
+async function loadTexture(path, loadingManager=null) {
 
     const loader = new THREE.TextureLoader(loadingManager);
-    const texture = loader.loadAsync('VATs/animations.png');
+    const texture = loader.loadAsync(path);
+
+    return texture;
+}
+
+function rawTexture(texture) {
+
+    texture.flipY = false;
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
 
     return texture;
 }
@@ -108,13 +118,15 @@ export default class {
         this.entityManager = new AgentManager();
         this.entityManager.navMesh = navMesh;
         //Loaders
-        const geo = await loadGeo(this.loadingManager);
-        const texture = await loadTexture(this.loadingManager);
+        const agent_geo = await loadGeo(this.loadingManager);
+        const anim_texture = await loadTexture('VATs/animations.png', this.loadingManager);
+        const alpha_texture = await loadTexture('textures/pictogramAlpha.png', this.loadingManager);
         //Instance
-        this.instancedMesh = new THREE.InstancedMesh(geo, new Shader(texture), MAX_AGENTS);
+        this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(anim_texture), rawTexture(alpha_texture)), MAX_AGENTS);
         this.objects.add(this.instancedMesh);
         //Link each instance to their individual agent
         const color = new Float32Array(MAX_AGENTS * 3);
+        const variation = new Float32Array(MAX_AGENTS);
         
         for (let i = 0; i < MAX_AGENTS; i++) {
 
@@ -136,10 +148,12 @@ export default class {
             color[i * 3 + 1] = Math.random();
             color[i * 3 + 2] = Math.random();
 
+            variation[i] = Math.floor(Math.random() * 2);
+
         }
 
         this.instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
-        this.instancedMesh.acti
+        this.instancedMesh.geometry.setAttribute("instance_variation", new THREE.InstancedBufferAttribute(variation, 1));
         //TODO Obstacles
         // this.entityManager.addObstacle([
         //     new THREE.Vector2(-5, 10),

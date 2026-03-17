@@ -8,22 +8,34 @@ class GoToState extends State {
     enter(owner) {
         super.enter(owner);
 
-        owner.maxSpeed = 0.75;
+        owner.maxSpeed = 0.8;
 
     }
 
     execute(owner) {
         super.execute(owner);
         //Reached exit
-        const path = owner.steering.behaviors[1].path; //TODO Find followPath instance
-        if (path.finished()) {
-            owner.setActive(false);
-        }
+        for (const behavior of owner.steering.behaviors) {
 
+            if (behavior instanceof YUKA.FollowPathBehavior) {
+
+                if (behavior.path.finished()) {
+                    owner.setActive(false);
+                }
+                break;
+
+            }
+            
+        }
+        
     }
 
     onMessage(owner, telegram) {
-        owner.stateMachine.changeTo('Cheer')
+
+        if (telegram.message.startsWith('MovieScreen') && telegram.data === 1) {
+            owner.stateMachine.changeTo('Cheer')
+        }
+
     }
 
 }
@@ -39,7 +51,11 @@ class CheerState extends State {
     }
 
     onMessage(owner, telegram) {
-        owner.stateMachine.changeTo('GoTo')
+
+        if (telegram.message.startsWith('MovieScreen') && telegram.data === 0) {
+            owner.stateMachine.changeTo('GoTo')
+        }
+        
     }
 
 }

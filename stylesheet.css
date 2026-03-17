@@ -14,8 +14,9 @@ video {
 }
 
 #version {
+    color: darkgray;
     position: fixed;
-    top: 2px;
+    bottom: 2px;
     left: 2px;
     z-index: 1000;
 }

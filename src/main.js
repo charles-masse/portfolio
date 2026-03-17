@@ -22,7 +22,7 @@ const loadingManager = new THREE.LoadingManager(
         loadingScreen.addEventListener('transitionend', onTransitionEnd);
     },
 
-    (itemUrl, itemsLoaded, itemsTotal) => {
+    (itemUrl) => {
         console.log(`Loading '${itemUrl}'`);
     },
 
@@ -62,7 +62,7 @@ scene.add(dayNight.objects);
 
 const render = new Render(renderer, scene, camera);
 //GUI
-const crowdSpawner = new CrowdSpawner(pedestrians.entityManager);
+/*const crowdSpawner = */new CrowdSpawner(pedestrians.entityManager);
 // const agentInfo = new AgentInfo(pedestrians.entityManager, camera);
 const stats = new Stats();
 // scene.add(agentInfo.objects);
@@ -115,7 +115,7 @@ function onTransitionEnd(event) {
     event.target.remove();
 }
 
-window.addEventListener('pointerdown', (event) => {
+window.addEventListener('pointerdown', (/*event*/) => {
 
     const intersection = getIntersection();
 

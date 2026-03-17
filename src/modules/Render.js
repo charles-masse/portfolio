@@ -32,7 +32,7 @@ export default class {
         //Comp
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new ShaderPass(new outlineShader(this.depthidRender, this.beautyRender)));
-        this.composer.addPass(new SMAAPass(window.innerWidth * 8, window.innerHeight * 8));
+        this.composer.addPass(new SMAAPass(window.innerWidth * 16, window.innerHeight * 16));
 
     }
 
@@ -46,11 +46,16 @@ export default class {
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
             `
-                varying vec3 color_id;
-                varying float color_depth;
+                varying vec2 vUv;
+
+                flat varying float variation;
+                flat varying vec3 color_id;
+                flat varying float color_depth;
+
+                uniform sampler2D alpha;
 
                 void main() {
-                    gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / ${MAX_DEPTH}), 1.0);
+                    gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / ${MAX_DEPTH}), texture2D(alpha, vUv)[int(variation)]);
                 }
             `
         )});
@@ -62,8 +67,14 @@ export default class {
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
             `
+                varying vec2 vUv;
+
+                flat varying float variation;
+
+                uniform sampler2D alpha;
+
                 void main() {
-                    gl_FragColor = vec4(vec3(0.), 1.0);
+                    gl_FragColor = vec4(vec3(0.), texture2D(alpha, vUv)[int(variation)]);
                 }
             `
         )});

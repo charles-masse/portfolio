@@ -141,8 +141,15 @@ export default class extends YUKA.Vehicle {
             for (const point of this.manager.navMesh.findPath(this.position, pickChoice(EXITS))) {
                 path.add(point);
             }
+            //Find behavior
+            for (const behavior of this.steering.behaviors) {
+                if (behavior instanceof YUKA.FollowPathBehavior) {
+                    behavior.path = path;
 
-            this.steering.behaviors[1].path = path; //TODO find the pathbehavior instance
+                    break;
+                }
+                
+            }
 
             this.stateMachine.changeTo('GoTo');
 
