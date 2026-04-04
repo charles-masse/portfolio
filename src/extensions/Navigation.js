@@ -3,6 +3,43 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
+class Path extends YUKA.Path {
+
+    constructor() {
+        super();
+
+        this.done = false;
+
+    }
+
+    finished() {
+        return this.done;
+    }
+
+    advance() {
+
+        this._index ++;
+
+        if ((this._index === this._waypoints.length)) {
+
+            if (this.loop === true) {
+                this._index = 0;
+            } 
+
+            else {
+
+                this.done = true;
+                this._index --;
+                
+            }
+
+        }
+
+        return this;
+    }
+
+}
+
 class NavMesh extends YUKA.NavMesh {
 
     constructor() {
@@ -33,7 +70,7 @@ class NavMesh extends YUKA.NavMesh {
 
             const contour_2d = contour.map(p => new THREE.Vector2(p.x, p.z));
 
-            const triangles = THREE.ShapeUtils.triangulateShape(contour_2d, [])
+            const triangles = THREE.ShapeUtils.triangulateShape(contour_2d, []);
             const triangles_points = triangles.map(tri => tri.map(idx => contour_2d[idx]));
 
             triangulated.push(...triangles_points);
@@ -76,7 +113,7 @@ class NavMesh extends YUKA.NavMesh {
                         perimeter[e].from.clone().sub(perimeter[i].to).length(),
                         perimeter[e].to.clone().sub(perimeter[i].to).length(),
                         perimeter[e].to.clone().sub(perimeter[i].from).length(),
-                    ]
+                    ];
 
                     if (distances.filter(v => v === 0).length == 2) {
                         final_perimeter.splice(final_perimeter.indexOf(perimeter[i]), 1);
@@ -508,5 +545,6 @@ class Parser {
 }
 
 export {
+    Path,
     NavMeshLoader,
 };

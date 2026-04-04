@@ -18,9 +18,11 @@
 
 import * as THREE from 'three';
 
-import {absSq, det, sqr, abs,} from '../utilities/RVO2.js';
+import * as YUKA from 'yuka';
 
-import {TIME_STEP, RVO_EPSILON,} from '../settings.js';
+import {RVO_EPSILON, absSq, det, sqr, abs,} from '../utilities/RVO2.js';
+
+import {TIME_STEP,} from '../settings.js';
 
 class Line {
 
@@ -242,6 +244,9 @@ function computeNewVelocity(agent) {
     for (let i = 0; i < agent._agentNeighbors.length; ++i) {
 
         const other = agent._agentNeighbors[i][1];
+        //Only use moving entities
+        if (!(other instanceof YUKA.MovingEntity)) continue;
+
         const other_position = new THREE.Vector2(other.position.x, other.position.z);
         const other_velocity = new THREE.Vector2(other.velocity.x, other.velocity.z);
 
@@ -313,7 +318,7 @@ function computeNewVelocity(agent) {
     const lineFail = linearProgram2(agent._orcaLines, agent.boundingRadius, velocity, false, newVelocity);
 
     if (lineFail < agent._orcaLines.length) {
-        linearProgram3(agent._orcaLines, numObstLines, lineFail, agent.boundingRadius, newVelocity)
+        linearProgram3(agent._orcaLines, numObstLines, lineFail, agent.boundingRadius, newVelocity);
     }
 
     
@@ -459,7 +464,7 @@ function linearProgram3(lines, numObstLines, beginLine, radius, result) {
             const tempResult = result.clone();
 
             if (linearProgram2(projLines, radius, new THREE.Vector2(-lines[i].direction.y, lines[i].direction.x), true, result) < projLines.length) {
-                //This should in principle not happen.  The result is by definition already in the feasible  region of this linear program.
+                //This should in principle not happen. The result is by definition already in the feasible region of this linear program.
                 //If it fails, it is due to small floating point error, and the current result is kept.
                 result.copy(tempResult);
             }

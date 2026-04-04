@@ -1,15 +1,17 @@
 
 import * as THREE from 'three';
-import {GLTFLoader,} from 'three/addons/loaders/GLTFLoader.js';
 
 import * as YUKA from 'yuka';
 
 import Agent from '../agents/pedestrians/Agent.js';
-import AgentManager from '../agents/pedestrians/AgentManager.js';
-import Shader from '../agents/pedestrians/Shader.js'
+import Shader from '../agents/pedestrians/Shader.js';
 
-import {NavMeshLoader,} from '../extensions/NavMesh.js'
+import {KdTreeManager,} from '../extensions/Entities.js';
 import {WallAvoidanceBehavior,} from '../extensions/Steering.js';
+
+import {StopSign,} from '../agents/Triggers.js';
+
+import {loadGLTF, loadTexture, rawTexture, loadNavMesh,} from '../utilities/loaders.js';
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
 
 import {MAX_AGENTS,} from '../settings.js';
@@ -30,63 +32,7 @@ import {MAX_AGENTS,} from '../settings.js';
 
 //     return points;
 // }
-//Loaders
-async function loadGeo(loadingManager) {
 
-    const geo = new Promise((resolve) => {
-
-        new GLTFLoader(loadingManager).load('models/pictogram.gltf', (gltf) => {
-
-            let mesh = null;
-
-            gltf.scene.traverse((child) => {
-                if (child.isMesh) {
-                    mesh = child;
-                }
-            });
-
-            const geo = mesh.geometry;
-            
-            geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-            geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-
-            resolve(geo);
-
-        });
-
-    });
-
-    return geo;
-}
-
-async function loadTexture(path, loadingManager=null) {
-
-    const loader = new THREE.TextureLoader(loadingManager);
-    const texture = loader.loadAsync(path);
-
-    return texture;
-}
-
-function rawTexture(texture) {
-
-    texture.flipY = false;
-    texture.minFilter = THREE.NearestFilter;
-    texture.magFilter = THREE.NearestFilter;
-
-    return texture;
-}
-
-async function loadNavMesh(loadingManager) {
-
-    const navMesh = new Promise((resolve) => {
-        new NavMeshLoader(loadingManager).load('models/navmesh.gltf').then((gltf) => {resolve(gltf)});
-    });
-
-    return navMesh;
-}
-//Render
 function renderInstance(entity, renderComponent, camera) {
     //Geo
     renderComponent.setMatrixAt(entity.agentId, entity.worldMatrix);
@@ -112,15 +58,21 @@ export default class {
 
     async init() {
 
-        const navMesh = await loadNavMesh(this.loadingManager);
-        // this.objects.add(createConvexRegionHelper(navMesh));
-
-        this.entityManager = new AgentManager();
-        this.entityManager.navMesh = navMesh;
-        //Loaders
-        const agent_geo = await loadGeo(this.loadingManager);
+        const navMesh = await loadNavMesh('models/navmesh.gltf', this.loadingManager);
+        const agent_mesh = await loadGLTF('models/pictogram.gltf', this.loadingManager);
         const anim_texture = await loadTexture('VATs/animations.png', this.loadingManager);
         const alpha_texture = await loadTexture('textures/pictogramAlpha.png', this.loadingManager);
+        //Helpers
+        this.objects.add(createConvexRegionHelper(navMesh));
+
+        const agent_geo = agent_mesh.geometry;
+        agent_geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        
+        this.entityManager = new KdTreeManager();
+        this.entityManager.navMesh = navMesh;
         //Instance
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(anim_texture), rawTexture(alpha_texture)), MAX_AGENTS);
         this.objects.add(this.instancedMesh);
@@ -137,13 +89,13 @@ export default class {
 
             const follow = new YUKA.FollowPathBehavior();
             agent.steering.add(follow);
-
+            //Render
             agent.setRenderComponent(
                 this.instancedMesh,
                 (entity, renderComponent) => renderInstance(entity, renderComponent, this.camera)
             );
             this.entityManager.addAgent(agent);
-
+            //Shader attributes
             color[i * 3 + 0] = Math.random();
             color[i * 3 + 1] = Math.random();
             color[i * 3 + 2] = Math.random();
@@ -175,6 +127,11 @@ export default class {
         //     new THREE.Vector2(-10, 5),
         //     new THREE.Vector2(-20, 5),
         // ]);
+        //Stop signs
+        // this.stop = new StopSign(new YUKA.RectangularTriggerRegion(new YUKA.Vector3(15, 5, 15)));
+        // this.stop.position.set(-8, 0, 33);
+
+        // this.entityManager.add(this.stop);
 
         return this;
     }
@@ -182,9 +139,9 @@ export default class {
     update(time) {
 
         this.entityManager.update(time.getDelta());
-        
+        //Update instances
         this.instancedMesh.instanceMatrix.needsUpdate = true;
-
+        //Update attributes
         const attributes = this.instancedMesh.geometry.attributes;
         for (const name in attributes) {
 

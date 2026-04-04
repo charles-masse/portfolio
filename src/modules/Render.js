@@ -4,7 +4,7 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
-import outlineShader from '../shaders/outlineShader.js'
+import outlineShader from '../shaders/outlineShader.js';
 
 const MAX_DEPTH = "100.";
 
@@ -41,7 +41,7 @@ export default class {
         this.renderer.setRenderTarget(this.beautyRender);
         this.renderer.render(this.scene, this.camera);
         //Create object mask
-        this.scene.traverse((object) => {this.objectMask(object)});
+        this.scene.traverse((object) => {this.objectMask(object);});
         //Depth/ID Pass
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
@@ -58,12 +58,12 @@ export default class {
                     gl_FragColor = vec4(vec3(color_id[0], color_id[1], color_depth / ${MAX_DEPTH}), texture2D(alpha, vUv)[int(variation)]);
                 }
             `
-        )});
+        );});
 
         this.renderer.setRenderTarget(this.depthidRender);
         this.renderer.render(this.scene, this.camera);
         //Put the original materials back
-        this.scene.traverse((object) => {this.disableMask(object)});
+        this.scene.traverse((object) => {this.disableMask(object);});
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
             `
@@ -77,7 +77,7 @@ export default class {
                     gl_FragColor = vec4(vec3(0.), texture2D(alpha, vUv)[int(variation)]);
                 }
             `
-        )});
+        );});
         //Comp
         this.composer.render();
 

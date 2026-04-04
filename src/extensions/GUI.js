@@ -38,9 +38,9 @@ class DelaunayController extends LIL.Controller {
         super(parent, object, property, 'lil-color');
 
         this.$display = document.createElement('canvas');
-        this.$display.width = 100
-        this.$display.height = 100
-        this.$display.style.width = '100px'
+        this.$display.width = 100;
+        this.$display.height = 100;
+        this.$display.style.width = '100px';
         this.$display.style.height = '100px';
         
         this.$widget.appendChild(this.$display);

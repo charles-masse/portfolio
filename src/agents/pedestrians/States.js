@@ -33,12 +33,25 @@ class GoToState extends State {
     onMessage(owner, telegram) {
 
         if (telegram.message.startsWith('MovieScreen') && telegram.data === 1) {
-            owner.stateMachine.changeTo('Cheer')
+            owner.stateMachine.changeTo('Cheer');
         }
 
     }
 
 }
+
+class IdleState extends State {
+
+    enter(owner) {
+        super.enter(owner);
+
+        this.blendFrames = 0;
+        owner.maxSpeed = 0;
+
+    }
+
+}
+
 
 class CheerState extends State {
 
@@ -53,7 +66,7 @@ class CheerState extends State {
     onMessage(owner, telegram) {
 
         if (telegram.message.startsWith('MovieScreen') && telegram.data === 0) {
-            owner.stateMachine.changeTo('GoTo')
+            owner.stateMachine.changeTo('GoTo');
         }
         
     }
@@ -66,8 +79,8 @@ class InteractState extends State {
 
 class DeadState extends State {
 
-    constructor(){
-        super();
+    enter(owner) {
+        super.enter(owner);
 
         this.blendFrames = 0;
 
@@ -77,6 +90,7 @@ class DeadState extends State {
 
 export {
     GoToState,
+    IdleState,
     CheerState,
     InteractState,
     DeadState,

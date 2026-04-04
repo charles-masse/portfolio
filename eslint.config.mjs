@@ -8,6 +8,10 @@ export default defineConfig([
     ignores: [".vite/**"],
     plugins: { js },
     extends: ["js/recommended"],
-    languageOptions: { globals: {...globals.browser, ...globals.node} }
+    languageOptions: {globals: {...globals.browser, ...globals.node}},
+    rules: {
+      "semi": ["error", "always"],
+      "no-tabs" : ["error"],
+    },
   },
 ]);

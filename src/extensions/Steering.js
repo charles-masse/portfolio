@@ -71,7 +71,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
             new LineSegment(position, feeler_end)
         );
 
-        return feelers
+        return feelers;
     }
 
     calculate(vehicle, force) {

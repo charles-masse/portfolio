@@ -13,7 +13,7 @@ My website needs to run well on most computers and smartphones because the last 
 Here's what I did to overcome these hurdles :
 
 ### Stylized over Realistic
-The *Uncanny Valley* is a tough hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much ressources to make it look nice. 
+The *Uncanny Valley* is a tough hill to climb and the results often age badly. Instead, I opted for a stylized look as I feel, if done right, doesn't age as quickly and doesn't require as much resources to make it look nice. 
 
 I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins> : simple pictogram characters, but full of personality. They can be achieved with a low amount of polygons, variations can be a simple texture swap and they don't need to be affected by lights since they're a flat black color.
 
@@ -21,10 +21,10 @@ I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins
 
 For the environment, I went with something similar. Super minimalistic shapes to keep it low poly and white textures not to distract too much from the crowd. The only compromise I opted for is enabling shadows to create depth and contrast.
 
-![Minimalist city with hard shadows reference](/../gh-images/city.jpg)
+![Reference of a minimalist city with hard shadows](/../gh-images/city.jpg)
 
 ### Instanced characters
-A more technical way to handle a large number of objects in **Three.js** is to use a single *Instanced Mesh* with X instances, instead of cloning the same object X times.
+A more technical way to handle a large number of objects in **Three.js** is to use a single *Instanced Mesh* with X instances, instead of cloning the same object X number of times.
 
 Here's the results of a test I did on my machine with 10 000 cloned [Suzannes](https://commons.wikimedia.org/wiki/File:Suzanne.stl#/media/File:Suzanne.stl) vs 10 000 instances of Suzanne:
 
@@ -38,12 +38,19 @@ As you can see, the max FPS is nearly doubled with the instances, they load 10x 
 
 The only problem, every instanced characters must look the same and play the same animation...
 
-### GL Shaders
-Like I mentioned before, instances comes with a major constrain—they all need to be indentical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where custom shaders come into play.
+### Custom Shader
+Like I mentioned before, instances comes with a major constraint—they all need to be identical. Pretty hard to create an interesting crowd when everyone looks and acts the same. This is where *GL Shaders* come into play.
 
-By overriding each agent's vertices position in the *Vertex Shader*, you can have everyone play a different clip. Additionally, to lower the CPU's calculation load, the vertex animations can be read by the GPU through a texture where each pixel's RGB values represent a XYZ transforms :
+By overriding each agent's vertices position in the *Vertex Shader*, you can have everyone play a different clip. Additionally, to lower the CPU's load and since we're already using the GPU with the shader, the animations can be read through a *Vertex Animation Texture*. A texture where each pixel's RGB values represent a XYZ transforms. :
 
-![The vertex animation texture](/public/VATs/animations.png)
+![Vertex animation texture](/public/VATs/animations.png)
+
+Last but not least, the variations can be handled inside the *Fragment Shader* by loading different textures and alphas depending on the selected variation.
+
+### KdTree
+Finally, crowd simulation is not just about optimizing the geo. During steering calculations, agents have to look around to see what their neighbors are doing. Normally, that agent would look through the whole list of agents, compare their distance to theirs and return the agents that fit in their detection radius—thus making each frame's calculations more and more complex as the number of agents increase.
+
+![KdTree](https://upload.wikimedia.org/wikipedia/commons/b/bf/Kdtree_2d.svg)
 
 ## An interesting environment
 

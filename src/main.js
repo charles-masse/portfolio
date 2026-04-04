@@ -2,17 +2,17 @@
 import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
-//Loaders
-import City from './loaders/City.js';
+
+import {loadObj,} from './utilities/loaders.js';
 //Modules
 import DayNight from './modules/DayNight.js';
 import MovieScreen from './modules/MovieScreen.js';
 import Pedestrians from './modules/Pedestrians.js';
 import Render from './modules/Render.js';
 //GUI
-import CrowdSpawner from './gui/CrowdSpawner.js';
-// import AgentInfo from './gui/AgentInfo.js';
-import Stats from './gui/Stats.js';
+import CrowdSpawner from './ui/CrowdSpawner.js';
+// import AgentInfo from './ui/AgentInfo.js';
+import Stats from './ui/Stats.js';
 //Loading Screen
 const loadingManager = new THREE.LoadingManager(
 
@@ -42,12 +42,11 @@ renderer.shadowMap.enabled = true;
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
-camera.setFocalLength(24)
+camera.setFocalLength(24);
 // camera.position.set(0, 14.188, 103.679);
 // camera.lookAt(0, 0, 30); //TODO Update to actual rotation
 camera.position.set(0, 14.188, 60); //Stop sign debug
 camera.lookAt(0, 0, 10);
-
 //Modules
 const pedestrians = await new Pedestrians(loadingManager, camera).init();
 scene.add(pedestrians.objects);
@@ -55,8 +54,12 @@ scene.add(pedestrians.objects);
 const movieScreen = new MovieScreen(pedestrians);
 scene.add(movieScreen.objects);
 
-const city = await City(loadingManager); //TODO Combine with module
+const city = await loadObj('models/city.obj', loadingManager); //TODO Create its own module
+city.material = new THREE.MeshStandardMaterial({color: 0x808080});
+city.castShadow = true;
+city.receiveShadow = true;
 scene.add(city);
+
 const dayNight = new DayNight(canvas, city);
 scene.add(dayNight.objects);
 

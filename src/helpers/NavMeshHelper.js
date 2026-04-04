@@ -1,5 +1,6 @@
+
 /**
- * @author Mugen87 / https://github.com/Mugen87
+ * author Mugen87 / https://github.com/Mugen87
  * https://github.com/Mugen87/yuka/blob/master/examples/navigation/common/js/NavMeshHelper.js
  */
 

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+export const RVO_EPSILON = 1e-8;
 /*
  * brief      Computes the squared length of a specified two-dimensional vector.
  * param      vector          The two-dimensional vector whose squared length is to be computed.
@@ -87,4 +88,4 @@ export {
     sqr,
     distSqPointLineSegment,
     abs,
-}
+};

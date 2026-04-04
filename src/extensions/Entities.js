@@ -1,3 +1,4 @@
+
 /*
  * This is a conversion of the RVO2 Library to JavaScript/Three.js/Yuka.
  *
@@ -20,9 +21,9 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {absSq, det, leftOf, sqr,} from '../../utilities/RVO2.js';
+import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../utilities/RVO2.js';
 
-import {MAX_LEAF_SIZE, RVO_EPSILON,} from '../../settings.js';
+import {MAX_LEAF_SIZE,} from '../settings.js';
 
 class Obstacle {
 
@@ -40,12 +41,12 @@ class Obstacle {
 
 class AgentTreeNode {
 
-    constructor(begin, end, X, Z){
+    constructor(begin, end, X, Y){
 
         this.begin = begin;
         this.end = end;
         this.minX = this.maxX = X;
-        this.minZ = this.maxZ = Z;
+        this.minY = this.maxY = Y;
 
     }
 
@@ -63,7 +64,7 @@ class ObstacleTreeNode {
 
 }
 
-export default class extends YUKA.EntityManager {
+class KdTreeManager extends YUKA.EntityManager {
 
     constructor() {
         super();
@@ -78,16 +79,14 @@ export default class extends YUKA.EntityManager {
         this.buildObstacleTree();
 
     }
+    //TODO Should be managed by the module
+    addAgent(entity) {
+        this.add(entity);
 
-    addAgent(agent) {
-        super.add(agent);
-        this.inactive_agents.push(agent);
+        this.inactive_agents.push(entity);
+
     }
-
-    removeAgent(agent) {
-        super.remove(agent);
-    }
-
+    
     addObstacle(vertices) {
 
         if (vertices.length < 2) return -1;
@@ -96,9 +95,9 @@ export default class extends YUKA.EntityManager {
 
         for (let i = 0; i < vertices.length; ++i) {
 
-            const obstacle = new Obstacle()
+            const obstacle = new Obstacle();
 
-            obstacle.point = vertices[i]
+            obstacle.point = vertices[i];
 
             if (i != 0) {
                 obstacle.prevObstacle = this.obstacles[this.obstacles.length - 1];
@@ -134,7 +133,7 @@ export default class extends YUKA.EntityManager {
 
         return this;
     }
-
+    //TODO Put in module
     activateAgents() {
         
         while (this.active_agents.length != this.population) {
@@ -183,14 +182,14 @@ export default class extends YUKA.EntityManager {
         for (let i = begin + 1; i < end; ++ i) {
             agentTreeNode.maxX = Math.max(agentTreeNode.maxX, this.agents[i].position.x);
             agentTreeNode.minX = Math.min(agentTreeNode.minX, this.agents[i].position.x);
-            agentTreeNode.maxZ = Math.max(agentTreeNode.maxZ, this.agents[i].position.z);
-            agentTreeNode.minZ = Math.min(agentTreeNode.minZ, this.agents[i].position.z);
+            agentTreeNode.maxY = Math.max(agentTreeNode.maxY, this.agents[i].position.z);
+            agentTreeNode.minY = Math.min(agentTreeNode.minY, this.agents[i].position.z);
         }
 
         if (end - begin > MAX_LEAF_SIZE) {
             //No leaf node.
-            const isVertical = (agentTreeNode.maxX - agentTreeNode.minX > agentTreeNode.maxZ - agentTreeNode.minZ);
-            const splitValue = isVertical ? 0.5 * (agentTreeNode.maxX + agentTreeNode.minX) : 0.5 * (agentTreeNode.maxZ + agentTreeNode.minZ);
+            const isVertical = (agentTreeNode.maxX - agentTreeNode.minX > agentTreeNode.maxY - agentTreeNode.minY);
+            const splitValue = isVertical ? 0.5 * (agentTreeNode.maxX + agentTreeNode.minX) : 0.5 * (agentTreeNode.maxY + agentTreeNode.minY);
             
             let left = begin;
             let right = end;
@@ -353,12 +352,33 @@ export default class extends YUKA.EntityManager {
         this.queryObstacleTreeRecursive(entity, this.obstacleTree);
 
         entity._agentNeighbors = [];
-        entity._rangeSq = sqr(entity.neighborhoodRadius);
-        //KdTree::computeAgentNeighbors
-        this.queryAgentTreeRecursive(entity, 0);
+
+        if (entity.maxNeighbors > 0) {
+            entity._rangeSq = sqr(entity.neighborhoodRadius);
+            //KdTree::computeAgentNeighbors
+            this.queryAgentTreeRecursive(entity, 0);
+        }
         //Converting neighbors to Yuka
         entity.neighbors = entity._agentNeighbors.map(neighbor => neighbor[1]);
 
+    }
+
+    processTrigger(trigger) {
+
+        trigger.updateRegion();
+
+        const neighbors = trigger.neighbors;
+        for (let i = (neighbors.length - 1); i >= 0; i --) {
+
+            const entity = neighbors[i];
+
+            if (trigger !== entity && entity.active === true && entity.canActivateTrigger === true) {
+                trigger.check(entity);
+            }
+
+        }
+
+        return this;
     }
 
     queryAgentTreeRecursive(agent, node) {
@@ -368,13 +388,13 @@ export default class extends YUKA.EntityManager {
         if (nodeAgent.end - nodeAgent.begin <= MAX_LEAF_SIZE) {
 
             for (let i = nodeAgent.begin; i < nodeAgent.end; ++ i) {
-                agent.insertAgentNeighbor(this.agents[i]);
+                this.insertAgentNeighbor(agent, this.agents[i]);
             }
 
         } else {
 
-            const distSqLeft = sqr(Math.max(0, this.agentTree[nodeAgent.left].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.left].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.left].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.left].maxZ));
-            const distSqRight = sqr(Math.max(0, this.agentTree[nodeAgent.right].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.right].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.right].minZ - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.right].maxZ));
+            const distSqLeft = sqr(Math.max(0, this.agentTree[nodeAgent.left].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.left].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.left].minY - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.left].maxY));
+            const distSqRight = sqr(Math.max(0, this.agentTree[nodeAgent.right].minX - agent.position.x)) + sqr(Math.max(0, agent.position.x - this.agentTree[nodeAgent.right].maxX)) + sqr(Math.max(0, this.agentTree[nodeAgent.right].minY - agent.position.z)) + sqr(Math.max(0, agent.position.z - this.agentTree[nodeAgent.right].maxY));
 
             if (distSqLeft < distSqRight && distSqLeft < agent._rangeSq) {
 
@@ -398,6 +418,36 @@ export default class extends YUKA.EntityManager {
 
     }
 
+    insertAgentNeighbor(agent, neighbor) {
+
+        if (agent != neighbor) {
+
+            const distSq = absSq(agent.position.clone().sub(neighbor.position));
+
+            if (distSq < agent._rangeSq) {
+
+                if (agent._agentNeighbors.length < agent.maxNeighbors) {
+                    agent._agentNeighbors.push([distSq, neighbor]);
+                }
+
+                let i = agent._agentNeighbors.length - 1;
+                while (i != 0 && distSq < agent._agentNeighbors[i - 1][0]) {
+                    agent._agentNeighbors[i] = agent._agentNeighbors[i - 1];
+                    --i;
+                }
+
+                agent._agentNeighbors[i] = [distSq, neighbor];
+
+                if (agent._agentNeighbors.length == agent.maxNeighbors) {
+                    agent._rangeSq = agent._agentNeighbors[agent._agentNeighbors.length - 1][0];
+                }
+
+            }
+            
+        }
+
+    }
+
     queryObstacleTreeRecursive(agent, node) {
 
         if (node === null) return;
@@ -411,20 +461,44 @@ export default class extends YUKA.EntityManager {
 
         this.queryObstacleTreeRecursive(agent, (agentLeftOfLine >= 0 ? node.left : node.right));
 
-        const distSqLine = sqr(agentLeftOfLine) / absSq(obstacle2.point.clone().sub(obstacle1.point))
+        const distSqLine = sqr(agentLeftOfLine) / absSq(obstacle2.point.clone().sub(obstacle1.point));
 
         if (distSqLine < agent._rangeSq) {
             //Try obstacle at this node only if agent is on right side of obstacle (and can see obstacle).
             if (agentLeftOfLine < 0) {
-                agent.insertObstacleNeighbor(node.obstacle);
+                this.insertObstacleNeighbor(agent, node.obstacle);
             }
 
-            this.queryObstacleTreeRecursive(agent, (agentLeftOfLine >= 0 ? node.right : node.left))
+            this.queryObstacleTreeRecursive(agent, (agentLeftOfLine >= 0 ? node.right : node.left));
 
         }
 
     }
 
+    insertObstacleNeighbor(agent, obstacle) {
+
+        const nextObstacle = obstacle.nextObstacle;
+
+        const distSq = distSqPointLineSegment(obstacle.point, nextObstacle.point, new THREE.Vector2(agent.position.x, agent.position.z));
+
+        if (distSq < agent._rangeSq) {
+            agent._obstacleNeighbors.push([distSq, obstacle]);
+
+            let i = agent._obstacleNeighbors.length - 1;
+
+            while (i != 0 && distSq < agent._obstacleNeighbors[i - 1][0]) {
+
+                agent._obstacleNeighbors[i] = agent._obstacleNeighbors[i - 1];
+                --i;
+
+            }
+
+            agent._obstacleNeighbors[i] = [distSq, obstacle];
+
+        }
+
+    }
+    
     update(delta) {
 
         this.activateAgents();
@@ -435,3 +509,7 @@ export default class extends YUKA.EntityManager {
     }
 
 }
+
+export {
+    KdTreeManager,
+};

@@ -59,7 +59,7 @@ export default class {
 
     initLines() {
 
-        this.neighbor_lines = []
+        this.neighbor_lines = [];
 
         for (let i = 0; i < MAX_NEIGHBORS; i++) {
 

@@ -23,7 +23,7 @@ export default class {
         const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
         const material = new THREE.MeshBasicMaterial();
         this.playButton = new THREE.Mesh(geometry, material);
-        this.playButton.position.set(1.25, 11.5, 7)
+        this.playButton.position.set(1.25, 11.5, 7);
 
         this.objects = new THREE.Group();
         this.objects.add(videoScreen);
@@ -49,7 +49,7 @@ export default class {
 
         }
         //Send message to agents
-        this.pedestrians.entityManager.entities.forEach((entity, i) => {
+        this.pedestrians.entityManager.entities.forEach((entity) => {
             this.pedestrians.entityManager.sendMessage(null, entity, 'MovieScreen : State Change', 0, this._state);
         });
         

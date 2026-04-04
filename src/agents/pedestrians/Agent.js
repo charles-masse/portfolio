@@ -1,35 +1,14 @@
-/*
- * This is a conversion of the RVO2 Library to JavaScript/Three.js/Yuka.
- *
- * Copyright 2008 University of North Carolina at Chapel Hill
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
-import * as THREE from 'three';
+// import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
 import {computeNewVelocity,} from '../../core/ORCA.js';
 // import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
-import {GoToState, CheerState, InteractState, DeadState} from './States.js';
+import {GoToState, IdleState, CheerState, InteractState, DeadState,} from './States.js';
 
 import {StateMachine,} from '../../extensions/States.js';
-import Path from '../../extensions/Path.js';
-import {pickChoice,} from '../../utilities/misc.js';
-import {absSq, distSqPointLineSegment,} from '../../utilities/RVO2.js';
-
-import {MAX_NEIGHBORS,} from '../../settings.js';
+import {Path,} from '../../extensions/Navigation.js';
 
 const EXITS = [
     new YUKA.Vector3(-23, 0, -20),
@@ -45,13 +24,17 @@ export default class extends YUKA.Vehicle {
     constructor(id) {
         super();
 
-        this.agentId = id
+        this.agentId = id; //TODO Does it need to be in the agent--render component might not be the best for that
 
         this.active = false;
 
-        this.neighborhoodRadius = 1.8;
         this.boundingRadius = 0.4;
 
+        this.neighborhoodRadius = 1.8;
+        this.maxNeighbors = 15;
+
+        this.canActivateTrigger = true;
+        
         // agent.blendSpaces = new BlendSpaces(this);
 
         // const idle = new LocomotionClip('idle');
@@ -84,6 +67,7 @@ export default class extends YUKA.Vehicle {
         this.stateMachine = new StateMachine(this);
 
         this.stateMachine.add('GoTo', new GoToState());
+        this.stateMachine.add('Idle', new IdleState());
         this.stateMachine.add('Interact', new InteractState());
         this.stateMachine.add('Cheer', new CheerState());
         this.stateMachine.add('Dead', new DeadState());
@@ -95,11 +79,8 @@ export default class extends YUKA.Vehicle {
         this.timeHorizon = 3;
         this.timeHorizonObst = 6;
 
-        this._agentNeighbors = [];
-        this._obstacleNeighbors = [];
-
     }
-
+    //TODO Should be handled by the module
     bestCandidate() {
 
         let best;
@@ -132,13 +113,16 @@ export default class extends YUKA.Vehicle {
             if (this.manager.user_input) {
                 this.position.copy(this.bestCandidate());
             }
-
+            //TODO Exits should be managed in the module
             else {
-                this.position.copy(pickChoice(EXITS));
+                const test = YUKA.MathUtils.choice(EXITS);
+                this.position.copy(test);
             }
             //Goal
             const path = new Path();
-            for (const point of this.manager.navMesh.findPath(this.position, pickChoice(EXITS))) {
+            const test = YUKA.MathUtils.choice(EXITS);
+
+            for (const point of this.manager.navMesh.findPath(this.position, test)) {
                 path.add(point);
             }
             //Find behavior
@@ -176,60 +160,6 @@ export default class extends YUKA.Vehicle {
 
     handleMessage(telegram) {
         this.stateMachine.handleMessage(telegram);
-    }
-
-    insertAgentNeighbor(agent) {
-
-        if (this != agent) {
-
-            const distSq = absSq(this.position.clone().sub(agent.position));
-
-            if (distSq < this._rangeSq) {
-
-                if (this._agentNeighbors.length < MAX_NEIGHBORS) {
-                    this._agentNeighbors.push([distSq, agent]);
-                }
-
-                let i = this._agentNeighbors.length - 1;
-                while (i != 0 && distSq < this._agentNeighbors[i - 1][0]) {
-                    this._agentNeighbors[i] = this._agentNeighbors[i - 1];
-                    --i;
-                }
-
-                this._agentNeighbors[i] = [distSq, agent];
-
-                if (this._agentNeighbors.length == MAX_NEIGHBORS) {
-                    this._rangeSq = this._agentNeighbors[this._agentNeighbors.length - 1][0];
-                }
-
-            }
-            
-        }
-
-    }
-
-    insertObstacleNeighbor(obstacle) {
-
-        const nextObstacle = obstacle.nextObstacle;
-
-        const distSq = distSqPointLineSegment(obstacle.point, nextObstacle.point, new THREE.Vector2(this.position.x, this.position.z));
-
-        if (distSq < this._rangeSq) {
-            this._obstacleNeighbors.push([distSq, obstacle]);
-
-            let i = this._obstacleNeighbors.length - 1;
-
-            while (i != 0 && distSq < this._obstacleNeighbors[i - 1][0]) {
-
-                this._obstacleNeighbors[i] = this._obstacleNeighbors[i - 1];
-                --i;
-
-            }
-
-            this._obstacleNeighbors[i] = [distSq, obstacle];
-
-        }
-
     }
 
     update(delta) {

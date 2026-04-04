@@ -1,9 +1,8 @@
 //Crowd
 export const MAX_AGENTS = 500;
-//RVO2
-export const MAX_NEIGHBORS = 15;
+//KdTree
 export const MAX_LEAF_SIZE = 10;
-export const RVO_EPSILON = 1e-8;
+//RVO
 export const TIME_STEP = 0.25;
 //Steering
 export const FEELER_ANGLE = 45;
@@ -48,4 +47,4 @@ export const COLORS = [
     'rgb(220, 140, 40)',
     'rgb(40, 180, 90)',
     'rgb(150, 200, 60)',
-]
+];
