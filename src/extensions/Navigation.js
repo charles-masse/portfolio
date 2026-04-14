@@ -1,44 +1,8 @@
 
+
 import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
-
-class Path extends YUKA.Path {
-
-    constructor() {
-        super();
-
-        this.done = false;
-
-    }
-
-    finished() {
-        return this.done;
-    }
-
-    advance() {
-
-        this._index ++;
-
-        if ((this._index === this._waypoints.length)) {
-
-            if (this.loop === true) {
-                this._index = 0;
-            } 
-
-            else {
-
-                this.done = true;
-                this._index --;
-                
-            }
-
-        }
-
-        return this;
-    }
-
-}
 
 class NavMesh extends YUKA.NavMesh {
 
@@ -132,8 +96,21 @@ class NavMesh extends YUKA.NavMesh {
     randomPoint() {
         
         const triangles = this.triangles;
-        const tri = triangles[THREE.MathUtils.randInt(0, triangles.length - 1)];
+        //Random triangle weighted by their size
+        const areas = triangles.map(
+            triangle => new THREE.Triangle(
+                new THREE.Vector3(triangle[0].x, 0, triangle[0].y),
+                new THREE.Vector3(triangle[1].x, 0, triangle[1].y),
+                new THREE.Vector3(triangle[2].x, 0, triangle[2].y)
+            ).getArea());
 
+        const random_idx = YUKA.MathUtils.choice(
+            [...Array(triangles.length).keys()],
+            areas.map(size => size / areas.reduce((a,b)=>a+b))
+        );
+        
+        const tri = triangles[random_idx];
+        //Random point inside chosen triangle
         let r1 = Math.random();
         let r2 = Math.random();
 
@@ -545,6 +522,5 @@ class Parser {
 }
 
 export {
-    Path,
     NavMeshLoader,
 };

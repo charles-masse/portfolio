@@ -1,6 +1,4 @@
 
-import * as YUKA from 'yuka';
-
 import {State,} from '../../extensions/States.js';
 
 class GoToState extends State {
@@ -10,24 +8,6 @@ class GoToState extends State {
 
         owner.maxSpeed = 0.8;
 
-    }
-
-    execute(owner) {
-        super.execute(owner);
-        //Reached exit
-        for (const behavior of owner.steering.behaviors) {
-
-            if (behavior instanceof YUKA.FollowPathBehavior) {
-
-                if (behavior.path.finished()) {
-                    owner.setActive(false);
-                }
-                break;
-
-            }
-            
-        }
-        
     }
 
     onMessage(owner, telegram) {

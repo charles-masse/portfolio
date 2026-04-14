@@ -27,6 +27,30 @@ class LineSegment extends YUKA.LineSegment {
 
 }
 
+class FollowPathBehavior extends YUKA.FollowPathBehavior {
+    //TODO should be handled by trigger regions
+    calculate(vehicle, force/* , delta*/) {
+
+        const path = this.path;
+        //Calculate distance in square space from current waypoint to vehicle
+        const distanceSq = path.current().squaredDistanceTo(vehicle.position);
+        //Reached the end
+        if (path.finished() === true) {
+            vehicle.setActive(false);
+        }
+        //Move to next waypoint/end if close enough to current target
+        if (distanceSq < (this.nextWaypointDistance * this.nextWaypointDistance)) {
+            path.advance();
+        }
+
+        this._seek.target = path.current();
+        this._seek.calculate(vehicle, force);
+        
+        return force;
+    }
+
+}
+
 const RADIANS_ANGLE = degreesToRadians(FEELER_ANGLE);
 const LEFT_QUAT = new YUKA.Quaternion().fromEuler(0, RADIANS_ANGLE, 0);
 const RIGHT_QUAT = new YUKA.Quaternion().fromEuler(0, -RADIANS_ANGLE, 0);
@@ -57,7 +81,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to left
         temp = direction.clone()
             .applyRotation(LEFT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2.0));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -65,7 +89,7 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
         //Feeler to right
         temp = direction.clone()
             .applyRotation(RIGHT_QUAT);
-        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length /* * 2.0 */));
+        feeler_end = position.clone().add(temp.multiplyScalar(feeler_length * 2));
 
         feelers.push(
             new LineSegment(position, feeler_end)
@@ -128,5 +152,6 @@ class WallAvoidanceBehavior extends YUKA.SteeringBehavior {
 }
 
 export {
+    FollowPathBehavior,
     WallAvoidanceBehavior,
 };

@@ -140,7 +140,7 @@ class KdTreeManager extends YUKA.EntityManager {
 
             if (this.active_agents.length < this.population) {
 
-                const agent = this.inactive_agents[0];
+                const agent = this.inactive_agents[this.inactive_agents.length - 1];
 
                 agent.setActive(true);
 
@@ -157,7 +157,7 @@ class KdTreeManager extends YUKA.EntityManager {
 
         }
 
-        this.user_input = false;
+        this.user_input = false; //TODO fix
 
     }
 
@@ -166,6 +166,7 @@ class KdTreeManager extends YUKA.EntityManager {
         this.agentTree = [];
 
         this.agents = this.entities.filter(agent => agent.active);
+
         this.buildAgentTreeRecursive(0, this.agents.length, 0);
 
     }

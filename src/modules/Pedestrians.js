@@ -1,18 +1,18 @@
 
 import * as THREE from 'three';
 
-import * as YUKA from 'yuka';
-
 import Agent from '../agents/pedestrians/Agent.js';
 import Shader from '../agents/pedestrians/Shader.js';
 
 import {KdTreeManager,} from '../extensions/Entities.js';
-import {WallAvoidanceBehavior,} from '../extensions/Steering.js';
+import {FollowPathBehavior, WallAvoidanceBehavior,} from '../extensions/Steering.js';
 
 import {StopSign,} from '../agents/Triggers.js';
 
 import {loadGLTF, loadTexture, rawTexture, loadNavMesh,} from '../utilities/loaders.js';
-import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js'
+import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js';
+import {createGraphHelper,} from '../helpers/GraphHelper.js';
+
 
 import {MAX_AGENTS,} from '../settings.js';
 
@@ -58,12 +58,13 @@ export default class {
 
     async init() {
 
-        const navMesh = await loadNavMesh('models/navmesh.gltf', this.loadingManager);
+        const navMesh = await loadNavMesh('models/navmesh.glb', this.loadingManager);
         const agent_mesh = await loadGLTF('models/pictogram.gltf', this.loadingManager);
         const anim_texture = await loadTexture('VATs/animations.png', this.loadingManager);
         const alpha_texture = await loadTexture('textures/pictogramAlpha.png', this.loadingManager);
         //Helpers
-        this.objects.add(createConvexRegionHelper(navMesh));
+        // this.objects.add(createConvexRegionHelper(navMesh));
+        this.objects.add(createGraphHelper(navMesh.graph, 0.25));
 
         const agent_geo = agent_mesh.geometry;
         agent_geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
@@ -87,7 +88,7 @@ export default class {
             const wall = new WallAvoidanceBehavior(navMesh); //TODO Remove after Path rework
             agent.steering.add(wall);
 
-            const follow = new YUKA.FollowPathBehavior();
+            const follow = new FollowPathBehavior();
             agent.steering.add(follow);
             //Render
             agent.setRenderComponent(

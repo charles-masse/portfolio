@@ -1,0 +1,3 @@
+[submodule "portfolioScripts"]
+	path = portfolioScripts
+	url = https://github.com/charles-masse/portfolioScripts.git

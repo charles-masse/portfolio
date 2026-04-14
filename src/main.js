@@ -41,12 +41,12 @@ renderer.shadowMap.enabled = true;
 //Scene
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000); 
+const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(24);
 // camera.position.set(0, 14.188, 103.679);
 // camera.lookAt(0, 0, 30); //TODO Update to actual rotation
-camera.position.set(0, 14.188, 60); //Stop sign debug
-camera.lookAt(0, 0, 10);
+camera.position.set(0, 14.188, 60); //DELETE ME Stop sign debug
+camera.lookAt(0, 0, 10); //DELETE ME Stop sign debug
 //Modules
 const pedestrians = await new Pedestrians(loadingManager, camera).init();
 scene.add(pedestrians.objects);

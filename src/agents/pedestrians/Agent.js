@@ -8,15 +8,14 @@ import {computeNewVelocity,} from '../../core/ORCA.js';
 import {GoToState, IdleState, CheerState, InteractState, DeadState,} from './States.js';
 
 import {StateMachine,} from '../../extensions/States.js';
-import {Path,} from '../../extensions/Navigation.js';
 
 const EXITS = [
-    new YUKA.Vector3(-23, 0, -20),
+    new YUKA.Vector3(-26, 0, -20),
     new YUKA.Vector3(23, 0, -20),
     new YUKA.Vector3(-40, 0, -20),
-    new YUKA.Vector3(40, 0, -20),
+    new YUKA.Vector3(43, 0, -20),
     new YUKA.Vector3(-10, 0, 50),
-    new YUKA.Vector3(10, 0, 50),
+    new YUKA.Vector3(11, 0, 50),
 ];
 
 export default class extends YUKA.Vehicle {
@@ -24,17 +23,16 @@ export default class extends YUKA.Vehicle {
     constructor(id) {
         super();
 
-        this.agentId = id; //TODO Does it need to be in the agent--render component might not be the best for that
-
         this.active = false;
 
-        this.boundingRadius = 0.4;
+        this.agentId = id;
 
+        this.boundingRadius = 0.4;
         this.neighborhoodRadius = 1.8;
         this.maxNeighbors = 15;
 
         this.canActivateTrigger = true;
-        
+        //Animation blending
         // agent.blendSpaces = new BlendSpaces(this);
 
         // const idle = new LocomotionClip('idle');
@@ -71,7 +69,6 @@ export default class extends YUKA.Vehicle {
         this.stateMachine.add('Interact', new InteractState());
         this.stateMachine.add('Cheer', new CheerState());
         this.stateMachine.add('Dead', new DeadState());
-
         this.stateMachine.changeTo('Dead');
 
         this.smoother = new YUKA.Smoother(20);
@@ -90,7 +87,7 @@ export default class extends YUKA.Vehicle {
             const {x, y} = this.manager.navMesh.randomPoint();
             const pos = new YUKA.Vector3(x, 0, y);
 
-            const minDist = Math.min(...this.manager.agents.map(entity => pos.distanceTo(entity.position)));
+            const minDist = Math.min(...this.manager.active_agents.map(entity => pos.distanceTo(entity.position)));
 
             if (minDist > maxDist) {
 
@@ -109,24 +106,26 @@ export default class extends YUKA.Vehicle {
         this.active = bool;
 
         if (bool) {
+            //Random exit TODO Exits should be managed in the module
+            const spawn = YUKA.MathUtils.choice(EXITS);
 
             if (this.manager.user_input) {
                 this.position.copy(this.bestCandidate());
             }
-            //TODO Exits should be managed in the module
+            
             else {
-                const test = YUKA.MathUtils.choice(EXITS);
-                this.position.copy(test);
+                this.position.copy(spawn);
             }
             //Goal
-            const path = new Path();
-            const test = YUKA.MathUtils.choice(EXITS);
+            const path = new YUKA.Path();
+            const exit = YUKA.MathUtils.choice(EXITS);
 
-            for (const point of this.manager.navMesh.findPath(this.position, test)) {
+            for (const point of this.manager.navMesh.findPath(this.position, exit)) {
                 path.add(point);
             }
             //Find behavior
             for (const behavior of this.steering.behaviors) {
+
                 if (behavior instanceof YUKA.FollowPathBehavior) {
                     behavior.path = path;
 
@@ -138,6 +137,7 @@ export default class extends YUKA.Vehicle {
             this.stateMachine.changeTo('GoTo');
 
             const index = this.manager.inactive_agents.indexOf(this);
+
             this.manager.inactive_agents.splice(index, 1);
             this.manager.active_agents.push(this);
 
@@ -151,6 +151,7 @@ export default class extends YUKA.Vehicle {
             this._renderComponentCallback(this, this._renderComponent);
 
             const index = this.manager.active_agents.indexOf(this);
+
             this.manager.active_agents.splice(index, 1);
             this.manager.inactive_agents.push(this);
             
