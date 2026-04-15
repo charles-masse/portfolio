@@ -1,0 +1,7 @@
+# Node.js dependencies
+node_modules/
+# My 3D scenes
+scenes/
+# Build
+dist/
+.vite/
