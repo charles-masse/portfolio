@@ -7,44 +7,33 @@ import {Path, NavMesh,} from './Navigation.js';
 
 import {createConvexRegionHelper,} from './NavMeshHelper.js';
 import {createGraphHelper,} from './GraphHelper.js';
-//Scene
+//Scene + Cam
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 5, 0);
 camera.lookAt(0, 0, 0);
-
-const poly1 = new YUKA.Polygon().fromContour([
-    new YUKA.Vector3(0,0,2),
-    new YUKA.Vector3(2,0,0),
-    new YUKA.Vector3(0,0,-2),
-    new YUKA.Vector3(-2,0,0)
-]);
-
-const poly2 = new YUKA.Polygon().fromContour([
-    new YUKA.Vector3(0,0,2),
-    new YUKA.Vector3(3,0,3),
-    new YUKA.Vector3(2,0,0)
-]);
-
+//Navmesh import
 const navMesh = new NavMesh();
 navMesh.mergeConvexRegions = false;
-navMesh.fromPolygons([poly1, poly2]);
+
+const polys = await loadPolygons();
+navMesh.fromPolygons(polys);
 console.log(navMesh);
-
-const findPath = navMesh.findPath(new YUKA.Vector3(0,0.1,0), new YUKA.Vector3(2,0.1,2));
-
-const geometry = new THREE.BufferGeometry();
-const material = new THREE.LineBasicMaterial({color: 0x00ff00});
-const line = new THREE.Line(geometry, material);
-line.geometry.setFromPoints(findPath);
-scene.add(line);
 
 const helper = createConvexRegionHelper(navMesh);
 // helper.material.side = THREE.DoubleSide; //Normal debug
 scene.add(helper);
 
 // scene.add(createGraphHelper(navMesh.graph, 0.2));
+//Pathfinding
+const findPath = navMesh.findPath(new YUKA.Vector3(-0.2, 0.1, -3), new YUKA.Vector3(4, 0.1, 2));
+
+const geometry = new THREE.BufferGeometry();
+const material = new THREE.LineBasicMaterial({color: 0x00ff00});
+const line = new THREE.Line(geometry, material);
+line.geometry.setFromPoints(findPath);
+scene.add(line);
 
 const vehicleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
 vehicleGeometry.translate(0, 0.1, 0);
@@ -91,4 +80,31 @@ function animate() {
 
 function sync( entity, renderComponent ) {
     renderComponent.matrix.copy( entity.worldMatrix );
+}
+
+async function loadPolygons(loadingManager=null) {
+
+    const loader = new THREE.FileLoader();
+
+    const polygons = await new Promise((resolve, reject) => {
+
+        loader.load(
+            "data.json",
+            (text) => {
+
+                const data = JSON.parse(text);
+
+                const result = [
+                    new YUKA.Polygon().fromContour(data.poly1.map(pt => new YUKA.Vector3(...pt))),
+                    new YUKA.Polygon().fromContour(data.poly2.map(pt => new YUKA.Vector3(...pt)))
+                ];
+
+                resolve(result);
+            }
+
+        );
+
+    });
+
+    return polygons;
 }
