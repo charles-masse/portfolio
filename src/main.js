@@ -11,21 +11,21 @@ import {createGraphHelper,} from './GraphHelper.js';
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 0);
+camera.position.set(0, 75, 0);
 camera.lookAt(0, 0, 0);
 //Navmesh import
 const navMesh = new NavMesh();
 navMesh.mergeConvexRegions = false;
 
-const polys = await loadPolygons();
-navMesh.fromPolygons(polys);
+const polygons = await loadPolygons();
+navMesh.fromPolygons(polygons.flat());
 console.log(navMesh);
 
 const helper = createConvexRegionHelper(navMesh);
 // helper.material.side = THREE.DoubleSide; //Normal debug
-scene.add(helper);
 
-// scene.add(createGraphHelper(navMesh.graph, 0.2));
+scene.add(helper);
+scene.add(createGraphHelper(navMesh.graph));
 //Pathfinding
 const findPath = navMesh.findPath(new YUKA.Vector3(-0.2, 0.1, -3), new YUKA.Vector3(4, 0.1, 2));
 
@@ -54,7 +54,7 @@ for (const point of findPath) {
 }
 
 const followPathBehavior = new YUKA.FollowPathBehavior(path, 0.2);
-vehicle.steering.add(followPathBehavior);
+// vehicle.steering.add(followPathBehavior);
 
 entityManager.add(vehicle);
 //Renderer
@@ -88,21 +88,14 @@ async function loadPolygons(loadingManager=null) {
 
     const polygons = await new Promise((resolve, reject) => {
 
-        loader.load(
-            "data.json",
-            (text) => {
+        loader.load("data.json",(text) => {
 
-                const data = JSON.parse(text);
+            const data = JSON.parse(text);
 
-                const result = [
-                    new YUKA.Polygon().fromContour(data.poly1.map(pt => new YUKA.Vector3(...pt))),
-                    new YUKA.Polygon().fromContour(data.poly2.map(pt => new YUKA.Vector3(...pt)))
-                ];
+            const result = [data.polygons.map(poly => new YUKA.Polygon().fromContour(poly.map(pt => new YUKA.Vector3(...pt))))];
 
-                resolve(result);
-            }
-
-        );
+            resolve(result);
+        });
 
     });
 

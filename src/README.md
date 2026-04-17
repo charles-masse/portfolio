@@ -1,1 +1,0 @@
-Creating a navMesh from JSON and pathfinding tests
