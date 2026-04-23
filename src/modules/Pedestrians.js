@@ -1,47 +1,33 @@
 
 import * as THREE from 'three';
 
+import * as YUKA from 'yuka';
+
 import Agent from '../agents/pedestrians/Agent.js';
 import Shader from '../agents/pedestrians/Shader.js';
 
+import {NavMesh,} from '../extensions/Navigation.js';
 import {KdTreeManager,} from '../extensions/Entities.js';
+import {PolygonalTriggerRegion,} from '../extensions/Triggers.js';
 import {FollowPathBehavior, WallAvoidanceBehavior,} from '../extensions/Steering.js';
 
 import {StopSign,} from '../agents/Triggers.js';
 
-import {loadGLTF, loadTexture, rawTexture, loadNavMesh,} from '../utilities/loaders.js';
+import {loadJSON, loadGLTF, loadTexture, rawTexture,} from '../utilities/loaders.js';
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js';
 import {createGraphHelper,} from '../helpers/GraphHelper.js';
 
-
 import {MAX_AGENTS,} from '../settings.js';
-
-// function getPointsFromMesh(mesh) {
-
-//     mesh.updateMatrixWorld(true);
-
-//     const points = [];
-
-//     const pt = new THREE.Vector3();
-
-//     mesh.geometry.attributes.position.forEach((position, i) => {
-//         pt.fromBufferAttribute(position, i);
-//         pt.applyMatrix4(mesh.matrixWorld);
-//         points.push(pt.clone());
-//     });
-
-//     return points;
-// }
 
 function renderInstance(entity, renderComponent, camera) {
     //Geo
-    renderComponent.setMatrixAt(entity.agentId, entity.worldMatrix);
+    renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
     //Attributes
     const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[entity.agentId] = camera.position.clone().sub(entity.position).length();
+    instance_depth.array[entity.id] = camera.position.clone().sub(entity.position).length();
 
     const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
-    instance_frame.array[entity.agentId] = entity.stateMachine.currentState.current_frame;
+    instance_frame.array[entity.id] = entity.stateMachine.currentState.current_frame;
 
 }
 
@@ -58,37 +44,57 @@ export default class {
 
     async init() {
 
-        const navMesh = await loadNavMesh('models/navmesh.glb', this.loadingManager);
+        this.entityManager = new KdTreeManager();
+        //Stage data loader
+        const stage_data = await loadJSON('stage.json', this.loadingManager);
+        //Create navmesh
+        const navMesh = new NavMesh();
+        navMesh.mergeConvexRegions = false;
+        const polygons = [stage_data.navmesh.map((poly) => new YUKA.Polygon().fromContour(poly.map((pt) => new YUKA.Vector3(...pt))))];
+        navMesh.fromPolygons(polygons.flat());
+        this.entityManager.navMesh = navMesh;
+        //Create Spawn points
+        //TODO
+        //Create Triggers
+        for (const tid in stage_data.triggers) {
+
+            const points = stage_data.triggers[tid].points.map((pt) => new YUKA.Vector3(...pt))
+            const region = new PolygonalTriggerRegion(points);
+            this.entityManager.add(new StopSign(region));
+
+        }
+        //Create Obstacles
+        for (const oid in stage_data.obstacles) {
+            this.entityManager.addObstacle(stage_data.obstacles[oid].map((pt) => new THREE.Vector2(pt[0], pt[2])));
+        }
+        //Helpers
+        this.objects.add(createConvexRegionHelper(navMesh));
+        // this.objects.add(createGraphHelper(navMesh.graph, 0.25));
+        //Pedestrian mesh
         const agent_mesh = await loadGLTF('models/pictogram.gltf', this.loadingManager);
         const anim_texture = await loadTexture('VATs/animations.png', this.loadingManager);
         const alpha_texture = await loadTexture('textures/pictogramAlpha.png', this.loadingManager);
-        //Helpers
-        // this.objects.add(createConvexRegionHelper(navMesh));
-        this.objects.add(createGraphHelper(navMesh.graph, 0.25));
-
+        //Custom attributes
         const agent_geo = agent_mesh.geometry;
         agent_geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-        
-        this.entityManager = new KdTreeManager();
-        this.entityManager.navMesh = navMesh;
-        //Instance
+        //Pedestrian instance
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(anim_texture), rawTexture(alpha_texture)), MAX_AGENTS);
         this.objects.add(this.instancedMesh);
-        //Link each instance to their individual agent
+        
         const color = new Float32Array(MAX_AGENTS * 3);
         const variation = new Float32Array(MAX_AGENTS);
         
         for (let i = 0; i < MAX_AGENTS; i++) {
-
+            //Link each instance to their individual agent
             const agent = new Agent(i);
             //Steering
-            const wall = new WallAvoidanceBehavior(navMesh); //TODO Remove after Path rework
+            const wall = new WallAvoidanceBehavior(navMesh);
             agent.steering.add(wall);
 
-            const follow = new FollowPathBehavior();
+            const follow = new FollowPathBehavior(/*null, 1*/);
             agent.steering.add(follow);
             //Render
             agent.setRenderComponent(
@@ -107,32 +113,6 @@ export default class {
 
         this.instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
         this.instancedMesh.geometry.setAttribute("instance_variation", new THREE.InstancedBufferAttribute(variation, 1));
-        //TODO Obstacles
-        // this.entityManager.addObstacle([
-        //     new THREE.Vector2(-5, 10),
-        //     new THREE.Vector2(5, 10),
-        //     new THREE.Vector2(5, 25),
-        //     new THREE.Vector2(-5, 25),
-        // ]);
-
-        // this.entityManager.addObstacle([
-        //     new THREE.Vector2(10, 5),
-        //     new THREE.Vector2(20, 5),
-        //     new THREE.Vector2(20, 20),
-        //     new THREE.Vector2(10, 20),
-        // ]);
-
-        // this.entityManager.addObstacle([
-        //     new THREE.Vector2(-20, 20),
-        //     new THREE.Vector2(-10, 20),
-        //     new THREE.Vector2(-10, 5),
-        //     new THREE.Vector2(-20, 5),
-        // ]);
-        //Stop signs
-        // this.stop = new StopSign(new YUKA.RectangularTriggerRegion(new YUKA.Vector3(15, 5, 15)));
-        // this.stop.position.set(-8, 0, 33);
-
-        // this.entityManager.add(this.stop);
 
         return this;
     }

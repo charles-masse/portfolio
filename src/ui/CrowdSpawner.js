@@ -13,7 +13,7 @@ export default class {
         const data = {Population: MAX_AGENTS / 2.0};
         entityManager.population = data.Population;
 
-        gui.add(data, 'Population', 1, MAX_AGENTS, 1).onFinishChange(value => {
+        gui.add(data, 'Population', 1, MAX_AGENTS, 1).onFinishChange((value) => {
             entityManager.population = value;
             entityManager.user_input = true; //TODO find a better way
         });

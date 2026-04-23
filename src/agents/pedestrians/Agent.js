@@ -7,6 +7,7 @@ import {computeNewVelocity,} from '../../core/ORCA.js';
 // import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
 import {GoToState, IdleState, CheerState, InteractState, DeadState,} from './States.js';
 
+import {Path,} from '../../extensions/Navigation.js';
 import {StateMachine,} from '../../extensions/States.js';
 
 const EXITS = [
@@ -25,13 +26,16 @@ export default class extends YUKA.Vehicle {
 
         this.active = false;
 
-        this.agentId = id;
+        this.id = id;
+
+        this.smoother = new YUKA.Smoother(20);
 
         this.boundingRadius = 0.4;
         this.neighborhoodRadius = 1.8;
         this.maxNeighbors = 15;
-
-        this.canActivateTrigger = true;
+        //ORCA
+        this.timeHorizon = 3;
+        this.timeHorizonObst = 6;
         //Animation blending
         // agent.blendSpaces = new BlendSpaces(this);
 
@@ -63,19 +67,14 @@ export default class extends YUKA.Vehicle {
         // agent.blendSpaces.add(walk180R);
         //States
         this.stateMachine = new StateMachine(this);
-
         this.stateMachine.add('GoTo', new GoToState());
         this.stateMachine.add('Idle', new IdleState());
         this.stateMachine.add('Interact', new InteractState());
         this.stateMachine.add('Cheer', new CheerState());
         this.stateMachine.add('Dead', new DeadState());
+
         this.stateMachine.changeTo('Dead');
-
-        this.smoother = new YUKA.Smoother(20);
-        //ORCA
-        this.timeHorizon = 3;
-        this.timeHorizonObst = 6;
-
+        
     }
     //TODO Should be handled by the module
     bestCandidate() {
@@ -87,7 +86,7 @@ export default class extends YUKA.Vehicle {
             const {x, y} = this.manager.navMesh.randomPoint();
             const pos = new YUKA.Vector3(x, 0, y);
 
-            const minDist = Math.min(...this.manager.active_agents.map(entity => pos.distanceTo(entity.position)));
+            const minDist = Math.min(...this.manager.active_agents.map((entity) => pos.distanceTo(entity.position)));
 
             if (minDist > maxDist) {
 
@@ -104,6 +103,7 @@ export default class extends YUKA.Vehicle {
     setActive(bool) {
 
         this.active = bool;
+        this.canActivateTrigger = bool;
 
         if (bool) {
             //Random exit TODO Exits should be managed in the module
@@ -117,7 +117,7 @@ export default class extends YUKA.Vehicle {
                 this.position.copy(spawn);
             }
             //Goal
-            const path = new YUKA.Path();
+            const path = new Path();
             const exit = YUKA.MathUtils.choice(EXITS);
 
             for (const point of this.manager.navMesh.findPath(this.position, exit)) {
@@ -164,47 +164,52 @@ export default class extends YUKA.Vehicle {
     }
 
     update(delta) {
-        //Calculate steering force
-        const steeringForce = new YUKA.Vector3();
-        const acceleration = new YUKA.Vector3();
 
-        this.steering.calculate(delta, steeringForce);
-        //Acceleration = force / mass
-        acceleration.copy(steeringForce).divideScalar(this.mass);
-        //Update velocity
-        this.velocity.add(acceleration.multiplyScalar(delta));
-        //Make sure vehicle does not exceed maximum speed
-        if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
-            this.velocity.normalize();
-            this.velocity.multiplyScalar(this.maxSpeed);
-        }
-        //TODO clip velocity to navmesh
-        //Search for the best new velocity.
-        const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
-        this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
-        //Calculate displacement
-        const displacement = new YUKA.Vector3();
-        displacement.copy(this.velocity).multiplyScalar(delta);
-        //Calculate target position
-        const target = new YUKA.Vector3();
-        target.copy(this.position).add(displacement);
-        //Update the orientation if the vehicle has a non zero velocity
-        if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-            this.lookAt(target);
-        }
-        //Update position
-        this.position.copy(target);
-        //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
-        const velocitySmooth = new YUKA.Vector3();
+        if (this.maxSpeed != 0) {
+            //Calculate steering force
+            const steeringForce = new YUKA.Vector3();
+            const acceleration = new YUKA.Vector3();
 
-        if (this.updateOrientation === true && this.smoother !== null) {
-
-            this.smoother.calculate(this.velocity, velocitySmooth);
-
-            displacement.copy(velocitySmooth).multiplyScalar(delta);
+            this.steering.calculate(delta, steeringForce);
+            //Acceleration = force / mass
+            acceleration.copy(steeringForce).divideScalar(this.mass);
+            //Update velocity
+            this.velocity.add(acceleration.multiplyScalar(delta));
+            //Make sure vehicle does not exceed maximum speed
+            if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
+                this.velocity.normalize();
+                this.velocity.multiplyScalar(this.maxSpeed);
+            }
+            //Search for the best new velocity.
+            const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
+            this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
+            //TODO clip velocity to navmesh
+            // this.manager.navMesh.clampMovement();
+            //Calculate displacement
+            const displacement = new YUKA.Vector3();
+            displacement.copy(this.velocity).multiplyScalar(delta);
+            //Calculate target position
+            const target = new YUKA.Vector3();
             target.copy(this.position).add(displacement);
+            //Update the orientation if the vehicle has a non zero velocity
+            if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
+                this.lookAt(target);
+            }
+            //Update position
+            this.position.copy(target);
+            //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
+            const velocitySmooth = new YUKA.Vector3();
 
-            this.lookAt(target);
+            if (this.updateOrientation === true && this.smoother !== null) {
+
+                this.smoother.calculate(this.velocity, velocitySmooth);
+
+                displacement.copy(velocitySmooth).multiplyScalar(delta);
+                target.copy(this.position).add(displacement);
+
+                this.lookAt(target);
+
+            }
 
         }
 

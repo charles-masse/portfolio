@@ -35,7 +35,7 @@ class FollowPathBehavior extends YUKA.FollowPathBehavior {
         //Calculate distance in square space from current waypoint to vehicle
         const distanceSq = path.current().squaredDistanceTo(vehicle.position);
         //Reached the end
-        if (path.finished() === true) {
+        if (path.done()) {
             vehicle.setActive(false);
         }
         //Move to next waypoint/end if close enough to current target

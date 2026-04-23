@@ -86,11 +86,11 @@ class DelaunayController extends LIL.Controller {
         const agent = this.getValue();
         const blendSpaces = agent.blendSpaces;
         //Find min and max values
-        const points_x = blendSpaces.clips.map(point => point.locomotion.x);
+        const points_x = blendSpaces.clips.map((point) => point.locomotion.x);
         let max_x = Math.max(...points_x);
         let min_x = Math.min(...points_x);
 
-        const points_z = blendSpaces.clips.map(point => point.locomotion.z);
+        const points_z = blendSpaces.clips.map((point) => point.locomotion.z);
         let max_z = Math.max(...points_z);
         let min_z = Math.min(...points_z);
         //Scale coords for display
@@ -103,7 +103,7 @@ class DelaunayController extends LIL.Controller {
         max_z = THREE.MathUtils.lerp(center_y,  max_z, 1.25); //Bottom doesn't have labels
         min_z = THREE.MathUtils.lerp(center_y,  min_z, 1.5);
         //Map coords on 100px display
-        const scaled_points = blendSpaces.clips.map(point => new THREE.Vector2(
+        const scaled_points = blendSpaces.clips.map((point) => new THREE.Vector2(
             THREE.MathUtils.inverseLerp(max_x, min_x, point.locomotion.x) * 100,
             THREE.MathUtils.inverseLerp(max_z, min_z, point.locomotion.z) * 100)
         );

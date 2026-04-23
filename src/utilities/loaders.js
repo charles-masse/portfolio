@@ -3,11 +3,25 @@ import * as THREE from 'three';
 import {OBJLoader,} from 'three/addons/loaders/OBJLoader.js';
 import {GLTFLoader,} from 'three/addons/loaders/GLTFLoader.js';
 
-// import * as YUKA from 'yuka';
+async function loadJSON(path, loadingManager=null) {
 
-import {NavMeshLoader,} from '../extensions/Navigation.js';
+    const loader = new THREE.FileLoader(loadingManager);
 
-async function loadObj(path, loadingManager=null) {
+    const data = await new Promise((resolve) => {
+
+        loader.load(path, (text) => {
+
+            const json = JSON.parse(text);
+
+            resolve(json);
+        });
+
+    });
+
+    return data;
+}
+
+async function loadOBJ(path, loadingManager=null) {
     
     const mesh = new Promise((resolve) => {
 
@@ -72,23 +86,10 @@ function rawTexture(texture) {
     return texture;
 }
 
-async function loadNavMesh(path, loadingManager=null) {
-
-    const navMesh = new Promise((resolve) => {
-        
-        new NavMeshLoader(loadingManager).load(path, {'mergeConvexRegions': false}).then((gltf) => {
-            resolve(gltf);
-        });
-
-    });
-
-    return navMesh;
-}
-
 export {
-    loadObj,
+    loadJSON,
+    loadOBJ,
     loadGLTF,
     loadTexture,
     rawTexture,
-    loadNavMesh,
 };

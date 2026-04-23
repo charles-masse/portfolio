@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {loadObj,} from './utilities/loaders.js';
+import {loadOBJ,} from './utilities/loaders.js';
 //Modules
 import DayNight from './modules/DayNight.js';
 import MovieScreen from './modules/MovieScreen.js';
@@ -54,7 +54,7 @@ scene.add(pedestrians.objects);
 const movieScreen = new MovieScreen(pedestrians);
 scene.add(movieScreen.objects);
 
-const city = await loadObj('models/city.obj', loadingManager); //TODO Create its own module
+const city = await loadOBJ('models/city.obj', loadingManager); //TODO Create its own module
 city.material = new THREE.MeshStandardMaterial({color: 0x808080});
 city.castShadow = true;
 city.receiveShadow = true;
@@ -70,11 +70,14 @@ const render = new Render(renderer, scene, camera);
 const stats = new Stats();
 // scene.add(agentInfo.objects);
 //Animation loop
-const clock = new THREE.Clock();
-const time = new YUKA.Time();
+const time = new THREE.Timer();
+time.connect(document);
+
+const step = 1000 / 24.;
+const capped_time = new THREE.Timer();
+capped_time.connect(document);
 
 let accumulator = 0;
-const step = 1000 / 24.;
 
 animate();
 
@@ -82,20 +85,20 @@ function animate() {
 
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta() * 1000;
+    time.update();
+    const delta = time.getDelta() * 1000;
     accumulator += delta;
     //Cap frames at 24
-    if (accumulator >= step) {
+    if (accumulator > step) {
 
-        const updated_time = time.update();
-        //Modules
-        pedestrians.update(updated_time);
-        dayNight.update(updated_time);
-        //GUI
+        capped_time.update();
+        //Update Modules and UIs
+        pedestrians.update(capped_time);
+        dayNight.update(capped_time);
         // agentInfo.update();
         stats.update();
-        //Drop frames
-        accumulator = accumulator % step;
+        //Reset accumulator
+        accumulator = accumulator - step;
 
     }
 

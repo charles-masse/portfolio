@@ -12,6 +12,7 @@ export default defineConfig([
     rules: {
       "semi": ["error", "always"],
       "no-tabs" : ["error"],
+      "no-warning-comments": ["warn", { "terms": ["todo", "fix", "delete"], "location": "start" }]
     },
   },
 ]);

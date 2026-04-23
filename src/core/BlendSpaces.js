@@ -87,7 +87,7 @@ class BlendSpaces {
 
     update() {
         //Delaunay triangulation
-        const delaunay = new Delaunator(this.clips.flatMap(clip => [clip.locomotion.x, clip.locomotion.z]));
+        const delaunay = new Delaunator(this.clips.flatMap((clip) => [clip.locomotion.x, clip.locomotion.z]));
         this.triangles = delaunay.triangles;
 
     }

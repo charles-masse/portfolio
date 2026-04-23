@@ -165,7 +165,7 @@ class KdTreeManager extends YUKA.EntityManager {
 
         this.agentTree = [];
 
-        this.agents = this.entities.filter(agent => agent.active);
+        this.agents = this.entities.filter((agent) => agent.active);
 
         this.buildAgentTreeRecursive(0, this.agents.length, 0);
 
@@ -360,7 +360,7 @@ class KdTreeManager extends YUKA.EntityManager {
             this.queryAgentTreeRecursive(entity, 0);
         }
         //Converting neighbors to Yuka
-        entity.neighbors = entity._agentNeighbors.map(neighbor => neighbor[1]);
+        entity.neighbors = entity._agentNeighbors.map((neighbor) => neighbor[1]);
 
     }
 
