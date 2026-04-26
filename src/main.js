@@ -1,8 +1,6 @@
 
 import * as THREE from 'three';
 
-import * as YUKA from 'yuka';
-
 import {loadOBJ,} from './utilities/loaders.js';
 //Modules
 import DayNight from './modules/DayNight.js';
@@ -98,7 +96,7 @@ function animate() {
         // agentInfo.update();
         stats.update();
         //Reset accumulator
-        accumulator = accumulator - step;
+        accumulator = accumulator % step;
 
     }
 

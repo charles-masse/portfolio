@@ -9,13 +9,12 @@ import Shader from '../agents/pedestrians/Shader.js';
 import {NavMesh,} from '../extensions/Navigation.js';
 import {KdTreeManager,} from '../extensions/Entities.js';
 import {PolygonalTriggerRegion,} from '../extensions/Triggers.js';
-import {FollowPathBehavior, WallAvoidanceBehavior,} from '../extensions/Steering.js';
+import {FollowPathBehavior,} from '../extensions/Steering.js';
 
 import {StopSign,} from '../agents/Triggers.js';
 
 import {loadJSON, loadGLTF, loadTexture, rawTexture,} from '../utilities/loaders.js';
 import {createConvexRegionHelper,} from '../helpers/NavMeshHelper.js';
-import {createGraphHelper,} from '../helpers/GraphHelper.js';
 
 import {MAX_AGENTS,} from '../settings.js';
 
@@ -58,7 +57,7 @@ export default class {
         //Create Triggers
         for (const tid in stage_data.triggers) {
 
-            const points = stage_data.triggers[tid].points.map((pt) => new YUKA.Vector3(...pt))
+            const points = stage_data.triggers[tid].points.map((pt) => new YUKA.Vector3(...pt));
             const region = new PolygonalTriggerRegion(points);
             this.entityManager.add(new StopSign(region));
 
@@ -69,7 +68,6 @@ export default class {
         }
         //Helpers
         this.objects.add(createConvexRegionHelper(navMesh));
-        // this.objects.add(createGraphHelper(navMesh.graph, 0.25));
         //Pedestrian mesh
         const agent_mesh = await loadGLTF('models/pictogram.gltf', this.loadingManager);
         const anim_texture = await loadTexture('VATs/animations.png', this.loadingManager);
@@ -91,11 +89,14 @@ export default class {
             //Link each instance to their individual agent
             const agent = new Agent(i);
             //Steering
-            const wall = new WallAvoidanceBehavior(navMesh);
-            agent.steering.add(wall);
-
-            const follow = new FollowPathBehavior(/*null, 1*/);
+            const follow = new FollowPathBehavior();
+            follow.nextWaypointDistance = 0.5;
             agent.steering.add(follow);
+
+            const onPath = new YUKA.OnPathBehavior();
+            onPath.radius = 0.05;
+            onPath.predictionFactor = 0.5;
+            agent.steering.add(onPath);
             //Render
             agent.setRenderComponent(
                 this.instancedMesh,

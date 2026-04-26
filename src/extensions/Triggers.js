@@ -7,7 +7,7 @@ class PolygonalTriggerRegion extends YUKA.TriggerRegion {
         super();
 
         this.polygon = new YUKA.Polygon().fromContour(points);
-        this.polygon.computeCentroid()
+        this.polygon.computeCentroid();
 
     }
 

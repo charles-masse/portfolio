@@ -22,6 +22,7 @@ I got really inspired by **Valve**'s promotional material for <ins>Portal 2</ins
 For the environment, I went with something similar. Super minimalistic shapes to keep it low poly and white textures not to distract too much from the crowd. The only compromise I opted for is enabling shadows to create depth and contrast.
 
 ![Reference of a minimalist city with hard shadows](/../gh-images/city.jpg)
+*Reference image by Ambrose Yu*
 
 ### Instanced characters
 A more technical way to handle a large number of objects in **Three.js** is to use a single *Instanced Mesh* with X instances, instead of cloning the same object X number of times.

@@ -4,8 +4,6 @@ export const MAX_AGENTS = 500;
 export const MAX_LEAF_SIZE = 10;
 //RVO
 export const TIME_STEP = 0.25;
-//Steering
-export const FEELER_ANGLE = 45;
 //DayNight
 export const START_TIME_SECS = 9;
 export const SUN_SPEED = -20;

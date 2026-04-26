@@ -11,7 +11,7 @@ class StopSign extends YUKA.Trigger {
 
     }
 
-    handleMessage(telegram) {
+    handleMessage(/*telegram*/) {
         //pass
     }
 

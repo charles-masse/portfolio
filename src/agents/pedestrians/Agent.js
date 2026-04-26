@@ -126,7 +126,7 @@ export default class extends YUKA.Vehicle {
             //Find behavior
             for (const behavior of this.steering.behaviors) {
 
-                if (behavior instanceof YUKA.FollowPathBehavior) {
+                if (behavior instanceof YUKA.FollowPathBehavior || behavior instanceof YUKA.OnPathBehavior) {
                     behavior.path = path;
 
                     break;
@@ -180,11 +180,23 @@ export default class extends YUKA.Vehicle {
                 this.velocity.normalize();
                 this.velocity.multiplyScalar(this.maxSpeed);
             }
+            //Clamp velocity to navmesh
+            const navMesh = this.manager.navMesh;
+            const clamped_velocity = new YUKA.Vector3();
+            
+            navMesh.clampMovement(
+                navMesh.getClosestRegion(this.position),
+                this.position,
+                this.position.clone().add(this.velocity),
+                clamped_velocity
+            );
+
+            if (clamped_velocity.length()) {
+                this.velocity.copy(clamped_velocity.sub(this.position));
+            }
             //Search for the best new velocity.
             const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
             this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
-            //TODO clip velocity to navmesh
-            // this.manager.navMesh.clampMovement();
             //Calculate displacement
             const displacement = new YUKA.Vector3();
             displacement.copy(this.velocity).multiplyScalar(delta);

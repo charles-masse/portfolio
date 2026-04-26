@@ -55,13 +55,13 @@ class NavMesh extends YUKA.NavMesh {
         super.fromPolygons(polygons);
 
         this.triangulate();
-        this.calculatePerimeter();
+        this.computePerimeter();
 
         return this;
     }
 
     triangulate() {
-
+        //TODO w/ 3d points
         const triangulated = [];
 
         for (const region of this.regions) {
@@ -82,7 +82,7 @@ class NavMesh extends YUKA.NavMesh {
 
     }
 
-    calculatePerimeter() {
+    computePerimeter() {
 
         const perimeter = [];
 
@@ -159,6 +159,66 @@ class NavMesh extends YUKA.NavMesh {
             x: tri[0].x + r1 * (tri[1].x - tri[0].x) + r2 * (tri[2].x - tri[0].x),
             y: tri[0].y + r1 * (tri[1].y - tri[0].y) + r2 * (tri[2].y - tri[0].y)
         };
+    }
+
+    findPath(from, to) {
+
+        const graph = this.graph;
+        const path = new Array();
+
+        let fromRegion = this.getRegionForPoint(from, this.epsilonContainsTest);
+        let toRegion = this.getRegionForPoint(to, this.epsilonContainsTest);
+
+        if (fromRegion === null || toRegion === null) {
+            //If source or target are outside the navmesh, choose the nearest convex region
+            if (fromRegion === null) fromRegion = this.getClosestRegion(from);
+            if (toRegion === null) toRegion = this.getClosestRegion(to);
+
+        }
+        //Check if both convex region are identical
+        if (fromRegion === toRegion) {
+            //No search necessary, directly create the path
+            path.push(new YUKA.Vector3().copy(from));
+            path.push(new YUKA.Vector3().copy(to));
+
+            return path;
+        }
+
+        else {
+            //Source and target are not in same region, perform search
+            const source = this.getNodeIndex(fromRegion);
+            const target = this.getNodeIndex(toRegion);
+
+            const astar = new YUKA.AStar(graph, source, target);
+            astar.search();
+
+            if (astar.found === true) {
+
+                const polygonPath = astar.getPath();
+                //Get the portals
+                const portalEdge = {left: null, right: null};
+
+                for (let i = 0, l = (polygonPath.length - 1); i < l; i ++) {
+
+                    const region = this.regions[polygonPath[i]];
+                    const nextRegion = this.regions[polygonPath[i + 1]];
+
+                    this._getPortalEdge(region, nextRegion, portalEdge);
+                    //Left/Right are reversed for our purpose
+                    const right = portalEdge.right.clone().multiplyScalar(0.25);
+                    const left = portalEdge.left.clone().multiplyScalar(0.75);
+
+                    path.push(right.add(left));
+
+                }
+
+                path.push(new YUKA.Vector3().copy(to));
+
+            }
+
+            return path;
+        }
+
     }
 
 }
