@@ -1,4 +1,6 @@
 
+import * as YUKA from 'yuka';
+
 import {State,} from '../../extensions/States.js';
 
 class GoToState extends State {
@@ -6,8 +8,27 @@ class GoToState extends State {
     enter(owner) {
         super.enter(owner);
 
-        owner.maxSpeed = 0.8;
+        owner.maxSpeed = 1;
+        owner.velocity.set(0, 0, 0);
 
+    }
+
+    execute(owner) {
+        super.execute(owner);
+        //Find behavior
+        for (const behavior of owner.steering.behaviors) {
+
+            if (behavior instanceof YUKA.FollowPathBehavior) {
+                //Reached the end
+                if (behavior.path.finished()) {
+                    owner.setActive(false);
+                }
+
+                break;
+            }
+                    
+        }
+        
     }
 
     onMessage(owner, telegram) {
@@ -32,7 +53,6 @@ class IdleState extends State {
 
 }
 
-
 class CheerState extends State {
 
     enter(owner) {
@@ -53,10 +73,6 @@ class CheerState extends State {
 
 }
 
-class InteractState extends State {
-
-}
-
 class DeadState extends State {
 
     enter(owner) {
@@ -72,6 +88,5 @@ export {
     GoToState,
     IdleState,
     CheerState,
-    InteractState,
     DeadState,
 };

@@ -1,3 +1,4 @@
+
 /*
  * This is a conversion of the RVO2 Library to JavaScript/Three.js/Yuka.
  *
@@ -23,17 +24,6 @@ import * as YUKA from 'yuka';
 import {RVO_EPSILON, absSq, det, sqr, abs,} from '../utilities/RVO2.js';
 
 import {TIME_STEP,} from '../settings.js';
-
-class Line {
-
-    constructor() {
-
-        this.point = null;
-        this.direction = null;
-
-    }
-
-}
 
 function computeNewVelocity(agent) {
 
@@ -76,7 +66,7 @@ function computeNewVelocity(agent) {
         const s = -relativePosition1.dot(obstacleVector) / absSq(obstacleVector);
         const distSqLine = absSq(relativePosition1.clone().negate().sub(obstacleVector.clone().multiplyScalar(s)));
 
-        const line = new Line();
+        const line = {};
 
         if (s < 0 && distSq1 <= radiusSq) {
             //Collision with left vertex. Ignore if non-convex.
@@ -89,8 +79,7 @@ function computeNewVelocity(agent) {
             continue;
 
         } else if (s > 1 && distSq2 <= radiusSq) {
-            //Collision with right vertex. Ignore if non-convex
-            //or if it will be taken care of by neighoring obstacle
+            //Collision with right vertex. Ignore if non-convex or if it will be taken care of by neighoring obstacle
             if (obstacle2.isConvex && det(relativePosition2, obstacle2.unitDir) >= 0) {
                 line.point = new THREE.Vector2(0, 0);
                 line.direction = new THREE.Vector2(-relativePosition2.y, relativePosition2.x).normalize();
@@ -108,7 +97,6 @@ function computeNewVelocity(agent) {
         }
         //No collision.
         //Compute legs. When obliquely viewed, both legs can come from a single vertex. Legs extend cut-off line when nonconvex vertex.
-
         let leftLegDirection = new THREE.Vector2();
         let rightLegDirection = new THREE.Vector2();
 
@@ -257,7 +245,7 @@ function computeNewVelocity(agent) {
         const combinedRadius = agent.boundingRadius + other.boundingRadius;
         const combinedRadiusSq = sqr(combinedRadius);
 
-        const line = new Line();
+        const line = {};
         const u = new THREE.Vector2();
 
         if (distSq > combinedRadiusSq) {
@@ -436,7 +424,7 @@ function linearProgram3(lines, numObstLines, beginLine, radius, result) {
 
             for (let j = numObstLines; j < i; ++j) {
 
-                const line = new Line();
+                const line = {};
 
                 let determinant = det(lines[i].direction, lines[j].direction);
 

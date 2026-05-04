@@ -16,26 +16,26 @@ class Path extends YUKA.Path {
 
         this._index ++;
 
-        if ( ( this._index === this._waypoints.length ) ) {
+        if (this._waypoints.length && this._index === this._waypoints.length) {
 
-            if ( this.loop === true ) {
+            this.end = true;
 
+            if (this.loop === true) {
                 this._index = 0;
-
-            } else {
-
-                this._index --;
-                this.end = true;
-
             }
 
+            else {
+                this._index--;
+            }
+
+        } else {
+            this.end = false;
         }
 
         return this;
-
     }
 
-    done() {
+    finished() {
         return this.end;
     }
 
@@ -46,87 +46,34 @@ class NavMesh extends YUKA.NavMesh {
     constructor() {
         super();
 
-        this.triangles = null;
-        this.perimeter = null;
+        this.triangles = [];
 
     }
 
     fromPolygons(polygons) {
         super.fromPolygons(polygons);
 
-        this.triangulate();
-        this.computePerimeter();
+        this._triangulate();
 
         return this;
     }
 
-    triangulate() {
-        //TODO w/ 3d points
-        const triangulated = [];
+    _triangulate() {
 
         for (const region of this.regions) {
-
+            //Convert contour in 2D
             const contour = [];
             region.getContour(contour);
-
             const contour_2d = contour.map((p) => new THREE.Vector2(p.x, p.z));
-
+            //Triangulate
             const triangles = THREE.ShapeUtils.triangulateShape(contour_2d, []);
-            const triangles_points = triangles.map((tri) => tri.map((idx) => contour_2d[idx]));
-
-            triangulated.push(...triangles_points);
-
-        }
-
-        this.triangles = triangulated;
-
-    }
-
-    computePerimeter() {
-
-        const perimeter = [];
-
-        for (const region of this.regions) {
-
-            const contour = [];
-            region.getContour(contour);
-
-            for (let i=0; i < contour.length; i++) {
-
-                const wall = new YUKA.LineSegment(contour[i], contour[(i + 1) % contour.length]);
-                wall.normal = wall.to.clone().sub(wall.from).cross(new YUKA.Vector3(0, 1, 0)).multiplyScalar(-1.0).normalize();
-
-                perimeter.push(wall);
-
+            const triangles_points = triangles.map((tri) => tri.map((idx) => contour[idx]));
+            //Create triangles
+            for (const tri of triangles_points) {
+                this.triangles.push(new THREE.Triangle(...tri));
             }
 
         }
-
-        let final_perimeter = perimeter.slice();
-
-        for (let e=0; e < perimeter.length; e++) {
-            for (let i=0; i < perimeter.length; i++) {
-
-                if (i != e) {
-
-                    const distances = [
-                        perimeter[e].from.clone().sub(perimeter[i].from).length(),
-                        perimeter[e].from.clone().sub(perimeter[i].to).length(),
-                        perimeter[e].to.clone().sub(perimeter[i].to).length(),
-                        perimeter[e].to.clone().sub(perimeter[i].from).length(),
-                    ];
-
-                    if (distances.filter((v) => v === 0).length == 2) {
-                        final_perimeter.splice(final_perimeter.indexOf(perimeter[i]), 1);
-                    }
-                    
-                }
-
-            }
-
-        }
-
-        this.perimeter = final_perimeter;
 
     }
 
@@ -134,31 +81,29 @@ class NavMesh extends YUKA.NavMesh {
         
         const triangles = this.triangles;
         //Random triangle weighted by their area size
-        const areas = triangles.map(
-            (triangle) => new THREE.Triangle(
-                new THREE.Vector3(triangle[0].x, 0, triangle[0].y),
-                new THREE.Vector3(triangle[1].x, 0, triangle[1].y),
-                new THREE.Vector3(triangle[2].x, 0, triangle[2].y)
-            ).getArea());
+        const areas = triangles.map((triangle) => triangle.getArea());
 
         const random_idx = YUKA.MathUtils.choice(
             [...Array(triangles.length).keys()],
-            areas.map((size) => size / areas.reduce((a,b)=>a+b))
+            areas.map((size) => size / areas.reduce((a, b) => a + b))
         );
-        
         const tri = triangles[random_idx];
         //Random point inside chosen triangle
-        let r1 = Math.random();
-        let r2 = Math.random();
+        let u = Math.random();
+        let v = Math.random();
 
-        if (r1 + r2 > 1) {
-            r1 = 1 - r1; r2 = 1 - r2;
-        };
+        if (u + v > 1) {
+            u = 1 - u;
+            v = 1 - v;
+        }
 
-        return {
-            x: tri[0].x + r1 * (tri[1].x - tri[0].x) + r2 * (tri[2].x - tri[0].x),
-            y: tri[0].y + r1 * (tri[1].y - tri[0].y) + r2 * (tri[2].y - tri[0].y)
-        };
+        const AB = new THREE.Vector3().subVectors(tri.b, tri.a);
+        const AC = new THREE.Vector3().subVectors(tri.c, tri.a);
+
+        return new THREE.Vector3()
+            .copy(tri.a)
+            .addScaledVector(AB, u)
+            .addScaledVector(AC, v);
     }
 
     findPath(from, to) {

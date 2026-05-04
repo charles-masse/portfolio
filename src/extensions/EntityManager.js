@@ -25,66 +25,20 @@ import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../
 
 import {MAX_LEAF_SIZE,} from '../settings.js';
 
-class Obstacle {
-
-    constructor() {
-
-        this.point = null;
-        this.prevObstacle = null;
-        this.nextObstacle = null;
-        this.unitDir = null;
-        this.isConvex = null;
-
-    }
-
-}
-
-class AgentTreeNode {
-
-    constructor(begin, end, X, Y){
-
-        this.begin = begin;
-        this.end = end;
-        this.minX = this.maxX = X;
-        this.minY = this.maxY = Y;
-
-    }
-
-}
-
-class ObstacleTreeNode {
-
-    constructor() {
-
-        this.left = null;
-        this.right = null;
-        this.obstacle = null;
-
-    }
-
-}
-
-class KdTreeManager extends YUKA.EntityManager {
+export default class extends YUKA.EntityManager {
 
     constructor() {
         super();
-        //Spawner
-        this.population = -1;
-        this.active_agents = [];
-        this.inactive_agents = [];
-        this.user_input = true;
-        //KdTree
+
         this.agents = [];
-        this.obstacles = new Array();
-        this.buildObstacleTree();
+        this.obstacles = [];
+
+        this.buildObstacleTree(); //TODO Update the obstacle tree when it's changed
 
     }
-    //TODO Should be managed by the module
+
     addAgent(entity) {
         this.add(entity);
-
-        this.inactive_agents.push(entity);
-
     }
     
     addObstacle(vertices) {
@@ -95,9 +49,8 @@ class KdTreeManager extends YUKA.EntityManager {
 
         for (let i = 0; i < vertices.length; ++i) {
 
-            const obstacle = new Obstacle();
-
-            obstacle.point = vertices[i];
+            const obstacle = {}
+                .point = vertices[i];
 
             if (i != 0) {
                 obstacle.prevObstacle = this.obstacles[this.obstacles.length - 1];
@@ -133,52 +86,28 @@ class KdTreeManager extends YUKA.EntityManager {
 
         return this;
     }
-    //TODO Put in module
-    activateAgents() {
-        
-        while (this.active_agents.length != this.population) {
-
-            if (this.active_agents.length < this.population) {
-
-                const agent = this.inactive_agents[this.inactive_agents.length - 1];
-
-                agent.setActive(true);
-
-            }
-
-            else if (this.active_agents.length > this.population) {
-                //Pick random agent
-                const random_idx = Math.floor(Math.random() * this.active_agents.length);
-                const agent = this.active_agents[random_idx];
-
-                agent.setActive(false);
-
-            }
-
-        }
-
-        this.user_input = false; //TODO fix
-
-    }
 
     buildAgentTree() {
 
         this.agentTree = [];
-
         this.agents = this.entities.filter((agent) => agent.active);
 
-        this.buildAgentTreeRecursive(0, this.agents.length, 0);
+        if (this.agents.length) {
+            this.buildAgentTreeRecursive(0, this.agents.length, 0);
+        }
 
     }
 
     buildAgentTreeRecursive(begin, end, node) {
 
-        const agentTreeNode = this.agentTree[node] = new AgentTreeNode(
-            begin,
-            end,
-            this.agents[begin].position.x,
-            this.agents[begin].position.z
-        );
+        const agentTreeNode = this.agentTree[node] = {
+            'begin': begin,
+            'end': end,
+            'minX': this.agents[begin].position.x,
+            'maxX': this.agents[begin].position.x,
+            'minY': this.agents[begin].position.z,
+            'maxY': this.agents[begin].position.z,
+        };
 
         for (let i = begin + 1; i < end; ++ i) {
             agentTreeNode.maxX = Math.max(agentTreeNode.maxX, this.agents[i].position.x);
@@ -313,14 +242,13 @@ class KdTreeManager extends YUKA.EntityManager {
                 const splitpoint = obstacleJ1.point.clone()
                     .add(obstacleJ2.point.clone().sub(obstacleJ1.point).multiplyScalar(t));
 
-                const newObstacle = new Obstacle();
-                newObstacle.point = splitpoint;
-                newObstacle.prevObstacle = obstacleJ1;
-                newObstacle.nextObstacle = obstacleJ2;
-                newObstacle.isConvex = true;
-                newObstacle.unitDir = obstacleJ1.unitDir;
-
-                newObstacle._id = this.obstacles.length;
+                const newObstacle = {}
+                    .point = splitpoint
+                    .prevObstacle = obstacleJ1
+                    .nextObstacle = obstacleJ2
+                    .isConvex = true
+                    .unitDir = obstacleJ1.unitDir
+                    ._id = this.obstacles.length;
                 this.obstacles.push(newObstacle);
 
                 obstacleJ1.nextObstacle = newObstacle;
@@ -338,10 +266,10 @@ class KdTreeManager extends YUKA.EntityManager {
 
         }
 
-        const node = new ObstacleTreeNode();
-        node.obstacle = obstacleI1;
-        node.left = this.buildObstacleTreeRecursive(leftObstacles);
-        node.right = this.buildObstacleTreeRecursive(rightObstacles);
+        const node = {}
+            .obstacle = obstacleI1
+            .left = this.buildObstacleTreeRecursive(leftObstacles)
+            .right = this.buildObstacleTreeRecursive(rightObstacles);
 
         return node;
     }
@@ -502,15 +430,9 @@ class KdTreeManager extends YUKA.EntityManager {
     
     update(delta) {
 
-        this.activateAgents();
         this.buildAgentTree();
-        
         super.update(delta);
 
     }
 
 }
-
-export {
-    KdTreeManager,
-};

@@ -1,23 +1,12 @@
 
-// import * as THREE from 'three';
-
 import * as YUKA from 'yuka';
+
+import {GoToState, IdleState, CheerState, DeadState,} from './States.js';
 
 import {computeNewVelocity,} from '../../core/ORCA.js';
 // import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
-import {GoToState, IdleState, CheerState, InteractState, DeadState,} from './States.js';
 
-import {Path,} from '../../extensions/Navigation.js';
 import {StateMachine,} from '../../extensions/States.js';
-
-const EXITS = [
-    new YUKA.Vector3(-26, 0, -20),
-    new YUKA.Vector3(23, 0, -20),
-    new YUKA.Vector3(-40, 0, -20),
-    new YUKA.Vector3(43, 0, -20),
-    new YUKA.Vector3(-10, 0, 50),
-    new YUKA.Vector3(11, 0, 50),
-];
 
 export default class extends YUKA.Vehicle {
 
@@ -28,14 +17,14 @@ export default class extends YUKA.Vehicle {
 
         this.id = id;
 
-        this.smoother = new YUKA.Smoother(20);
+        this.smoother = new YUKA.Smoother(25);
 
-        this.boundingRadius = 0.4;
+        this.boundingRadius = 0.35;
         this.neighborhoodRadius = 1.8;
         this.maxNeighbors = 15;
         //ORCA
         this.timeHorizon = 3;
-        this.timeHorizonObst = 6;
+        this.timeHorizonObst = 3;
         //Animation blending
         // agent.blendSpaces = new BlendSpaces(this);
 
@@ -69,35 +58,10 @@ export default class extends YUKA.Vehicle {
         this.stateMachine = new StateMachine(this);
         this.stateMachine.add('GoTo', new GoToState());
         this.stateMachine.add('Idle', new IdleState());
-        this.stateMachine.add('Interact', new InteractState());
         this.stateMachine.add('Cheer', new CheerState());
         this.stateMachine.add('Dead', new DeadState());
-
         this.stateMachine.changeTo('Dead');
         
-    }
-    //TODO Should be handled by the module
-    bestCandidate() {
-
-        let best;
-        let maxDist = -Infinity;
-        for (let i = 0; i < 10; i++) {
-
-            const {x, y} = this.manager.navMesh.randomPoint();
-            const pos = new YUKA.Vector3(x, 0, y);
-
-            const minDist = Math.min(...this.manager.active_agents.map((entity) => pos.distanceTo(entity.position)));
-
-            if (minDist > maxDist) {
-
-                maxDist = minDist;
-                best = pos;
-
-            }
-
-        }
-
-        return best;
     }
 
     setActive(bool) {
@@ -106,55 +70,26 @@ export default class extends YUKA.Vehicle {
         this.canActivateTrigger = bool;
 
         if (bool) {
-            //Random exit TODO Exits should be managed in the module
-            const spawn = YUKA.MathUtils.choice(EXITS);
-
-            if (this.manager.user_input) {
-                this.position.copy(this.bestCandidate());
-            }
-            
-            else {
-                this.position.copy(spawn);
-            }
-            //Goal
-            const path = new Path();
-            const exit = YUKA.MathUtils.choice(EXITS);
-
-            for (const point of this.manager.navMesh.findPath(this.position, exit)) {
-                path.add(point);
-            }
-            //Find behavior
-            for (const behavior of this.steering.behaviors) {
-
-                if (behavior instanceof YUKA.FollowPathBehavior || behavior instanceof YUKA.OnPathBehavior) {
-                    behavior.path = path;
-
-                    break;
-                }
-                
-            }
-
             this.stateMachine.changeTo('GoTo');
 
-            const index = this.manager.inactive_agents.indexOf(this);
-
-            this.manager.inactive_agents.splice(index, 1);
             this.manager.active_agents.push(this);
+
+            const id = this.manager.inactive_agents.indexOf(this);
+            this.manager.inactive_agents.splice(id, 1);
 
         }
 
         else {
 
             this.stateMachine.changeTo('Dead');
-
             this.position.set(0, -9999, 0); //Shadow Realm
             this._renderComponentCallback(this, this._renderComponent);
 
-            const index = this.manager.active_agents.indexOf(this);
-
-            this.manager.active_agents.splice(index, 1);
             this.manager.inactive_agents.push(this);
-            
+
+            const id = this.manager.active_agents.indexOf(this);
+            this.manager.active_agents.splice(id, 1);
+
         }
 
     }

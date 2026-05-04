@@ -1,5 +1,5 @@
 
-import {GUI,} from '../extensions/GUI.js';
+import {GUI,} from './GUI.js';
 
 var Stats = function () {
 

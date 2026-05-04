@@ -5,12 +5,11 @@ import {loadOBJ,} from './utilities/loaders.js';
 //Modules
 import DayNight from './modules/DayNight.js';
 import MovieScreen from './modules/MovieScreen.js';
-import Pedestrians from './modules/Pedestrians.js';
-import Render from './modules/Render.js';
-//GUI
-import CrowdSpawner from './ui/CrowdSpawner.js';
-// import AgentInfo from './ui/AgentInfo.js';
-import Stats from './ui/Stats.js';
+import {Cars} from './modules/Cars/module.js';
+import {Pedestrians} from './modules/Pedestrians/module.js';
+import {Render} from './modules/Render/module.js';
+
+import Stats from './extensions/Stats.js';
 //Loading Screen
 const loadingManager = new THREE.LoadingManager(
 
@@ -34,7 +33,6 @@ const canvas = document.querySelector('#canvas');
 
 const renderer = new THREE.WebGLRenderer({canvas,/* alpha: true,*/}); //Change to full DMP
 renderer.setSize(window.innerWidth, window.innerHeight);
-// renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 //Scene
 const scene = new THREE.Scene();
@@ -42,17 +40,20 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(24);
 // camera.position.set(0, 14.188, 103.679);
-// camera.lookAt(0, 0, 30); //TODO Update to actual rotation
-camera.position.set(0, 14.188, 60); //DELETE ME Stop sign debug
-camera.lookAt(0, 0, 10); //DELETE ME Stop sign debug
+// camera.lookAt(0, 0, 30); //TODO load from json
+camera.position.set(0, 14.188, 60); //DELETE Stop sign debug
+camera.lookAt(0, 0, 10); //DELETE Stop sign debug
 //Modules
-const pedestrians = await new Pedestrians(loadingManager, camera).init();
+const cars = new Cars();
+scene.add(cars.objects);
+
+const pedestrians = new Pedestrians(camera, loadingManager);
 scene.add(pedestrians.objects);
 
 const movieScreen = new MovieScreen(pedestrians);
 scene.add(movieScreen.objects);
-
-const city = await loadOBJ('models/city.obj', loadingManager); //TODO Create its own module
+//TODO Create its own module
+const city = await loadOBJ('models/city.obj', loadingManager);
 city.material = new THREE.MeshStandardMaterial({color: 0x808080});
 city.castShadow = true;
 city.receiveShadow = true;
@@ -61,12 +62,9 @@ scene.add(city);
 const dayNight = new DayNight(canvas, city);
 scene.add(dayNight.objects);
 
-const render = new Render(renderer, scene, camera);
-//GUI
-/*const crowdSpawner = */new CrowdSpawner(pedestrians.entityManager);
-// const agentInfo = new AgentInfo(pedestrians.entityManager, camera);
 const stats = new Stats();
-// scene.add(agentInfo.objects);
+
+const render = new Render(renderer, scene, camera);
 //Animation loop
 const time = new THREE.Timer();
 time.connect(document);
@@ -87,10 +85,11 @@ function animate() {
     const delta = time.getDelta() * 1000;
     accumulator += delta;
     //Cap frames at 24
-    if (accumulator > step) {
+    if (accumulator >= step) {
 
         capped_time.update();
         //Update Modules and UIs
+        cars.update(capped_time);
         pedestrians.update(capped_time);
         dayNight.update(capped_time);
         // agentInfo.update();
@@ -103,7 +102,7 @@ function animate() {
     render.update();
 
 }
-//Listeners
+//Listeners TODO Put in their respective modules
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize() {

@@ -4,7 +4,7 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
-import outlineShader from '../shaders/outlineShader.js';
+import outlineShader from './outlineShader.js';
 
 const MAX_DEPTH = "100.";
 
@@ -16,7 +16,7 @@ function isCompatible(object) {
     return (object.isMesh === true && object.material !== undefined && hasNormals === true);
 }
 
-export default class {
+export class Render {
 
     constructor(renderer, scene, camera) {
 
