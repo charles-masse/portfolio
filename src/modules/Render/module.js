@@ -4,7 +4,7 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
-import outlineShader from './outlineShader.js';
+import OutlineShader from './OutlineShader.js';
 
 const MAX_DEPTH = "100.";
 
@@ -16,7 +16,7 @@ function isCompatible(object) {
     return (object.isMesh === true && object.material !== undefined && hasNormals === true);
 }
 
-export class Render {
+export default class {
 
     constructor(renderer, scene, camera) {
 
@@ -31,7 +31,7 @@ export class Render {
         this.depthidRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         //Comp
         this.composer = new EffectComposer(renderer);
-        this.composer.addPass(new ShaderPass(new outlineShader(this.depthidRender, this.beautyRender)));
+        this.composer.addPass(new ShaderPass(new OutlineShader(this.depthidRender, this.beautyRender)));
         this.composer.addPass(new SMAAPass(window.innerWidth * 16, window.innerHeight * 16));
 
     }

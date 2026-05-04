@@ -1,13 +1,15 @@
 
 import * as YUKA from 'yuka';
 
+function degreesToRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
 function radiansToDegrees(radians) {
     return radians * (180 / Math.PI);
 }
 
-function degreesToRadians(degrees) {
-    return degrees * (Math.PI / 180);
-}
+
 
 function worldToLocal(vector, direction, up=new YUKA.Vector3(0, 1, 0)) {
 
@@ -26,7 +28,7 @@ function worldToLocal(vector, direction, up=new YUKA.Vector3(0, 1, 0)) {
 }
 
 export {
-    radiansToDegrees,
     degreesToRadians,
+    radiansToDegrees,
     worldToLocal,
 };

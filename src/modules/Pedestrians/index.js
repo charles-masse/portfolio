@@ -1,0 +1,1 @@
+export {default as Pedestrians} from './module.js';

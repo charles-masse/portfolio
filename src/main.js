@@ -3,11 +3,11 @@ import * as THREE from 'three';
 
 import {loadOBJ,} from './utilities/loaders.js';
 //Modules
+import {Cars} from './modules/Cars';
+import {Pedestrians} from './modules/Pedestrians';
+import {Render} from './modules/Render';
 import DayNight from './modules/DayNight.js';
 import MovieScreen from './modules/MovieScreen.js';
-import {Cars} from './modules/Cars/module.js';
-import {Pedestrians} from './modules/Pedestrians/module.js';
-import {Render} from './modules/Render/module.js';
 
 import Stats from './extensions/Stats.js';
 //Loading Screen

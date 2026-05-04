@@ -3,17 +3,17 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import Agent from './Agent.js';
-import Shader from './Shader.js';
-
 import {GUI,} from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
 import {NavMesh, Path,} from '../../extensions/Navigation.js';
 
+// import {createGraphHelper,} from '../../helpers/GraphHelper.js';
+// import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
+
 import {loadJSON, loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
-// import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
-// import {createGraphHelper,} from '../../helpers/GraphHelper.js';
+import Agent from './Agent.js';
+import Shader from './Shader.js';
 
 import {MAX_AGENTS,} from '../../settings.js';
 
@@ -29,7 +29,7 @@ function renderInstance(entity, renderComponent, camera) {
 
 }
 
-export class Pedestrians {
+export default class {
 
     constructor(camera, loadingManager) {
 
@@ -74,16 +74,16 @@ export class Pedestrians {
         //Create Spawn points
         this.exits = stage_data.spawns.map((pt) => new YUKA.Vector3(...pt));
         //Create Triggers
-        // for (const tid in stage_data.triggers) {
+        // for (const trigger of stage_data.triggers) {
 
-        //     const points = stage_data.triggers[tid].points.map((pt) => new YUKA.Vector3(...pt));
+        //     const points = trigger.points.map((pt) => new YUKA.Vector3(...pt));
         //     const region = new PolygonalTriggerRegion(points);
         //     this.manager.add(new StopSign(region));
 
         // }
         //Create Obstacles
-        for (const oid in stage_data.obstacles) {
-            this.manager.addObstacle(stage_data.obstacles[oid].map((pt) => new THREE.Vector2(pt[0], pt[2])));
+        for (const obstacle of stage_data.obstacles) {
+            this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
         }
         //Helpers
         //TODO Make a custom helper
@@ -93,10 +93,12 @@ export class Pedestrians {
         const agent_mesh = await loadGLTF('models/pictogram.gltf', loadingManager);
         //Custom attributes
         const agent_geo = agent_mesh.geometry;
+
         agent_geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+
         const anim_texture = await loadTexture('VATs/animations.png', loadingManager);
         const alpha_texture = await loadTexture('textures/pictogramAlpha.png', loadingManager);
         //Pedestrian instance
@@ -215,10 +217,12 @@ export class Pedestrians {
 
             const attributes = this.instancedMesh.geometry.attributes;
 
-            for (const name in attributes) {
-                if (name.startsWith('instance')) {
-                    attributes[name].needsUpdate = true;
+            for (const attribute_name in attributes) {
+
+                if (attribute_name.startsWith('instance')) {
+                    attributes[attribute_name].needsUpdate = true;
                 }
+                
             }
 
         }

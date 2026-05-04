@@ -1,8 +1,6 @@
 
 import * as THREE from 'three';
 
-// import * as YUKA from 'yuka';
-
 export default class {
 
     constructor(pedestrians) {
@@ -49,8 +47,8 @@ export default class {
 
         }
         //Send message to agents
-        this.pedestrians.entityManager.entities.forEach((entity) => {
-            this.pedestrians.entityManager.sendMessage(null, entity, 'MovieScreen : State Change', 0, this._state);
+        this.pedestrians.manager.entities.forEach((entity) => {
+            this.pedestrians.manager.sendMessage(null, entity, 'MovieScreen : State Change', 0, this._state);
         });
         
     }
