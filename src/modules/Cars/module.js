@@ -34,7 +34,7 @@ const ROADS = [
     ]
 ];
 
-function createBB(pos, size=4) {
+function createBB(pos, size=6) {
 
     const half_size = size / 2.;
 

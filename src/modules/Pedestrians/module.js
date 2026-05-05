@@ -64,7 +64,7 @@ export default class {
 
     async init(camera, loadingManager) {
         //Stage data loader
-        const stage_data = await loadJSON('stage.json', loadingManager);
+        const stage_data = await loadJSON('data/stage.json', loadingManager);
         //Create navmesh
         const navMesh = new NavMesh();
         navMesh.mergeConvexRegions = false;

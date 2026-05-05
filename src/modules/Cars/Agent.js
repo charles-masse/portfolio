@@ -10,8 +10,12 @@ export default class extends YUKA.Vehicle {
 
         this.maxSpeed = 6;
 
+        this.boundingRadius = 3;
+
         this.neighborhoodRadius = 10;
         this.maxNeighbors = 10;
+
+        // this.smoother = new YUKA.Smoother(30);
 
     }
 
