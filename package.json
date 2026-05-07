@@ -1,13 +1,17 @@
 {
   "scripts": {
-    "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test": "vitest",
+    "devtest": "concurrently \"vite\" \"vitest --watch\"",
+    "build": "vite build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.1",
     "eslint": "^10.0.2",
     "globals": "^17.4.0",
-    "vite": "^7.1.12"
+    "vite": "^7.1.12",
+    "vitest": "^4.1.5"
   },
   "dependencies": {
     "delaunator": "^5.0.1",

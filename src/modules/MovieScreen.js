@@ -7,9 +7,8 @@ export default class {
 
         this.pedestrians = pedestrians;
 
-        this._state = 0;
-
         this.video = document.getElementById('video');
+        this.video.pause();
 
         const videoMaterial =  new THREE.MeshBasicMaterial({
             map: new THREE.VideoTexture(this.video),
@@ -31,24 +30,16 @@ export default class {
 
     update() {
 
-        if (this._state === 0) {
-
+        if (this.video.paused) {
             this.video.play();
-            this._state = 1;
-            this.playButton.visible = false;
-
-        }
-
-        else {
-
+        } else {
             this.video.pause();
-            this._state = 0;
-            this.playButton.visible = true;
-
         }
+
+        this.playButton.visible = this.video.paused;
         //Send message to agents
         this.pedestrians.manager.entities.forEach((entity) => {
-            this.pedestrians.manager.sendMessage(null, entity, 'MovieScreen : State Change', 0, this._state);
+            this.pedestrians.manager.sendMessage(this, entity, '[MovieScreen] State Change', 0, this.video.paused);
         });
         
     }

@@ -45,7 +45,7 @@ Like I mentioned before, instances comes with a major constraint—they all need
 
 By overriding each agent's vertices position in the *Vertex Shader*, you can have everyone play a different clip. Additionally, to lower the CPU's load and since we're already using the GPU with the shader, the animations can be read through a *Vertex Animation Texture*. A texture where each pixel's RGB values represent a XYZ transforms. :
 
-![Vertex animation texture](/public/VATs/animations.png)
+![Vertex animation texture](/public/Pedestrians/VAT.png)
 
 Last but not least, the variations can be handled inside the *Fragment Shader* by loading different textures and alphas depending on the selected variation.
 

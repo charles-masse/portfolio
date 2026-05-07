@@ -53,7 +53,7 @@ scene.add(pedestrians.objects);
 const movieScreen = new MovieScreen(pedestrians);
 scene.add(movieScreen.objects);
 //TODO Create its own module
-const city = await loadOBJ('models/city.obj', loadingManager);
+const city = await loadOBJ('City/model.obj', loadingManager);
 city.material = new THREE.MeshStandardMaterial({color: 0x808080});
 city.castShadow = true;
 city.receiveShadow = true;
