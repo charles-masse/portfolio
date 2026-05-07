@@ -28,10 +28,16 @@ export default class {
 
     }
 
-    async update() {
+    update() {
 
         if (this.video.paused) {
-            await this.video.play(); // this.video.readyState
+
+            if (this.video.readyState !== 4) {
+                this.video.play();
+            }
+
+            this.video.play();
+
         } else {
             this.video.pause();
         }
