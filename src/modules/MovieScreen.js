@@ -29,7 +29,7 @@ export default class {
 
     }
 
-    update() {
+    async update() {
 
         if (this.video.paused) {
 
