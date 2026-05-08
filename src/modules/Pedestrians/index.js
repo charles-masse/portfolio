@@ -92,23 +92,20 @@ export class Pedestrians {
         // this.objects.add(createGraphHelper(navMesh.graph, 0.5, 0x00ff00, 0xff0000));
         //Load
         const agent_mesh = await loadGLTF('Pedestrians/pictogram.gltf', loadingManager);
-        //Custom attributes
-        const agent_geo = agent_mesh.geometry;
-
-        agent_geo.setAttribute('instance_id', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-        agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-        agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-        agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
-
         const anim_texture = await loadTexture('Pedestrians/VAT.png', loadingManager);
         const alpha_texture = await loadTexture('Pedestrians/pictogramAlpha.png', loadingManager);
-        //Pedestrian instance
+
+        const agent_geo = agent_mesh.geometry;
+        //Custom attributes
+        agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
+        //Instance agents
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(anim_texture), rawTexture(alpha_texture)), MAX_AGENTS);
         this.objects.add(this.instancedMesh);
         
         const color = new Float32Array(MAX_AGENTS * 3);
         const variation = new Float32Array(MAX_AGENTS);
-        
+
         for (let i = 0; i < MAX_AGENTS; i++) {
             //Link each instance to their individual agent
             const agent = new Agent(i);

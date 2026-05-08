@@ -8,8 +8,6 @@ export default class {
         this.pedestrians = pedestrians;
 
         this.video = document.getElementById('video');
-        console.log(this.video.readyState);
-        // this.video.pause();
 
         const videoMaterial =  new THREE.MeshBasicMaterial({
             map: new THREE.VideoTexture(this.video),
@@ -33,8 +31,8 @@ export default class {
 
         if (this.video.paused) {
 
-            this.video.play();
-            //Fix for playback on mobile
+            await this.video.play();
+            //Fix for playback on mobile //TODO doesnt really work
             if (video.paused) {
                 await new Promise(r => setTimeout(r, 50));
                 await video.play();

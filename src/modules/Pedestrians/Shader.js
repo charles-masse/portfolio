@@ -4,6 +4,7 @@ import * as THREE from 'three';
 export default class extends THREE.ShaderMaterial {
 
     constructor(animation_texture, alpha_texture) {
+        
         super({
 
             side: THREE.DoubleSide,
@@ -33,9 +34,6 @@ export default class extends THREE.ShaderMaterial {
                 flat varying float color_depth;
                 //Animation player
                 attribute float instance_frame;
-                // attribute float length;
-                // attribute float origin;
-                // attribute float amplitude;
 
                 uniform sampler2D animations;
                 uniform vec2 atlasSize;

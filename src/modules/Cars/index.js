@@ -6,7 +6,10 @@ import * as YUKA from 'yuka';
 import {Path,} from '../../extensions/Navigation.js';
 import EntityManager from '../../extensions/EntityManager.js';
 
+import {loadTexture, rawTexture,} from '../../utilities/loaders.js';
+
 import Agent from './Agent.js';
+import Shader from './Shader.js';
 import {brakingBehavior} from './Behaviors.js';
 
 const MAX_CARS = 50;
@@ -63,23 +66,38 @@ function randomOnPath(waypoints) {
 
 export class Cars {
 
-    constructor() {
+    constructor(loadingManager=null) {
 
-        this.init = true;
+        this.blabla = true;
 
         this.manager = new EntityManager();
         this.manager.active_agents = [];
         this.manager.inactive_agents = [];
 
         this.objects = new THREE.Group();
+        
+        this.init(loadingManager);
 
-        const geometry = new THREE.BoxGeometry(2.5, 2, 3);
+    }
+
+    async init(loadingManager) {
+        //Load
+        const palette_texture = await loadTexture('Cars/palette.png', loadingManager);
+
+        const agent_geo = new THREE.BoxGeometry(2.5, 2, 3);
+        agent_geo.setAttribute('instance_color', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
+        // agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
+
         const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-        this.instancedMesh = new THREE.InstancedMesh(geometry, material, MAX_CARS);
+        //new Shader()
 
+        this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(palette_texture)), MAX_CARS);
+
+        const variation = new Float32Array(MAX_CARS);
+        
         for (let i = 0; i < MAX_CARS; i++) {
             //Link each instance to their individual agent
-            const agent = new Agent();
+            const agent = new Agent(i);
             this.manager.addAgent(agent);
             this.manager.inactive_agents.push(agent);
             //Steering
@@ -112,7 +130,7 @@ export class Cars {
 
                 let intersect = false;
                 //Spawn at random point on line or start of line
-                if (this.init) {
+                if (this.blabla) {
                     [selected_index, selected_spawn] = randomOnPath(road);
                 } else {
                     selected_index = 0;
@@ -158,12 +176,13 @@ export class Cars {
                 //Spawn at beginning of path with 0 velocity
                 agent.position.copy(selected_spawn);
                 agent.velocity.set(0, 0, 0);
-
+                //Set variation and color
+                this.instancedMesh.geometry.attributes.instance_color.array[agent.id] = Math.random();
             }
 
         }
 
-        this.init = false;
+        this.blabla = false;
 
     }
 
@@ -176,7 +195,17 @@ export class Cars {
         for (let i = 0; i < this.manager.entities.length; i++) {
             this.instancedMesh.setMatrixAt(i, this.manager.entities[i].worldMatrix);
         }
+        //Update instanced mesh and its instance attributes
         this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+        const attributes = this.instancedMesh.geometry.attributes;
+        for (const attribute_name in attributes) {
+
+            if (attribute_name.startsWith('instance')) {
+                attributes[attribute_name].needsUpdate = true;
+            }
+            
+        }
 
     }
 

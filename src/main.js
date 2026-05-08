@@ -44,7 +44,7 @@ camera.setFocalLength(24);
 camera.position.set(0, 14.188, 60); //DELETE Stop sign debug
 camera.lookAt(0, 0, 10); //DELETE Stop sign debug
 //Modules
-const cars = new Cars();
+const cars = new Cars(loadingManager);
 scene.add(cars.objects);
 
 const pedestrians = new Pedestrians(camera, loadingManager);
@@ -64,7 +64,7 @@ scene.add(dayNight.objects);
 
 const stats = new Stats();
 
-const render = new Render(renderer, scene, camera);
+const render = new Render(renderer, scene, camera, pedestrians);
 //Animation loop
 const time = new THREE.Timer();
 time.connect(document);
@@ -87,13 +87,14 @@ function animate() {
     //Cap frames at 24
     if (accumulator >= step) {
 
+        stats.update();
+
         capped_time.update();
         //Update Modules and UIs
         cars.update(capped_time);
         pedestrians.update(capped_time);
         dayNight.update(capped_time);
         // agentInfo.update();
-        stats.update();
         //Reset accumulator
         accumulator = accumulator % step;
 

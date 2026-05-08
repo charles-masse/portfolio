@@ -3,10 +3,12 @@ import * as YUKA from 'yuka';
 
 export default class extends YUKA.Vehicle {
 
-    constructor() {
+    constructor(id) {
         super();
 
         this.active = false;
+
+        this.id = id;
 
         this.maxSpeed = 6;
 

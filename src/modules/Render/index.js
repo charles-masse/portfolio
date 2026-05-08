@@ -18,11 +18,12 @@ function isCompatible(object) {
 
 export class Render {
 
-    constructor(renderer, scene, camera) {
+    constructor(renderer, scene, camera, pedestrians) {
 
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
+        this.pedestrians = pedestrians;
 
         this.originalMaterials = {};
         this.materialCache = {};
@@ -99,7 +100,7 @@ export class Render {
 
     objectMask(object) {
 
-        if (isCompatible(object) && !(object instanceof THREE.InstancedMesh)) {
+        if (isCompatible(object) && object !== this.pedestrians.instancedMesh) {
 
             const mask_material = this.getMaskMaterial(object.material);
 
@@ -113,7 +114,7 @@ export class Render {
 
     disableMask(object) {
 
-        if (isCompatible(object) && !(object instanceof THREE.InstancedMesh)) {
+        if (isCompatible(object) && object !== this.pedestrians.instancedMesh) {
             object.material = this.originalMaterials[object.material.uuid];
         }
 
@@ -121,7 +122,7 @@ export class Render {
 
     overrideFragment(object, override) {
 
-        if (object instanceof THREE.InstancedMesh) {
+        if (object === this.pedestrians.instancedMesh) {
 
             object.material.fragmentShader = override;
             object.material.needsUpdate = true;
