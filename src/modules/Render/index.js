@@ -6,7 +6,7 @@ import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
 import OutlineShader from './OutlineShader.js';
 
-const MAX_DEPTH = "100.";
+const MAX_DEPTH = "150.";
 
 function isCompatible(object) {
 

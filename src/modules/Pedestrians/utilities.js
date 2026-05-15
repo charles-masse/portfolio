@@ -23,4 +23,4 @@ function findBestNavmeshSpacing(navMesh, obstacles) {
 
 export {
     findBestNavmeshSpacing,
-}
+};

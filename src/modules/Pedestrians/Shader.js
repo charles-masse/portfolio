@@ -20,7 +20,7 @@ export default class extends THREE.ShaderMaterial {
                 },
                 alpha: {value: alpha_texture},
             },
-
+            
             vertexShader: `
                 varying vec2 vUv;
 

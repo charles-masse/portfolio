@@ -7,7 +7,7 @@ import {GUI,} from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
 import {NavMesh, Path,} from '../../extensions/Navigation.js';
 
-import {loadJSON, loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
+import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
 import Agent from './Agent.js';
 import Shader from './Shader.js';
@@ -32,7 +32,7 @@ function renderInstance(entity, renderComponent, camera) {
 
 export class Pedestrians {
 
-    constructor(camera, loadingManager=null) {
+    constructor(stageData, camera, loadingManager) {
 
         this.manager = new EntityManager();
         this.manager.active_agents = [];
@@ -41,7 +41,7 @@ export class Pedestrians {
         this.objects = new THREE.Group();
 
         this.initUI();
-        this.init(camera, loadingManager);
+        this.init(stageData, camera, loadingManager);
  
     }
 
@@ -63,19 +63,17 @@ export class Pedestrians {
         
     }
 
-    async init(camera, loadingManager) {
-        //Stage data loader
-        const stage_data = await loadJSON('data/stage.json', loadingManager);
+    async init(stageData, camera, loadingManager) {
         //Create navmesh
         const navMesh = new NavMesh();
         navMesh.mergeConvexRegions = false;
-        const polygons = [stage_data.navmesh.map((poly) => new YUKA.Polygon().fromContour(poly.map((pt) => new YUKA.Vector3(...pt))))];
+        const polygons = [stageData.navmesh.map((poly) => new YUKA.Polygon().fromContour(poly.map((pt) => new YUKA.Vector3(...pt))))];
         navMesh.fromPolygons(polygons.flat());
         this.manager.navMesh = navMesh;
         //Create Spawn points
-        this.exits = stage_data.spawns.map((pt) => new YUKA.Vector3(...pt));
+        this.exits = stageData.spawns.map((pt) => new YUKA.Vector3(...pt));
         //Create Triggers
-        // for (const trigger of stage_data.triggers) {
+        // for (const trigger of stageData.triggers) {
 
         //     const points = trigger.points.map((pt) => new YUKA.Vector3(...pt));
         //     const region = new PolygonalTriggerRegion(points);
@@ -83,7 +81,7 @@ export class Pedestrians {
 
         // }
         //Create Obstacles
-        for (const obstacle of stage_data.obstacles) {
+        for (const obstacle of stageData.obstacles) {
             this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
         }
         //Helpers
@@ -171,10 +169,8 @@ export class Pedestrians {
             }
             //Too many agents
             else if (this.manager.active_agents.length > this.population) {
-                //Pick random agent
-                const random_id = Math.floor(Math.random() * this.manager.active_agents.length);
-                const agent = this.manager.active_agents[random_id];
 
+                const agent = this.manager.active_agents[0];
                 agent.setActive(false);
 
             }
@@ -183,12 +179,12 @@ export class Pedestrians {
 
     }
 
-    update(time) {
+    update(delta) {
         //Wait until it fully loads before updating
         if (this.manager.entities.length) {
 
             this.activateAgents();
-            this.manager.update(time.getDelta());
+            this.manager.update(delta);
             //Update instanced mesh and its instance attributes
             this.instancedMesh.instanceMatrix.needsUpdate = true;
 

@@ -10,7 +10,7 @@ export default class extends THREE.ShaderMaterial {
             uniforms: {
                 palette: {value: palette_texture},
             },
-
+            
             vertexShader: `
 
                 varying float color_range;

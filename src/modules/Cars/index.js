@@ -6,38 +6,15 @@ import * as YUKA from 'yuka';
 import {Path,} from '../../extensions/Navigation.js';
 import EntityManager from '../../extensions/EntityManager.js';
 
-import {loadTexture, rawTexture,} from '../../utilities/loaders.js';
+import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
 import Agent from './Agent.js';
 import Shader from './Shader.js';
-import {brakingBehavior} from './Behaviors.js';
+import {brakingBehavior,} from './Behaviors.js';
 
-const MAX_CARS = 50;
+const MAX_CARS = 100;
 
-const ROADS = [
-    [
-        new YUKA.Vector3(-38, 0, -24),
-        new YUKA.Vector3(-9, 0, 36),
-        new YUKA.Vector3(-5, 0, 59),
-    ],
-    [
-        new YUKA.Vector3(3, 0, 59),
-        new YUKA.Vector3(-6, 0, 30),
-        new YUKA.Vector3(-32, 0, -25),
-    ],
-    [
-        new YUKA.Vector3(34, 0, -25),
-        new YUKA.Vector3(8, 0, 30),
-        new YUKA.Vector3(-2, 0, 59),
-    ],
-    [
-        new YUKA.Vector3(7.5, 0, 59),
-        new YUKA.Vector3(11.5, 0, 35.5),
-        new YUKA.Vector3(40, 0, -24),
-    ]
-];
-
-function createBB(pos, size=6) {
+function createBB(pos, size=4) {
 
     const half_size = size / 2.;
 
@@ -61,14 +38,19 @@ function randomOnPath(waypoints) {
     );
 
     return [random_index, result];
+}
 
+function renderInstance(entity, renderComponent) {
+    renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
 }
 
 export class Cars {
 
-    constructor(loadingManager=null) {
+    constructor(stageData, loadingManager) {
 
-        this.blabla = true;
+        this.stageData = stageData;
+
+        this.initialized = false;
 
         this.manager = new EntityManager();
         this.manager.active_agents = [];
@@ -82,14 +64,11 @@ export class Cars {
 
     async init(loadingManager) {
         //Load
-        const palette_texture = await loadTexture('Cars/palette.png', loadingManager);
-
-        const agent_geo = new THREE.BoxGeometry(2.5, 2, 3);
+        const agent_mesh = await loadGLTF('Cars/model.gltf', loadingManager);
+        const agent_geo = agent_mesh.geometry;
         agent_geo.setAttribute('instance_color', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
-        // agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
-
-        const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-        //new Shader()
+        agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
+        const palette_texture = await loadTexture('Cars/palette.png', loadingManager);
 
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(palette_texture)), MAX_CARS);
 
@@ -98,20 +77,25 @@ export class Cars {
         for (let i = 0; i < MAX_CARS; i++) {
             //Link each instance to their individual agent
             const agent = new Agent(i);
+            //Render
+            agent.setRenderComponent(
+                this.instancedMesh,
+                (entity, renderComponent) => renderInstance(entity, renderComponent)
+            );
             this.manager.addAgent(agent);
             this.manager.inactive_agents.push(agent);
             //Steering
+            const brake = new brakingBehavior();
+            agent.steering.add(brake);
+            
             const followPath = new YUKA.FollowPathBehavior();
             agent.steering.add(followPath);
 
-            const onPath = new YUKA.OnPathBehavior();
-            agent.steering.add(onPath);
-
-            const brake = new brakingBehavior();
-            agent.steering.add(brake);
+            // const onPath = new YUKA.OnPathBehavior();
+            // agent.steering.add(onPath);
 
         }
-
+        
         this.objects.add(this.instancedMesh);
 
     }
@@ -124,17 +108,17 @@ export class Cars {
             let selected_spawn;
             let selected_index;
 
-            const road_candidates = ROADS.slice();
+            for (const road of this.stageData.roads) {
 
-            for (const road of road_candidates) {
+                const road_vertex = road.map((point) => new YUKA.Vector3(...point));
 
                 let intersect = false;
                 //Spawn at random point on line or start of line
-                if (this.blabla) {
-                    [selected_index, selected_spawn] = randomOnPath(road);
+                if (!(this.initialized)) {
+                    [selected_index, selected_spawn] = randomOnPath(road_vertex);
                 } else {
-                    selected_index = 0;
-                    selected_spawn = road[0];
+                    selected_index = 1;
+                    selected_spawn = road_vertex[0];
                 }
 
                 const bounding_box = createBB(selected_spawn);
@@ -150,7 +134,7 @@ export class Cars {
 
                 if (!intersect) {
                     
-                    selected_road = road;
+                    selected_road = road_vertex;
 
                     break;
                 }
@@ -170,41 +154,47 @@ export class Cars {
                     path.add(point);
                 }
                 path._index = selected_index;
-                
-                agent.steering.behaviors[0].path = path;
-                agent.steering.behaviors[1].path = path;
+                //Find path behaviors
+                for (const behavior of agent.steering.behaviors) {
+
+                    if (behavior instanceof YUKA.FollowPathBehavior || behavior instanceof YUKA.OnPathBehavior) {
+                        behavior.path = path;
+                    }
+
+                }
                 //Spawn at beginning of path with 0 velocity
                 agent.position.copy(selected_spawn);
                 agent.velocity.set(0, 0, 0);
+                agent.lookAt(selected_road[selected_index]);
                 //Set variation and color
                 this.instancedMesh.geometry.attributes.instance_color.array[agent.id] = Math.random();
             }
 
         }
 
-        this.blabla = false;
-
     }
 
-    update(time) {
+    update(delta) {
 
-        this.activateAgents();
-        
-        this.manager.update(time.getDelta());
+        if (this.instancedMesh) {
 
-        for (let i = 0; i < this.manager.entities.length; i++) {
-            this.instancedMesh.setMatrixAt(i, this.manager.entities[i].worldMatrix);
-        }
-        //Update instanced mesh and its instance attributes
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-
-        const attributes = this.instancedMesh.geometry.attributes;
-        for (const attribute_name in attributes) {
-
-            if (attribute_name.startsWith('instance')) {
-                attributes[attribute_name].needsUpdate = true;
-            }
+            this.activateAgents();
             
+            this.manager.update(delta);
+            //Update instanced mesh and its instance attributes
+            this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+            const attributes = this.instancedMesh.geometry.attributes;
+            for (const attribute_name in attributes) {
+
+                if (attribute_name.startsWith('instance')) {
+                    attributes[attribute_name].needsUpdate = true;
+                }
+                
+            }
+
+            this.initialized = true;
+
         }
 
     }

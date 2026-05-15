@@ -9,8 +9,6 @@ function radiansToDegrees(radians) {
     return radians * (180 / Math.PI);
 }
 
-
-
 function worldToLocal(vector, direction, up=new YUKA.Vector3(0, 1, 0)) {
 
     const forward = direction.clone().normalize();

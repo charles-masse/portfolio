@@ -3,7 +3,7 @@ import * as YUKA from 'yuka';
 
 import {State,} from '../../extensions/States.js';
 
-import MovieScreen from '../../modules/MovieScreen'
+// import MovieScreen from '../../modules/MovieScreen'
 
 class GoToState extends State {
 
@@ -35,9 +35,9 @@ class GoToState extends State {
 
     onMessage(owner, telegram) {
 
-        if (telegram.sender instanceof MovieScreen && telegram.data == false) {
-            owner.stateMachine.changeTo('Cheer');
-        }
+        // if (telegram.sender instanceof MovieScreen && telegram.data == false) {
+        //     owner.stateMachine.changeTo('Cheer');
+        // }
 
     }
 

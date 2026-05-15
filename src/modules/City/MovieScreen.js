@@ -27,17 +27,10 @@ export default class {
 
     }
 
-    async update() {
+    interact() {
 
         if (this.video.paused) {
-
-            await this.video.play();
-            //Fix for playback on mobile //TODO doesnt really work
-            if (video.paused) {
-                await new Promise(r => setTimeout(r, 50));
-                await video.play();
-            }
-
+            this.video.play();
         } else {
             this.video.pause();
         }

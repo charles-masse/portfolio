@@ -18,9 +18,8 @@ export function colorToString(color) {
 
 export default class {
 
-    constructor(canvas, emissives, /*debug=false*/) {
+    constructor(emissives, /*debug=false*/) {
 
-        this.canvas = canvas;
         this.emissives = emissives;
 
         this.sun = new THREE.DirectionalLight(0xffffff, 15);

@@ -1,13 +1,15 @@
 
 import * as THREE from 'three';
-
-import {loadOBJ,} from './utilities/loaders.js';
 //Modules
 import {Cars} from './modules/Cars';
 import {Pedestrians} from './modules/Pedestrians';
+import {City} from './modules/City';
+
+import {Traffic} from './modules/Traffic';
+
 import {Render} from './modules/Render';
-import DayNight from './modules/DayNight.js';
-import MovieScreen from './modules/MovieScreen.js';
+
+import {loadJSON,} from './utilities/loaders.js';
 
 import Stats from './extensions/Stats.js';
 //Loading Screen
@@ -29,14 +31,15 @@ const loadingManager = new THREE.LoadingManager(
 
 );
 //Renderer
-const canvas = document.querySelector('#canvas');
-
-const renderer = new THREE.WebGLRenderer({canvas,/* alpha: true,*/}); //Change to full DMP
+const renderer = new THREE.WebGLRenderer({
+    canvas : document.querySelector('#canvas'),
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
+//Stage data loader
+const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
-
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(24);
 // camera.position.set(0, 14.188, 103.679);
@@ -44,27 +47,21 @@ camera.setFocalLength(24);
 camera.position.set(0, 14.188, 60); //DELETE Stop sign debug
 camera.lookAt(0, 0, 10); //DELETE Stop sign debug
 //Modules
-const cars = new Cars(loadingManager);
+const cars = new Cars(stage_data, loadingManager);
 scene.add(cars.objects);
 
-const pedestrians = new Pedestrians(camera, loadingManager);
+const pedestrians = new Pedestrians(stage_data, camera, loadingManager);
 scene.add(pedestrians.objects);
 
-const movieScreen = new MovieScreen(pedestrians);
-scene.add(movieScreen.objects);
-//TODO Create its own module
-const city = await loadOBJ('City/model.obj', loadingManager);
-city.material = new THREE.MeshStandardMaterial({color: 0x808080});
-city.castShadow = true;
-city.receiveShadow = true;
-scene.add(city);
+const city = new City(loadingManager);
+scene.add(city.objects);
 
-const dayNight = new DayNight(canvas, city);
-scene.add(dayNight.objects);
+const traffic = new Traffic(cars.manager, pedestrians.manager);
 
 const stats = new Stats();
-
 const render = new Render(renderer, scene, camera, pedestrians);
+//Listeners
+initListeners();
 //Animation loop
 const time = new THREE.Timer();
 time.connect(document);
@@ -76,70 +73,63 @@ capped_time.connect(document);
 let accumulator = 0;
 
 animate();
-
 function animate() {
-
+    //Looping
     requestAnimationFrame(animate);
 
     time.update();
-    const delta = time.getDelta() * 1000;
-    accumulator += delta;
-    //Cap frames at 24
+    accumulator += time.getDelta() * 1000;
+    //Cap at 24 frames
     if (accumulator >= step) {
 
         stats.update();
-
+    
         capped_time.update();
-        //Update Modules and UIs
-        cars.update(capped_time);
-        pedestrians.update(capped_time);
-        dayNight.update(capped_time);
-        // agentInfo.update();
+        const delta = capped_time.getDelta();
+        //Update Modules
+        cars.update(delta);
+        pedestrians.update(delta);
+        traffic.update(delta);
+
+        render.update();
         //Reset accumulator
         accumulator = accumulator % step;
 
     }
-
-    render.update();
-
-}
-//Listeners TODO Put in their respective modules
-window.addEventListener('resize', onWindowResize, false);
-
-function onWindowResize() {
-
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
 
 function onTransitionEnd(event) {
     event.target.remove();
 }
+//Listeners
+function initListeners() {
 
-window.addEventListener('pointerdown', (/*event*/) => {
+    window.addEventListener('resize', () => {
 
-    const intersection = getIntersection();
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
 
-    if (intersection) {
-        movieScreen.update();
-    }
+        renderer.setSize(window.innerWidth, window.innerHeight);
 
-});
+    });
 
-function getIntersection() {
+    window.addEventListener('pointerdown', () => {
 
-    const mouse = new THREE.Vector2(
-        (event.clientX / window.innerWidth) * 2 - 1,
-        -(event.clientY / window.innerHeight) * 2 + 1
-    );
+        const mouse = new THREE.Vector2(
+            (event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1
+        );
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    
-    const intersection = raycaster.intersectObjects(movieScreen.objects.children, true)[0];
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        
+        // const intersection = raycaster.intersectObjects(movieScreen.objects.children, true)[0];
 
-    return intersection;
+        if (intersection) {
+            // movieScreen.interact();
+        }
+
+    });
+
 }
