@@ -1,8 +1,4 @@
 
-video {
-    display: none;
-}
-
 #canvas {
     width: 100vw !important;
     height: 100vh !important;
@@ -10,7 +6,6 @@ video {
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #000000;
 }
 
 #version {
@@ -125,4 +120,8 @@ video {
         transform: rotate(360deg);
     }
 
+}
+
+video {
+    display: none;
 }

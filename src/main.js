@@ -40,6 +40,8 @@ renderer.shadowMap.enabled = true;
 const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x829FAB);
+
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(24);
 // camera.position.set(0, 14.188, 103.679);
@@ -126,9 +128,9 @@ function initListeners() {
         
         // const intersection = raycaster.intersectObjects(movieScreen.objects.children, true)[0];
 
-        if (intersection) {
-            // movieScreen.interact();
-        }
+        // if (intersection) {
+        //     movieScreen.interact();
+        // }
 
     });
 

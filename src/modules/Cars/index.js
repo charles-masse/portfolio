@@ -12,9 +12,9 @@ import Agent from './Agent.js';
 import Shader from './Shader.js';
 import {brakingBehavior,} from './Behaviors.js';
 
-const MAX_CARS = 100;
+const MAX_CARS = 75;
 
-function createBB(pos, size=4) {
+function createBB(pos, size=3) {
 
     const half_size = size / 2.;
 

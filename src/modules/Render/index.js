@@ -41,8 +41,11 @@ export class Render {
         //Beauty
         this.renderer.setRenderTarget(this.beautyRender);
         this.renderer.render(this.scene, this.camera);
+
+        const background_color = this.scene.background;
         //Create object mask
         this.scene.traverse((object) => {this.objectMask(object);});
+        this.scene.background = new THREE.Color(0x000000);
         //Depth/ID Pass
         this.scene.traverse((object) => {this.overrideFragment(
             object, 
@@ -79,6 +82,8 @@ export class Render {
                 }
             `
         );});
+        
+        this.scene.background = background_color;
         //Comp
         this.composer.render();
 
