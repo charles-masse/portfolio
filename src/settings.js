@@ -1,36 +1,34 @@
+
+import * as THREE from 'three';
 //Crowd
 export const MAX_AGENTS = 500;
-//KdTree
-export const MAX_LEAF_SIZE = 10;
-//RVO
-export const TIME_STEP = 0.25;
 //DayNight
-export const START_TIME_SECS = 9;
-export const SUN_SPEED = -20;
+export const START_TIME_SECS = 5;
+export const SUN_SPEED = 20;
 export const DAY_EVENTS = [
     { //Sunrise
-        time:0,
-        top_color:{r:106, g:132, b:191},
-        bot_color:{r:246, g:114, b:128},
-        ambient_color:{r:246, g:114, b:128},
+        time: 0,
+        sky_color: new THREE.Color(0.690, 0.482, 0.625),
+        shadow_color: new THREE.Color(0.965, 0.447, 0.502),
+        highlight_color: new THREE.Color(1., 0.847, 0.650),
     },
     { //Midday
-        time:0.24,
-        top_color:{r:0, g:191, b:255},
-        bot_color:{r:255, g:255, b:255},
-        ambient_color:{r:0, g:191, b:255},
+        time: 0.24,
+        sky_color: new THREE.Color(0.5, 0.875, 1.),
+        shadow_color: new THREE.Color(0., 0.749, 1.),
+        highlight_color: new THREE.Color(1., 1., 1.),
     },
     { //Sunset
-        time:0.5,
-        top_color:{r:246, g:114, b:128},
-        bot_color:{r:246, g:114, b:128},
-        ambient_color:{r:25, g:25, b:112},
+        time: 0.5,
+        sky_color: new THREE.Color(0.965, 0.447, 0.502),
+        shadow_color: new THREE.Color(0.098, 0.098, 0.439),
+        highlight_color: new THREE.Color(1., 0.720, 0.420),
     },
     { //Midnight
-        time:0.75,
-        top_color:{r:25, g:25, b:112},
-        bot_color:{r:0, g:0, b:0},
-        ambient_color:{r:25, g:25, b:112},
+        time: 0.75,
+        sky_color: new THREE.Color(0.049, 0.049, 0.220),
+        shadow_color: new THREE.Color(0.098, 0.098, 0.439),
+        highlight_color: new THREE.Color(0.6, 0.720, 1.),
     },
 ];
 //Charts

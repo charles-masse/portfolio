@@ -23,7 +23,7 @@ import * as YUKA from 'yuka';
 
 import {RVO_EPSILON, absSq, det, sqr, abs,} from '../utilities/RVO2.js';
 
-import {TIME_STEP,} from '../settings.js';
+const TIME_STEP = 0.25;
 
 function computeNewVelocity(agent) {
 

@@ -23,7 +23,7 @@ import * as YUKA from 'yuka';
 
 import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../utilities/RVO2.js';
 
-import {MAX_LEAF_SIZE,} from '../settings.js';
+const MAX_LEAF_SIZE = 10;
 
 export default class extends YUKA.EntityManager {
 

@@ -40,7 +40,6 @@ renderer.shadowMap.enabled = true;
 const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x829FAB);
 
 const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.setFocalLength(24);
@@ -49,16 +48,17 @@ camera.setFocalLength(24);
 camera.position.set(0, 14.188, 60); //DELETE Stop sign debug
 camera.lookAt(0, 0, 10); //DELETE Stop sign debug
 //Modules
+const city = new City(scene, loadingManager);
+scene.add(city.objects);
+
 const cars = new Cars(stage_data, loadingManager);
 scene.add(cars.objects);
 
 const pedestrians = new Pedestrians(stage_data, camera, loadingManager);
 scene.add(pedestrians.objects);
 
-const city = new City(loadingManager);
-scene.add(city.objects);
-
 const traffic = new Traffic(cars.manager, pedestrians.manager);
+scene.add(traffic.objects);
 
 const stats = new Stats();
 const render = new Render(renderer, scene, camera, pedestrians);
@@ -89,10 +89,10 @@ function animate() {
         capped_time.update();
         const delta = capped_time.getDelta();
         //Update Modules
+        city.update(capped_time.getElapsed());
         cars.update(delta);
         pedestrians.update(delta);
         traffic.update(delta);
-
         render.update();
         //Reset accumulator
         accumulator = accumulator % step;
