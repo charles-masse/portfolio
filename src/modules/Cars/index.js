@@ -91,8 +91,8 @@ export class Cars {
             const followPath = new YUKA.FollowPathBehavior();
             agent.steering.add(followPath);
 
-            // const onPath = new YUKA.OnPathBehavior();
-            // agent.steering.add(onPath);
+            const onPath = new YUKA.OnPathBehavior();
+            agent.steering.add(onPath);
 
         }
         

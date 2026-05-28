@@ -90,7 +90,7 @@ export default class extends YUKA.EntityManager {
     buildAgentTree() {
 
         this.agentTree = [];
-        this.agents = this.entities.filter((agent) => agent.active);
+        this.agents = this.entities.filter((agent) => (agent.active/* && agent instanceof YUKA.MovingEntity*/));
 
         if (this.agents.length) {
             this.buildAgentTreeRecursive(0, this.agents.length, 0);

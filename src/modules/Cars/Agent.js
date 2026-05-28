@@ -1,10 +1,18 @@
 
+import * as THREE from 'three';
+
 import * as YUKA from 'yuka';
 
-const targetRotation = new YUKA.Quaternion();
-const targetDirection = new YUKA.Vector3();
-const positionWorld = new YUKA.Vector3();
-const quaternionWorld = new YUKA.Quaternion();
+const steeringForce = new YUKA.Vector3();
+const displacement = new YUKA.Vector3();
+const acceleration = new YUKA.Vector3();
+const target = new YUKA.Vector3();
+const velocitySmooth = new YUKA.Vector3();
+
+const up = new YUKA.Vector3(0, 1, 0);
+
+const forward = new YUKA.Vector3();
+const right = new YUKA.Vector3();
 
 export default class extends YUKA.Vehicle {
 
@@ -18,52 +26,24 @@ export default class extends YUKA.Vehicle {
         this.maxSpeed = 6;
         this.maxTurnRate = Math.PI / 2;
 
-        this.boundingRadius = 3;
+        this.boundingRadius = 5;
 
         this.neighborhoodRadius = 10;
         this.maxNeighbors = 10;
 
-        // this.smoother = new YUKA.Smoother(10);
+        this.smoother = new YUKA.Smoother(10);
 
     }
 
-    rotateTo( target, delta, tolerance = 0.0001 ) {
+    getLateralVelocity() {
 
-        const parent = this.parent;
+        this.getDirection(forward);
+        right.crossVectors(forward, up);
 
-        if (parent !== null) {
-
-            this.getWorldPosition(positionWorld);
-
-            targetDirection.subVectors(target, positionWorld).normalize();
-
-            targetRotation.lookAt(this.forward, targetDirection, this.up);
-
-            quaternionWorld.extractRotationFromMatrix(parent.worldMatrix).inverse();
-
-            targetRotation.premultiply(quaternionWorld);
-
-        } else {
-
-            targetDirection.subVectors(target, this.position).normalize();
-
-            targetRotation.lookAt(this.forward, targetDirection, this.up);
-
-        }
-
-        const speed = (this.velocity.length() / this.maxSpeed);
-
-        return this.rotation.rotateTo(targetRotation, (this.maxTurnRate * delta) * speed, tolerance);
-
+        return right.clone().multiplyScalar(right.dot(this.velocity));
     }
 
     update(delta) {
-
-        const steeringForce = new YUKA.Vector3();
-        const displacement = new YUKA.Vector3();
-        const acceleration = new YUKA.Vector3();
-        const target = new YUKA.Vector3();
-        const velocitySmooth = new YUKA.Vector3();
         //Find path behavior
         let behavior;
 
@@ -74,7 +54,7 @@ export default class extends YUKA.Vehicle {
             }
 
         }
-
+        //Disable if at end of path
         if (behavior.path.finished()) {
 
             const aid = this.manager.active_agents.indexOf(this);
@@ -85,30 +65,32 @@ export default class extends YUKA.Vehicle {
             this.active = false;
 
         }
-        //calculate steering force
+        //Calculate steering force
         this.steering.calculate(delta, steeringForce);
-        //acceleration = force / mass
+        //Acceleration = Force / Mass
         acceleration.copy(steeringForce).divideScalar(this.mass);
-        //update velocity
+        //Update velocity
         this.velocity.add(acceleration.multiplyScalar(delta));
-        //make sure vehicle does not exceed maximum speed
-        if (this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed)) {
-
+        //Make sure vehicle does not exceed maximum speed
+        if ( this.getSpeedSquared() > (this.maxSpeed * this.maxSpeed) ) {
             this.velocity.normalize();
             this.velocity.multiplyScalar(this.maxSpeed);
-
         }
-        //calculate displacement
+        //Kill lateral velocity
+        //https://www.iforce2d.net/b2dtut/top-down-car
+        const impulse = this.getLateralVelocity().multiplyScalar(-this.mass);
+        this.velocity.add(impulse.multiplyScalar(THREE.MathUtils.inverseLerp(this.maxSpeed, 0.0001, this.velocity.length())));
+        //Calculate displacement
         displacement.copy(this.velocity).multiplyScalar(delta);
-        //calculate target position
+        //Calculate target position
         target.copy(this.position).add(displacement);
-        //update the orientation if the vehicle has a non zero velocity
+        //Update the orientation if the vehicle has a non zero velocity
         if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-            this.rotateTo(target, delta);
+            this.rotateTo(target, this.displacement.length());
         }
-        //update position
+        //Update position
         this.position.copy(target);
-        //if smoothing is enabled, the orientation (not the position!) of the vehicle is
+        //If smoothing is enabled, the orientation (not the position!) of the vehicle is
         //changed based on a post-processed velocity vector
         if (this.updateOrientation === true && this.smoother !== null) {
 
@@ -117,12 +99,11 @@ export default class extends YUKA.Vehicle {
             displacement.copy(velocitySmooth).multiplyScalar(delta);
             target.copy(this.position).add(displacement);
 
-            this.rotateTo(target, delta);
+            this.rotateTo(target, this.velocity.length() * delta);
 
         }
 
         return this;
-
     }
 
 }

@@ -8,6 +8,14 @@ import {computeNewVelocity,} from '../../core/ORCA.js';
 
 import {StateMachine,} from '../../extensions/States.js';
 
+const steeringForce = new YUKA.Vector3();
+const displacement = new YUKA.Vector3();
+const acceleration = new YUKA.Vector3();
+const target = new YUKA.Vector3();
+const velocitySmooth = new YUKA.Vector3();
+
+// const clamped_velocity = new YUKA.Vector3();
+
 export default class extends YUKA.Vehicle {
 
     constructor(id) {
@@ -102,9 +110,6 @@ export default class extends YUKA.Vehicle {
 
         if (this.maxSpeed != 0) {
             //Calculate steering force
-            const steeringForce = new YUKA.Vector3();
-            const acceleration = new YUKA.Vector3();
-
             this.steering.calculate(delta, steeringForce);
             //Acceleration = force / mass
             acceleration.copy(steeringForce).divideScalar(this.mass);
@@ -115,28 +120,25 @@ export default class extends YUKA.Vehicle {
                 this.velocity.normalize();
                 this.velocity.multiplyScalar(this.maxSpeed);
             }
-            //Clamp velocity to navmesh
-            const navMesh = this.manager.navMesh;
-            const clamped_velocity = new YUKA.Vector3();
+            //Clamp velocity to navmesh //TODO
+            // const navMesh = this.manager.navMesh;
             
-            navMesh.clampMovement(
-                navMesh.getClosestRegion(this.position),
-                this.position,
-                this.position.clone().add(this.velocity),
-                clamped_velocity
-            );
+            // navMesh.clampMovement(
+            //     navMesh.getClosestRegion(this.position),
+            //     this.position,
+            //     this.position.clone().add(this.velocity),
+            //     clamped_velocity
+            // );
 
-            if (clamped_velocity.length()) {
-                this.velocity.copy(clamped_velocity.sub(this.position));
-            }
+            // if (clamped_velocity.length()) {
+            //     this.velocity.copy(clamped_velocity.sub(this.position));
+            // }
             //Search for the best new velocity.
             const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
             this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
             //Calculate displacement
-            const displacement = new YUKA.Vector3();
             displacement.copy(this.velocity).multiplyScalar(delta);
             //Calculate target position
-            const target = new YUKA.Vector3();
             target.copy(this.position).add(displacement);
             //Update the orientation if the vehicle has a non zero velocity
             if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
@@ -145,8 +147,6 @@ export default class extends YUKA.Vehicle {
             //Update position
             this.position.copy(target);
             //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
-            const velocitySmooth = new YUKA.Vector3();
-
             if (this.updateOrientation === true && this.smoother !== null) {
 
                 this.smoother.calculate(this.velocity, velocitySmooth);
