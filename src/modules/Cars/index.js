@@ -72,7 +72,7 @@ export class Cars {
 
         this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(palette_texture)), MAX_CARS);
 
-        const variation = new Float32Array(MAX_CARS);
+        // const variation = new Float32Array(MAX_CARS);
         
         for (let i = 0; i < MAX_CARS; i++) {
             //Link each instance to their individual agent
@@ -162,10 +162,13 @@ export class Cars {
                     }
 
                 }
-                //Spawn at beginning of path with 0 velocity
-                agent.position.copy(selected_spawn);
+                //Cleanup old velocity
                 agent.velocity.set(0, 0, 0);
+                //Spawn agent
+                agent.position.copy(selected_spawn);
+                // agent.smoother = null;
                 agent.lookAt(selected_road[selected_index]);
+                // agent.smoother = new YUKA.Smoother(10);
                 //Set variation and color
                 this.instancedMesh.geometry.attributes.instance_color.array[agent.id] = Math.random();
             }

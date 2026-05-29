@@ -11,7 +11,6 @@ class GoToState extends State {
         super.enter(owner);
 
         owner.maxSpeed = 1;
-        owner.velocity.set(0, 0, 0);
 
     }
 

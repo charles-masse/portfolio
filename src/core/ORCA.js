@@ -194,8 +194,8 @@ function computeNewVelocity(agent) {
         }
         //Project on left leg, right leg, or cut-off line, whichever is closest to velocity.
         const distSqCutoff = (t < 0 || t > 1 || obstacle1 == obstacle2) ? Infinity : absSq(velocity.clone().sub(leftCutoff.clone().add(cutoffVec.clone().multiplyScalar(t))));
-        const distSqLeft = (tLeft < 0) ? Infinity : absSq(velocity.clone().sub(leftCutoff.clone().add(tLeft * leftLegDirection)));
-        const distSqRight = (tRight < 0) ? Infinity : absSq(velocity.clone().sub(rightCutoff.clone().add(tRight * rightLegDirection)));
+        const distSqLeft = (tLeft < 0) ? Infinity : absSq(velocity.clone().sub(leftCutoff.clone().add(leftLegDirection.clone().multiplyScalar(tLeft))));
+        const distSqRight = (tRight < 0) ? Infinity : absSq(velocity.clone().sub(rightCutoff.clone().add(rightLegDirection.clone().multiplyScalar(tRight))));
 
         if (distSqCutoff <= distSqLeft && distSqCutoff <= distSqRight) {
             //Project on cut-off line.

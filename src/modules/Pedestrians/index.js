@@ -84,6 +84,7 @@ export class Pedestrians {
         for (const obstacle of stageData.obstacles) {
             this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
         }
+        this.manager.buildObstacleTree();
         //Helpers
         //TODO Make a custom helper
         // this.objects.add(createConvexRegionHelper(navMesh));
@@ -110,7 +111,7 @@ export class Pedestrians {
             this.manager.inactive_agents.push(agent);
             //Steering
             const follow = new YUKA.FollowPathBehavior();
-            follow.nextWaypointDistance = 0.8;
+            // follow.nextWaypointDistance = 0.4;
             agent.steering.add(follow);
             //Render
             agent.setRenderComponent(
@@ -163,6 +164,12 @@ export class Pedestrians {
                     }
                     
                 }
+                //Reset velocity and activate
+                agent.velocity.set(0, 0, 0);
+
+                agent.smoother = null;
+                agent.lookAt(path.current());
+                agent.smoother = new YUKA.Smoother(25);
 
                 agent.setActive(true);
 

@@ -33,8 +33,6 @@ export default class extends YUKA.EntityManager {
         this.agents = [];
         this.obstacles = [];
 
-        this.buildObstacleTree(); //TODO Update the obstacle tree when it's changed
-
     }
 
     addAgent(entity) {
@@ -49,8 +47,9 @@ export default class extends YUKA.EntityManager {
 
         for (let i = 0; i < vertices.length; ++i) {
 
-            const obstacle = {}
-                .point = vertices[i];
+            const obstacle = {
+                point: vertices[i],
+            };
 
             if (i != 0) {
                 obstacle.prevObstacle = this.obstacles[this.obstacles.length - 1];
@@ -159,7 +158,7 @@ export default class extends YUKA.EntityManager {
 
     }
 
-    buildObstacleTree() {
+    buildObstacleTree() { //TODO Update the obstacle tree when it's changed
         this.obstacleTree = this.buildObstacleTreeRecursive(this.obstacles);
     }
 
@@ -242,13 +241,14 @@ export default class extends YUKA.EntityManager {
                 const splitpoint = obstacleJ1.point.clone()
                     .add(obstacleJ2.point.clone().sub(obstacleJ1.point).multiplyScalar(t));
 
-                const newObstacle = {}
-                    .point = splitpoint
-                    .prevObstacle = obstacleJ1
-                    .nextObstacle = obstacleJ2
-                    .isConvex = true
-                    .unitDir = obstacleJ1.unitDir
-                    ._id = this.obstacles.length;
+                const newObstacle = {
+                    point: splitpoint,
+                    prevObstacle: obstacleJ1,
+                    nextObstacle: obstacleJ2,
+                    isConvex: true,
+                    unitDir: obstacleJ1.unitDir,
+                    _id: this.obstacles.length,
+                }
                 this.obstacles.push(newObstacle);
 
                 obstacleJ1.nextObstacle = newObstacle;
@@ -266,19 +266,24 @@ export default class extends YUKA.EntityManager {
 
         }
 
-        const node = {}
-            .obstacle = obstacleI1
-            .left = this.buildObstacleTreeRecursive(leftObstacles)
-            .right = this.buildObstacleTreeRecursive(rightObstacles);
+        const node = {
+            obstacle: obstacleI1,
+            left: this.buildObstacleTreeRecursive(leftObstacles),
+            right: this.buildObstacleTreeRecursive(rightObstacles),
+        }
 
         return node;
     }
 
     updateNeighborhood(entity) {
         //Agent::computeNeighbors
-        entity._obstacleNeighbors = [];
-        entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
-        this.queryObstacleTreeRecursive(entity, this.obstacleTree);
+        if (this.obstacleTree) {
+
+            entity._obstacleNeighbors = [];
+            entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
+            this.queryObstacleTreeRecursive(entity, this.obstacleTree);
+
+        }
 
         entity._agentNeighbors = [];
 

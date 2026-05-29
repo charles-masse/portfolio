@@ -14,7 +14,7 @@ const acceleration = new YUKA.Vector3();
 const target = new YUKA.Vector3();
 const velocitySmooth = new YUKA.Vector3();
 
-// const clamped_velocity = new YUKA.Vector3();
+const forward = new YUKA.Vector3();
 
 export default class extends YUKA.Vehicle {
 
@@ -25,14 +25,12 @@ export default class extends YUKA.Vehicle {
 
         this.id = id;
 
-        this.smoother = new YUKA.Smoother(25);
-
-        this.boundingRadius = 0.35;
+        this.boundingRadius = 0.375;
         this.neighborhoodRadius = 1.8;
         this.maxNeighbors = 15;
         //ORCA
-        this.timeHorizon = 3;
-        this.timeHorizonObst = 3;
+        this.timeHorizon = 2;
+        this.timeHorizonObst = 1;
         //Animation blending
         // agent.blendSpaces = new BlendSpaces(this);
 
@@ -109,6 +107,18 @@ export default class extends YUKA.Vehicle {
     update(delta) {
 
         if (this.maxSpeed != 0) {
+
+            //Find path behavior
+            let path;
+            for (const behavior of this.steering.behaviors) {
+
+                if (behavior instanceof YUKA.FollowPathBehavior) {
+                    path = behavior.path;
+
+                    break;
+                }
+
+            }
             //Calculate steering force
             this.steering.calculate(delta, steeringForce);
             //Acceleration = force / mass
@@ -120,41 +130,47 @@ export default class extends YUKA.Vehicle {
                 this.velocity.normalize();
                 this.velocity.multiplyScalar(this.maxSpeed);
             }
-            //Clamp velocity to navmesh //TODO
-            // const navMesh = this.manager.navMesh;
-            
-            // navMesh.clampMovement(
-            //     navMesh.getClosestRegion(this.position),
-            //     this.position,
-            //     this.position.clone().add(this.velocity),
-            //     clamped_velocity
-            // );
+            // Penalize going backwards
+            forward.subVectors(path.current(), this.position).normalize();
+            const forward_factor = forward.dot(this.velocity);
 
-            // if (clamped_velocity.length()) {
-            //     this.velocity.copy(clamped_velocity.sub(this.position));
-            // }
+            if (forward_factor < 0) {
+                const resistance = forward.multiplyScalar(forward_factor);
+                this.velocity.add(resistance);
+            }
             //Search for the best new velocity.
             const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
-            this.velocity.copy(new YUKA.Vector3(optimal_velocity.x, 0, optimal_velocity.y));
+            this.velocity.set(optimal_velocity.x, 0, optimal_velocity.y);
             //Calculate displacement
             displacement.copy(this.velocity).multiplyScalar(delta);
             //Calculate target position
             target.copy(this.position).add(displacement);
+            //Clamp target to navmesh
+            const navMesh = this.manager.navMesh;
+            
+            navMesh.clampMovement(
+                navMesh.getClosestRegion(this.position),
+                this.position,
+                target,
+                target
+            );
             //Update the orientation if the vehicle has a non zero velocity
             if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
                 this.lookAt(target);
+                // this.rotateTo(target, displacement.length());
             }
             //Update position
             this.position.copy(target);
-            //If smoothing is enabled, the orientation (not the position!) of the vehicle is changed based on a post-processed velocity vector
+            //If smoothing is enabled, the orientation (not the position!) of the vehicle is
+            //changed based on a post-processed velocity vector
             if (this.updateOrientation === true && this.smoother !== null) {
 
                 this.smoother.calculate(this.velocity, velocitySmooth);
 
                 displacement.copy(velocitySmooth).multiplyScalar(delta);
                 target.copy(this.position).add(displacement);
-
                 this.lookAt(target);
+                // this.rotateTo(target, displacement.length());
 
             }
 

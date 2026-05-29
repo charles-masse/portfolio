@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
+import {degreesToRadians,} from '../../utilities/math.js';
+
 const steeringForce = new YUKA.Vector3();
 const displacement = new YUKA.Vector3();
 const acceleration = new YUKA.Vector3();
@@ -24,14 +26,12 @@ export default class extends YUKA.Vehicle {
         this.id = id;
 
         this.maxSpeed = 6;
-        this.maxTurnRate = Math.PI / 2;
+        this.maxTurnRate = degreesToRadians(30);
 
-        this.boundingRadius = 5;
+        this.boundingRadius = 4;
 
         this.neighborhoodRadius = 10;
         this.maxNeighbors = 10;
-
-        this.smoother = new YUKA.Smoother(10);
 
     }
 
@@ -77,16 +77,15 @@ export default class extends YUKA.Vehicle {
             this.velocity.multiplyScalar(this.maxSpeed);
         }
         //Kill lateral velocity
-        //https://www.iforce2d.net/b2dtut/top-down-car
-        const impulse = this.getLateralVelocity().multiplyScalar(-this.mass);
-        this.velocity.add(impulse.multiplyScalar(THREE.MathUtils.inverseLerp(this.maxSpeed, 0.0001, this.velocity.length())));
+        const resistance = this.getLateralVelocity().multiplyScalar(-1);
+        this.velocity.add(resistance.multiplyScalar(THREE.MathUtils.inverseLerp(this.maxSpeed, 0.0001, this.velocity.length())));
         //Calculate displacement
         displacement.copy(this.velocity).multiplyScalar(delta);
         //Calculate target position
         target.copy(this.position).add(displacement);
         //Update the orientation if the vehicle has a non zero velocity
         if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-            this.rotateTo(target, this.displacement.length());
+            this.rotateTo(target, displacement.length());
         }
         //Update position
         this.position.copy(target);
@@ -99,7 +98,7 @@ export default class extends YUKA.Vehicle {
             displacement.copy(velocitySmooth).multiplyScalar(delta);
             target.copy(this.position).add(displacement);
 
-            this.rotateTo(target, this.velocity.length() * delta);
+            this.rotateTo(target, displacement.length());
 
         }
 

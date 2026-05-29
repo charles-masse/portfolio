@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 
-import {loadOBJ,} from '../../utilities/loaders.js';
+import {loadOBJ, loadTexture,} from '../../utilities/loaders.js';
 
 import {START_TIME_SECS, SUN_SPEED, DAY_EVENTS,} from '../../settings.js';
 
@@ -23,24 +23,46 @@ export class City {
 
         this.scene.background = new THREE.Color();
 
-        const city = await loadOBJ('City/model.obj', loadingManager);
-        city.material = new THREE.MeshStandardMaterial({color: 0xbcd1e4});
-        city.castShadow = true;
-        city.receiveShadow = true;
+        const emission = await loadTexture('City/emission.jpg', loadingManager);
+        emission.minFilter = THREE.NearestFilter;
+        emission.magFilter = THREE.NearestFilter;
+
+        this.city = await loadOBJ('City/model.obj', loadingManager);
+        this.city.castShadow = true;
+        this.city.receiveShadow = true;
+
+        this.city.material = new THREE.MeshStandardMaterial({
+            color: 0xbcd1e4,
+            emissive: new THREE.Color(1, 1, 1),
+            emissiveMap: emission,
+        });
         //Video screen
         this.video = document.getElementById('video');
 
-        const videoMaterial =  new THREE.MeshBasicMaterial({
+        const videoMaterial = new THREE.MeshBasicMaterial({
             map: new THREE.VideoTexture(this.video),
         });
+
         const screen = new THREE.PlaneGeometry(19.2, 10.8);
+
         const videoScreen = new THREE.Mesh(screen, videoMaterial);
+        //Play icon
+        const play_plane = new THREE.PlaneGeometry(4, 4);
+
+        const play_icon = await loadTexture('City/play.png', loadingManager);
+        play_icon.minFilter = THREE.NearestFilter;
+        play_icon.magFilter = THREE.NearestFilter;
+
+        const material = new THREE.MeshBasicMaterial({
+            map: play_icon,
+            transparent: true,
+        });
+        this.playButton = new THREE.Mesh(play_plane, material);
+        //Parent icon to screen with tiny offset
+        this.playButton.position.set(0, 0, 0.1);
+        videoScreen.attach(this.playButton);
+
         videoScreen.position.set(1.25, 11.5, 7);
-        //TODO change to an actual icon
-        const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-        const material = new THREE.MeshBasicMaterial();
-        this.playButton = new THREE.Mesh(geometry, material);
-        this.playButton.position.set(1.25, 11.5, 7);
         //Lights
         this.sun = new THREE.DirectionalLight(0xffffff, 1);
         this.sun.castShadow = true;
@@ -68,11 +90,10 @@ export class City {
         this.ambient = new THREE.AmbientLight(0xffffff, 1);
 
         this.objects.add(
-            this.playButton,
             this.sun,
             this.sun_helper,
             this.ambient,
-            city,
+            this.city,
             videoScreen,
         );
 
@@ -107,7 +128,7 @@ export class City {
             const current_id = this.current_event;
             const current = DAY_EVENTS[current_id];
 
-            const next_id = (this.current_event + 1) % DAY_EVENTS.length
+            const next_id = (this.current_event + 1) % DAY_EVENTS.length;
             const next = DAY_EVENTS[next_id];
 
             let blend_factor;
@@ -125,8 +146,8 @@ export class City {
             //Sky
             this.scene.background.lerpColors(current.sky_color, next.sky_color, blend_factor);
             //Building lights
-            // this.emissives.children[0].material.emissiveIntensity = this.cityLights(time_offset);
-
+            this.city.material.emissiveIntensity = THREE.MathUtils.lerp(current.emissive_weight, next.emissive_weight, blend_factor);
+            this.city.material.emissive.lerpColors(current.emissive_color, next.emissive_color, blend_factor);
         }
 
     }

@@ -1,8 +1,17 @@
 import js from "@eslint/js";
 import globals from "globals";
-import { defineConfig } from "eslint/config";
+import {defineConfig} from "eslint/config";
+import compat from "eslint-plugin-compat";
 
 export default defineConfig([
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off"
+    }
+  },
+
+  compat.configs["flat/recommended"],
+
   { 
     files: ["**/*.{js,mjs,cjs}"],
     ignores: [".vite/**", ".node_modules/**"],
