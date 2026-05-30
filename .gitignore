@@ -3,5 +3,3 @@ node_modules/
 .vite/
 # My 3D scenes
 scenes/
-# LFS
-.husky/_

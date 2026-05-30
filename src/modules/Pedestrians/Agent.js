@@ -107,18 +107,6 @@ export default class extends YUKA.Vehicle {
     update(delta) {
 
         if (this.maxSpeed != 0) {
-
-            //Find path behavior
-            let path;
-            for (const behavior of this.steering.behaviors) {
-
-                if (behavior instanceof YUKA.FollowPathBehavior) {
-                    path = behavior.path;
-
-                    break;
-                }
-
-            }
             //Calculate steering force
             this.steering.calculate(delta, steeringForce);
             //Acceleration = force / mass
@@ -130,13 +118,26 @@ export default class extends YUKA.Vehicle {
                 this.velocity.normalize();
                 this.velocity.multiplyScalar(this.maxSpeed);
             }
-            // Penalize going backwards
-            forward.subVectors(path.current(), this.position).normalize();
-            const forward_factor = forward.dot(this.velocity);
+            //Find path behavior
+            let path;
+            for (const behavior of this.steering.behaviors) {
 
-            if (forward_factor < 0) {
-                const resistance = forward.multiplyScalar(forward_factor);
-                this.velocity.add(resistance);
+                if (behavior instanceof YUKA.FollowPathBehavior) {
+                    path = behavior.path;
+
+                    break;
+                }
+
+            }
+            // Penalize going backwards
+            if (path) {
+                forward.subVectors(path.current(), this.position).normalize();
+                const forward_factor = forward.dot(this.velocity);
+
+                if (forward_factor < 0) {
+                    const resistance = forward.multiplyScalar(forward_factor);
+                    this.velocity.add(resistance);
+                }
             }
             //Search for the best new velocity.
             const optimal_velocity = computeNewVelocity(this); //TODO Use the original RVO2 library in C++
