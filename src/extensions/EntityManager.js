@@ -33,6 +33,8 @@ export default class extends YUKA.EntityManager {
         this.agents = [];
         this.obstacles = [];
 
+        this.obstacleTree = null;
+
     }
 
     addAgent(entity) {
@@ -277,13 +279,9 @@ export default class extends YUKA.EntityManager {
 
     updateNeighborhood(entity) {
         //Agent::computeNeighbors
-        if (this.obstacleTree) {
-
-            entity._obstacleNeighbors = [];
-            entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
-            this.queryObstacleTreeRecursive(entity, this.obstacleTree);
-
-        }
+        entity._obstacleNeighbors = [];
+        entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
+        this.queryObstacleTreeRecursive(entity, this.obstacleTree);
 
         entity._agentNeighbors = [];
 

@@ -9,7 +9,8 @@ import EntityManager from '../../extensions/EntityManager.js';
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
 import Agent from './Agent.js';
-import Shader from './Shader.js';
+import vert_shader from './Shader.vert';
+import frag_shader from './Shader.frag';
 import {brakingBehavior,} from './Behaviors.js';
 
 const MAX_CARS = 75;
@@ -70,7 +71,17 @@ export class Cars {
         agent_geo.setAttribute('instance_variation', new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS), 1));
         const palette_texture = await loadTexture('Cars/palette.png', loadingManager);
 
-        this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(palette_texture)), MAX_CARS);
+        this.instancedMesh = new THREE.InstancedMesh(
+            agent_geo,
+            new THREE.ShaderMaterial({
+                vertexShader: vert_shader,
+                fragmentShader: frag_shader,
+                uniforms: {
+                    palette: {value: rawTexture(palette_texture)},
+                },
+            }),
+            MAX_CARS
+        );
 
         // const variation = new Float32Array(MAX_CARS);
         

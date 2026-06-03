@@ -7,11 +7,11 @@ import {GUI,} from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
 import {NavMesh, Path,} from '../../extensions/Navigation.js';
 
+import {findBestNavmeshSpacing} from './utilities';
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
 import Agent from './Agent.js';
-import Shader from './Shader.js';
-import {findBestNavmeshSpacing} from './utilities';
+import vert_shader from './Shader.vert';
 
 import {MAX_AGENTS,} from '../../settings.js';
 
@@ -99,8 +99,28 @@ export class Pedestrians {
         agent_geo.setAttribute('instance_depth', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         agent_geo.setAttribute('instance_frame', new THREE.InstancedBufferAttribute(new Float32Array(MAX_AGENTS), 1));
         //Instance agents
-        this.instancedMesh = new THREE.InstancedMesh(agent_geo, new Shader(rawTexture(anim_texture), rawTexture(alpha_texture)), MAX_AGENTS);
+        this.instancedMesh = new THREE.InstancedMesh(
+            agent_geo,
+            new THREE.ShaderMaterial({
+                side: THREE.DoubleSide,
+                transparent: true,
+                uniforms: {
+                    animations: {value: rawTexture(anim_texture)},
+                    atlasSize: {
+                        value: new THREE.Vector2(
+                            anim_texture.image.width,
+                            anim_texture.image.height
+                        )
+                    },
+                    alpha: {value: rawTexture(alpha_texture)},
+                },
+                vertexShader: vert_shader,
+            }),
+            MAX_AGENTS
+        );
         this.objects.add(this.instancedMesh);
+
+            
         
         const color = new Float32Array(MAX_AGENTS * 3);
         const variation = new Float32Array(MAX_AGENTS);
@@ -169,7 +189,7 @@ export class Pedestrians {
 
                 agent.smoother = null;
                 agent.lookAt(path.current());
-                agent.smoother = new YUKA.Smoother(25);
+                agent.smoother = new YUKA.Smoother(30);
 
                 agent.setActive(true);
 

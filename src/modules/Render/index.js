@@ -4,7 +4,8 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 
-import OutlineShader from './OutlineShader.js';
+import vert_outline from './Outline.vert';
+import frag_outline from './Outline.frag';
 
 const MAX_DEPTH = "150.";
 
@@ -32,7 +33,18 @@ export class Render {
         this.depthidRender = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
         //Comp
         this.composer = new EffectComposer(renderer);
-        this.composer.addPass(new ShaderPass(new OutlineShader(this.depthidRender, this.beautyRender)));
+        this.composer.addPass(
+            new ShaderPass(
+                new THREE.ShaderMaterial({
+                    uniforms: {
+                        tDepthid: {value: this.depthidRender.texture},
+                        tBeauty: {value: this.beautyRender.texture},
+                    },
+                    vertexShader: vert_outline,
+                    fragmentShader: frag_outline,
+                })
+            )
+        );
         this.composer.addPass(new SMAAPass(window.innerWidth * 16, window.innerHeight * 16));
 
     }
