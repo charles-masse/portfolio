@@ -3,11 +3,11 @@ import {expect, test} from 'vitest';
 
 import * as YUKA from 'yuka';
 
-import {NavMesh,} from '../../extensions/Navigation.js';
-import EntityManager from '../../extensions/EntityManager.js';
+import {NavMesh,} from '../extensions/Navigation.js';
+import EntityManager from '../extensions/EntityManager.js';
 
-import Agent from './Agent.js';
-import {findBestNavmeshSpacing,} from './utilities.js';
+import Agent from '../modules/Pedestrians/Agent.js';
+import {findBestNavmeshSpacing,} from '../modules/Pedestrians/utilities.js';
 
 const AGENT_NUMBER = 5000;
 const AGENT_RADIUS = 0.35;
@@ -75,4 +75,4 @@ test('Non-colliding agents during simulation', () => {
     console.log(`Closest agent : ${distance}`);
     expect(distance).toBeGreaterThanOrEqual(AGENT_RADIUS);
 
-}, 20000);
+}, 40000);

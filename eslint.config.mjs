@@ -1,9 +1,11 @@
 import js from "@eslint/js";
-import globals from "globals";
-import {defineConfig} from "eslint/config";
 import compat from "eslint-plugin-compat";
+import globals from "globals";
+import {jsdoc} from 'eslint-plugin-jsdoc';
+import {defineConfig} from "eslint/config";
 
 export default defineConfig([
+
   {
     linterOptions: {
       reportUnusedDisableDirectives: "off"
@@ -11,6 +13,10 @@ export default defineConfig([
   },
 
   compat.configs["flat/recommended"],
+
+  jsdoc({
+    config: 'flat/recommended',
+  }),
 
   { 
     files: ["**/*.{js,mjs,cjs}"],
@@ -24,4 +30,5 @@ export default defineConfig([
       "no-warning-comments": ["warn", { "terms": ["todo", "fix", "delete"], "location": "start" }]
     },
   },
+  
 ]);

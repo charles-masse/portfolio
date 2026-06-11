@@ -40,7 +40,7 @@ export default class extends YUKA.EntityManager {
     addAgent(entity) {
         this.add(entity);
     }
-    
+    // Add (polygonal) obstacle(s), specifying vertices in counterclockwise order.
     addObstacle(vertices) {
 
         if (vertices.length < 2) return -1;
@@ -91,7 +91,7 @@ export default class extends YUKA.EntityManager {
     buildAgentTree() {
 
         this.agentTree = [];
-        this.agents = this.entities.filter((agent) => (agent.active/* && agent instanceof YUKA.MovingEntity*/));
+        this.agents = this.entities.filter((agent) => (agent.active));
 
         if (this.agents.length) {
             this.buildAgentTreeRecursive(0, this.agents.length, 0);
@@ -138,16 +138,16 @@ export default class extends YUKA.EntityManager {
                 if (left < right) {
 
                     [this.agents[left], this.agents[right - 1]] = [this.agents[right - 1], this.agents[left]];
-                    ++ left;
-                    -- right;
+                    ++left;
+                    --right;
 
                 }
 
             }
 
             if (left == begin) {
-                ++ left;
-                ++ right;
+                ++left;
+                ++right;
             }
 
             agentTreeNode.left = node + 1;
@@ -250,7 +250,8 @@ export default class extends YUKA.EntityManager {
                     isConvex: true,
                     unitDir: obstacleJ1.unitDir,
                     _id: this.obstacles.length,
-                }
+                };
+
                 this.obstacles.push(newObstacle);
 
                 obstacleJ1.nextObstacle = newObstacle;
@@ -272,7 +273,7 @@ export default class extends YUKA.EntityManager {
             obstacle: obstacleI1,
             left: this.buildObstacleTreeRecursive(leftObstacles),
             right: this.buildObstacleTreeRecursive(rightObstacles),
-        }
+        };
 
         return node;
     }
@@ -280,7 +281,7 @@ export default class extends YUKA.EntityManager {
     updateNeighborhood(entity) {
         //Agent::computeNeighbors
         entity._obstacleNeighbors = [];
-        entity._rangeSq = sqr(entity.timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
+        entity._rangeSq = sqr(entity.orca_timeHorizonObst * entity.maxSpeed + entity.boundingRadius);
         this.queryObstacleTreeRecursive(entity, this.obstacleTree);
 
         entity._agentNeighbors = [];
@@ -382,7 +383,7 @@ export default class extends YUKA.EntityManager {
 
     queryObstacleTreeRecursive(agent, node) {
 
-        if (node === null) return;
+        if (node == null) return;
 
         const obstacle1 = node.obstacle;
         const obstacle2 = obstacle1.nextObstacle;
@@ -430,7 +431,52 @@ export default class extends YUKA.EntityManager {
         }
 
     }
-    
+
+    queryVisibility(q1, q2, radius) {
+        return this.queryVisibilityRecursive(q1, q2, radius, this.obstacleTree);
+    }
+
+    queryVisibilityRecursive(q1, q2, radius, node) {
+
+        if (node == null) {
+            return true;
+        }
+
+        else {
+
+            const obstacle1 = node.obstacle;
+            const obstacle2 = obstacle1.nextObstacle;
+
+            const q1LeftOfI = leftOf(obstacle1.point, obstacle2.point, q1);
+            const q2LeftOfI = leftOf(obstacle1.point, obstacle2.point, q2);
+            const invLengthI = 1. / absSq(obstacle2.point.clone().sub(obstacle1.point));
+
+            if (q1LeftOfI >= 0 && q2LeftOfI >= 0) {
+                return this.queryVisibilityRecursive(q1, q2, radius, node.left) && ((sqr(q1LeftOfI) * invLengthI >= sqr(radius) && sqr(q2LeftOfI) * invLengthI >= sqr(radius)) || this.queryVisibilityRecursive(q1, q2, radius, node.right));
+            }
+
+            else if (q1LeftOfI <= 0 && q2LeftOfI <= 0) {
+                return this.queryVisibilityRecursive(q1, q2, radius, node.right) && ((sqr(q1LeftOfI) * invLengthI >= sqr(radius) && sqr(q2LeftOfI) * invLengthI >= sqr(radius)) || this.queryVisibilityRecursive(q1, q2, radius, node.left));
+            }
+
+            else if (q1LeftOfI >= 0 && q2LeftOfI <= 0) {
+                //One can see through obstacle from left to right.
+                return this.queryVisibilityRecursive(q1, q2, radius, node.left) && this.queryVisibilityRecursive(q1, q2, radius, node.right);
+            }
+
+            else {
+
+                const point1LeftOfQ = leftOf(q1, q2, obstacle1.point);
+                const point2LeftOfQ = leftOf(q1, q2, obstacle2.point);
+                const invLengthQ = 1. / absSq(q2.clone().sub(q1));
+
+                return (point1LeftOfQ * point2LeftOfQ >= 0 && sqr(point1LeftOfQ) * invLengthQ > sqr(radius) && sqr(point2LeftOfQ) * invLengthQ > sqr(radius) && this.queryVisibilityRecursive(q1, q2, radius, node.left) && this.queryVisibilityRecursive(q1, q2, radius, node.right));
+            }
+
+        }
+
+    }
+
     update(delta) {
 
         this.buildAgentTree();

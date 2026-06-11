@@ -1,7 +1,5 @@
 
 import * as THREE from 'three';
-//Crowd
-export const MAX_AGENTS = 500;
 //Day/Night
 export const START_TIME_SECS = 5;
 export const SUN_SPEED = 10;

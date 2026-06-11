@@ -11,7 +11,7 @@ import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 import Agent from './Agent.js';
 import vert_shader from './Shader.vert';
 import frag_shader from './Shader.frag';
-import {brakingBehavior,} from './Behaviors.js';
+import {BrakingBehavior,} from './Behaviors.js';
 
 const MAX_CARS = 75;
 
@@ -44,12 +44,18 @@ function randomOnPath(waypoints) {
 function renderInstance(entity, renderComponent) {
     renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
 }
-
+/** Class representing the cars in the scene */
 export class Cars {
-
+    /**
+     * 
+     * @param {object} stageData - Data from JSON file containing roads 
+     * @param {THREE.LoadingManager} loadingManager - Three.js Loading manager to track loading progress
+     */
     constructor(stageData, loadingManager) {
 
         this.stageData = stageData;
+
+        console.log(stageData);
 
         this.initialized = false;
 
@@ -96,7 +102,7 @@ export class Cars {
             this.manager.addAgent(agent);
             this.manager.inactive_agents.push(agent);
             //Steering
-            const brake = new brakingBehavior();
+            const brake = new BrakingBehavior();
             agent.steering.add(brake);
             
             const followPath = new YUKA.FollowPathBehavior();
@@ -137,7 +143,7 @@ export class Cars {
                 for (const active_agent of this.manager.active_agents) {
 
                     const pos = active_agent.position;
-                    intersect = bounding_box.intersectsAABB(createBB(pos));
+                    intersect = bounding_box.intersectsAABB(createBB(pos)); //TODO Real boundingbox, not Axis-Aligned
                     //Skip road if spawn is occupied
                     if (intersect) break;
 
@@ -177,9 +183,7 @@ export class Cars {
                 agent.velocity.set(0, 0, 0);
                 //Spawn agent
                 agent.position.copy(selected_spawn);
-                // agent.smoother = null;
                 agent.lookAt(selected_road[selected_index]);
-                // agent.smoother = new YUKA.Smoother(10);
                 //Set variation and color
                 this.instancedMesh.geometry.attributes.instance_color.array[agent.id] = Math.random();
             }

@@ -23,9 +23,7 @@ import * as YUKA from 'yuka';
 
 import {RVO_EPSILON, absSq, det, sqr, abs,} from '../utilities/RVO2.js';
 
-const TIME_STEP = 0.25;
-
-function computeNewVelocity(agent) {
+function computeNewVelocity(agent, timeStep) {
 
     const newVelocity = new THREE.Vector2();
 
@@ -34,7 +32,7 @@ function computeNewVelocity(agent) {
 
     agent._orcaLines = [];
 
-    const invTimeHorizonObst = 1. / agent.timeHorizonObst;
+    const invTimeHorizonObst = 1. / agent.orca_timeHorizonObst;
     //Create obstacle ORCA lines.
     for (let i = 0; i < agent._obstacleNeighbors.length; ++i) {
 
@@ -48,7 +46,7 @@ function computeNewVelocity(agent) {
 
         for (let j = 0; j < agent._orcaLines.length; ++j) {
 
-            if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -RVO_EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >=  -RVO_EPSILON) {
+            if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -RVO_EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -RVO_EPSILON) {
                 alreadyCovered = true;
                 break;
             }
@@ -161,11 +159,9 @@ function computeNewVelocity(agent) {
         const leftCutoff =  obstacle1.point.clone()
             .sub(position)
             .multiplyScalar(invTimeHorizonObst);
-
         const rightCutoff = obstacle2.point.clone()
             .sub(position)
             .multiplyScalar(invTimeHorizonObst);
-
         const cutoffVec = rightCutoff.clone().sub(leftCutoff);
         //Project current velocity on velocity obstacle.
         //Check if current velocity is projected on cutoff circles.
@@ -227,7 +223,7 @@ function computeNewVelocity(agent) {
     }
 
     const numObstLines = agent._orcaLines.length;
-    const invTimeHorizon = 1.0 / agent.timeHorizon;
+    const invTimeHorizon = 1.0 / agent.orca_timeHorizon;
     //Create agent ORCA lines.
     for (let i = 0; i < agent._agentNeighbors.length; ++i) {
 
@@ -286,7 +282,7 @@ function computeNewVelocity(agent) {
 
         } else {
             //Collision. Project on cut-off circle of time timeStep.
-            const invTimeStep = 1.0 / TIME_STEP;
+            const invTimeStep = 1.0 / timeStep;
             //Vector from cutoff center to relative velocity.
             const w = relativeVelocity.clone().sub(relativePosition.clone().multiplyScalar(invTimeStep));
 

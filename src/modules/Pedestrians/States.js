@@ -32,25 +32,21 @@ class GoToState extends State {
         
     }
 
-    onMessage(owner, telegram) {
+    // onMessage(owner, telegram) {
 
-        // if (telegram.sender instanceof MovieScreen && telegram.data == false) {
-        //     owner.stateMachine.changeTo('Cheer');
-        // }
+    //     if (telegram.sender instanceof MovieScreen && telegram.data == false) {
+    //         owner.stateMachine.changeTo('Cheer');
+    //     }
 
-    }
+    // }
 
 }
 
 class IdleState extends State {
 
-    enter(owner) {
-        super.enter(owner);
+}
 
-        this.blendFrames = 0;
-        owner.maxSpeed = 0;
-
-    }
+class RunState extends State {
 
 }
 
@@ -64,30 +60,19 @@ class CheerState extends State {
 
     }
 
-    onMessage(owner, telegram) {
+    // onMessage(owner, telegram) {
 
-        if (telegram.sender instanceof MovieScreen && telegram.data == true) {
-            owner.stateMachine.changeTo('GoTo');
-        }
+    //     if (telegram.sender instanceof MovieScreen && telegram.data == true) {
+    //         owner.stateMachine.changeTo('GoTo');
+    //     }
         
-    }
-
-}
-
-class DeadState extends State {
-
-    enter(owner) {
-        super.enter(owner);
-
-        this.blendFrames = 0;
-
-    }
+    // }
 
 }
 
 export {
     GoToState,
     IdleState,
+    RunState,
     CheerState,
-    DeadState,
 };

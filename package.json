@@ -7,9 +7,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "eslint": "^10.0.2",
     "eslint-plugin-compat": "^7.0.2",
+    "eslint-plugin-jsdoc": "^63.0.2",
     "globals": "^17.4.0",
     "vite": "^7.1.12",
     "vite-plugin-glsl": "^1.6.0",

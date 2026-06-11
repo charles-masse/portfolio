@@ -13,10 +13,10 @@ import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 import Agent from './Agent.js';
 import vert_shader from './Shader.vert';
 
-import {MAX_AGENTS,} from '../../settings.js';
-
-// import {createGraphHelper,} from '../../helpers/GraphHelper.js';
+import {createGraphHelper,} from '../../helpers/GraphHelper.js';
 // import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
+
+const MAX_AGENTS = 500;
 
 function renderInstance(entity, renderComponent, camera) {
     //Geo
@@ -86,9 +86,8 @@ export class Pedestrians {
         }
         this.manager.buildObstacleTree();
         //Helpers
-        //TODO Make a custom helper
         // this.objects.add(createConvexRegionHelper(navMesh));
-        // this.objects.add(createGraphHelper(navMesh.graph, 0.5, 0x00ff00, 0xff0000));
+        this.objects.add(createGraphHelper(navMesh.graph, 0.25, 0x00ff00, 0xff0000));
         //Load
         const agent_mesh = await loadGLTF('Pedestrians/pictogram.gltf', loadingManager);
         const anim_texture = await loadTexture('Pedestrians/VAT.png', loadingManager);
@@ -130,9 +129,13 @@ export class Pedestrians {
             const agent = new Agent(i);
             this.manager.inactive_agents.push(agent);
             //Steering
-            const follow = new YUKA.FollowPathBehavior();
-            // follow.nextWaypointDistance = 0.4;
-            agent.steering.add(follow);
+            // const obstacle = new YUKA.ObstacleAvoidanceBehavior(this.manager.entities);
+            // obstacle.brakingWeight = agent.maxSpeed;
+            // obstacle.dBoxMinLength = agent.boundingRadius * 2;
+            // agent.steering.add(obstacle);
+
+            const followPath = new YUKA.FollowPathBehavior(null, 1.5);
+            agent.steering.add(followPath);
             //Render
             agent.setRenderComponent(
                 this.instancedMesh,
@@ -177,7 +180,7 @@ export class Pedestrians {
                 //Find path behavior
                 for (const behavior of agent.steering.behaviors) {
 
-                    if (behavior instanceof YUKA.FollowPathBehavior) {
+                    if (behavior instanceof YUKA.FollowPathBehavior || behavior instanceof YUKA.OnPathBehavior) {
                         behavior.path = path;
 
                         break;
@@ -189,7 +192,7 @@ export class Pedestrians {
 
                 agent.smoother = null;
                 agent.lookAt(path.current());
-                agent.smoother = new YUKA.Smoother(30);
+                agent.smoother = new YUKA.Smoother(50);
 
                 agent.setActive(true);
 
