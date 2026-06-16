@@ -3,21 +3,55 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {GUI,} from '../../extensions/GUI.js';
+import GUI from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
 import {NavMesh, Path,} from '../../extensions/Navigation.js';
 
-import {findBestNavmeshSpacing} from './utilities';
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
 import Agent from './Agent.js';
 import vert_shader from './Shader.vert';
+import {ArriveBehavior,} from './behaviors.js';
 
-import {createGraphHelper,} from '../../helpers/GraphHelper.js';
+// import {createGraphHelper,} from '../../helpers/GraphHelper.js';
 // import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
 
-const MAX_AGENTS = 500;
+const MAX_AGENTS = 200;
 
+/**
+ * Find a point on the navmesh that is as far as possible from the other entities.
+ * @param {YUKA.NavMesh} navMesh - The navmesh to find the point on.
+ * @param {YUKA.GameEntity[]} entities - The entities to find the point far from.
+ * @returns {YUKA.Vector3} The best point found.
+ */
+function findBestNavMeshPoint(navMesh, entities) {
+
+    let best;
+    let maxDist = -Infinity;
+
+    for (let i = 0; i < 10; i++) {
+
+        const pos = navMesh.randomPoint();
+        const minDist = Math.min(...entities.map((entity) => pos.distanceTo(entity.position)));
+
+        if (minDist > maxDist) {
+
+            maxDist = minDist;
+            best = pos;
+
+        }
+
+    }
+
+    return best;
+}
+
+/**
+ * Individually update an instance from the instacedMesh.
+ * @param {YUKA.GameEntity} entity - The agent linked to the instance being updated.
+ * @param {THREE.InstancedMesh} renderComponent - The instanced mesh the instance belongs to.
+ * @param {THREE.Camera} camera - The scene's camera, used to calculate the distance from the agent to the camera.
+ */
 function renderInstance(entity, renderComponent, camera) {
     //Geo
     renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
@@ -72,14 +106,6 @@ export class Pedestrians {
         this.manager.navMesh = navMesh;
         //Create Spawn points
         this.exits = stageData.spawns.map((pt) => new YUKA.Vector3(...pt));
-        //Create Triggers
-        // for (const trigger of stageData.triggers) {
-
-        //     const points = trigger.points.map((pt) => new YUKA.Vector3(...pt));
-        //     const region = new PolygonalTriggerRegion(points);
-        //     this.manager.add(new StopSign(region));
-
-        // }
         //Create Obstacles
         for (const obstacle of stageData.obstacles) {
             this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
@@ -87,7 +113,7 @@ export class Pedestrians {
         this.manager.buildObstacleTree();
         //Helpers
         // this.objects.add(createConvexRegionHelper(navMesh));
-        this.objects.add(createGraphHelper(navMesh.graph, 0.25, 0x00ff00, 0xff0000));
+        // this.objects.add(createGraphHelper(navMesh.graph, 0.25, 0x00ff00, 0xff0000));
         //Load
         const agent_mesh = await loadGLTF('Pedestrians/pictogram.gltf', loadingManager);
         const anim_texture = await loadTexture('Pedestrians/VAT.png', loadingManager);
@@ -134,7 +160,10 @@ export class Pedestrians {
             // obstacle.dBoxMinLength = agent.boundingRadius * 2;
             // agent.steering.add(obstacle);
 
-            const followPath = new YUKA.FollowPathBehavior(null, 1.5);
+            const arrive = new ArriveBehavior();
+            agent.steering.add(arrive);
+
+            const followPath = new YUKA.FollowPathBehavior();
             agent.steering.add(followPath);
             //Render
             agent.setRenderComponent(
@@ -164,11 +193,10 @@ export class Pedestrians {
             //Not enough agents
             if (this.manager.active_agents.length < this.population) {
 
-                const id = this.manager.inactive_agents.length - 1;
-                const agent = this.manager.inactive_agents[id];
+                const agent = this.manager.inactive_agents[0];
 
                 if (input) {
-                    agent.position.copy(findBestNavmeshSpacing(this.manager.navMesh, this.manager.active_agents));
+                    agent.position.copy(findBestNavMeshPoint(this.manager.navMesh, this.manager.active_agents));
                 } else {
                     agent.position.copy(YUKA.MathUtils.choice(this.exits));
                 }
@@ -190,9 +218,9 @@ export class Pedestrians {
                 //Reset velocity and activate
                 agent.velocity.set(0, 0, 0);
 
-                agent.smoother = null;
+                // agent.smoother = null;
                 agent.lookAt(path.current());
-                agent.smoother = new YUKA.Smoother(50);
+                // agent.smoother = new YUKA.Smoother(50);
 
                 agent.setActive(true);
 
@@ -211,7 +239,7 @@ export class Pedestrians {
 
     update(delta) {
         //Wait until it fully loads before updating
-        if (this.manager.entities.length) {
+        if (this.manager.active_agents.length != 0) {
 
             this.activateAgents();
             this.manager.update(delta);

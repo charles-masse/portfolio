@@ -1,5 +1,5 @@
 
-import {GUI,} from './GUI.js';
+import GUI from './GUI.js';
 
 var Stats = function () {
 

@@ -29,8 +29,7 @@ export default class extends YUKA.Vehicle {
         this.maxTurnRate = degreesToRadians(30);
 
         this.boundingRadius = 4;
-
-        this.neighborhoodRadius = 10;
+        this.neighborhoodRadius = 8;
         this.maxNeighbors = 10;
 
     }

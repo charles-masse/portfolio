@@ -1,35 +1,119 @@
 
 import * as YUKA from 'yuka';
 
-import {State,} from '../../extensions/States.js';
+import {State,} from '../../extensions/states.js';
 
 // import MovieScreen from '../../modules/MovieScreen'
 
-class GoToState extends State {
+class CheerState extends State {
 
-    enter(owner) {
-        super.enter(owner);
+    constructor() {
+        super();
 
-        owner.maxSpeed = 1;
+        this.speed = 0;
+        this.blendFrames = 0;
+        
+    }
 
+    // onMessage(owner, telegram) {ta
+
+    //     if (telegram.sender instanceof MovieScreen && telegram.data == true) {
+    //         owner.stateMachine.changeTo('GoTo');
+    //     }
+        
+    // }
+
+}
+
+class IdleState extends State {
+
+    constructor() {
+        super();
+
+        this.speed = 0;
+        this.blendFrames = 0;
+        
     }
 
     execute(owner) {
         super.execute(owner);
-        //Find behavior
-        for (const behavior of owner.steering.behaviors) {
 
-            if (behavior instanceof YUKA.FollowPathBehavior) {
-                //Reached the end
-                if (behavior.path.finished()) {
-                    owner.setActive(false);
-                }
+        // let follow;
+        let arrive;
+
+        for (const behavior of owner.steering.behaviors) {
+            // if (behavior instanceof YUKA.FollowPathBehavior) {
+                // follow = behavior;
+            // } 
+
+            if (behavior instanceof YUKA.ArriveBehavior) {
+
+                arrive = behavior;
 
                 break;
             }
-                    
+
         }
+        //If nothing is stopping the agent, keep walking
+        if (owner.triggers.length === 0) {
+            arrive.target = null;
+            owner.stateMachine.changeTo('Walk');
+
+        }
+
+    }
+
+}
+
+class RunState extends State {
+
+    constructor() {
+        super();
+
+        this.speed = 1;
+        this.blendFrames = 0;
+
+    }
+
+}
+
+class WalkState extends State {
+
+    constructor() {
+        super();
+
+        this.speed = 0.5;
+        this.blendFrames = 0;
         
+    }
+
+    execute(owner) {
+        super.execute(owner);
+
+        let follow;
+        let arrive;
+
+        for (const behavior of owner.steering.behaviors) {
+            if (behavior instanceof YUKA.FollowPathBehavior) {
+                follow = behavior;
+            } 
+
+            else if (behavior instanceof YUKA.ArriveBehavior) {
+                arrive = behavior;
+            }
+
+        }
+        //Check if agent reached end of their path
+        if (follow.path.finished()) {
+            owner.setActive(false);
+        }
+        //If agent is trying to reach a point, disable FollowPath
+        if (arrive.target != null) {
+            follow.weight = 0;
+        } else {
+            follow.weight = 1;
+        }
+
     }
 
     // onMessage(owner, telegram) {
@@ -42,37 +126,9 @@ class GoToState extends State {
 
 }
 
-class IdleState extends State {
-
-}
-
-class RunState extends State {
-
-}
-
-class CheerState extends State {
-
-    enter(owner) {
-        super.enter(owner);
-
-        this.blendFrames = 0;
-        owner.maxSpeed = 0;
-
-    }
-
-    // onMessage(owner, telegram) {
-
-    //     if (telegram.sender instanceof MovieScreen && telegram.data == true) {
-    //         owner.stateMachine.changeTo('GoTo');
-    //     }
-        
-    // }
-
-}
-
 export {
-    GoToState,
+    CheerState,
     IdleState,
     RunState,
-    CheerState,
+    WalkState,
 };

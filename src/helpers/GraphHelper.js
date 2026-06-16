@@ -1,10 +1,18 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- * https://github.com/Mugen87/yuka/blob/master/examples/graph/common/js/GraphHelper.js
- */
 
 import * as THREE from 'three';
 
+import * as YUKA from 'yuka';
+/**
+ * A helper function for visualizing the graph structure of a YUKA graph.
+ * 
+ * {@link https://github.com/Mugen87/yuka/blob/master/examples/graph/common/js/GraphHelper.js}
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @param {YUKA.Graph} graph - The graph to visualize.
+ * @param {number} nodeSize - The size of the nodes in the visualization.
+ * @param {number} nodeColor - The color of the nodes in the visualization.
+ * @param {number} edgeColor - The color of the edges in the visualization.
+ * @returns {THREE.Group} A group containing the visualization of the graph.
+ */
 function createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor = 0xffffff ) {
 
     const group = new THREE.Group();
@@ -67,6 +75,17 @@ function createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor
 
 }
 
+/**
+ * A helper function for visualizing a path on a YUKA graph.
+ * 
+ * {@link https://github.com/Mugen87/yuka/blob/master/examples/graph/common/js/GraphHelper.js}
+ * @author Mugen87
+ * @param {YUKA.Graph} graph - The graph containing the path.
+ * @param {number[]} path - An array of node indices representing the path.
+ * @param {number} nodeSize - The size of the nodes in the visualization.
+ * @param {number} color - The color of the path in the visualization.
+ * @returns {THREE.Group} A group containing the visualization of the path.
+ */
 function createPathHelper( graph, path, nodeSize, color = 0x00ff00 ) {
 
     const group = new THREE.Group();
@@ -117,31 +136,7 @@ function createPathHelper( graph, path, nodeSize, color = 0x00ff00 ) {
 
 }
 
-function createSearchTreeHelper( graph, searchTree, color = 0xff0000 ) {
-
-    const geometry = new THREE.BufferGeometry();
-    const position = [];
-
-    const material = new THREE.LineBasicMaterial( { color: color } );
-
-    for ( let edge of searchTree ) {
-
-        const fromNode = graph.getNode( edge.from );
-        const toNode = graph.getNode( edge.to );
-
-        position.push( fromNode.position.x, fromNode.position.y, fromNode.position.z );
-        position.push( toNode.position.x, toNode.position.y, toNode.position.z );
-
-    }
-
-    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
-
-    const lines = new THREE.LineSegments( geometry, material );
-    lines.matrixAutoUpdate = false;
-
-    return lines;
-
-}
-
-
-export { createGraphHelper, createPathHelper, createSearchTreeHelper };
+export {
+    createGraphHelper,
+    createPathHelper
+};

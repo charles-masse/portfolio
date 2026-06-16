@@ -25,7 +25,7 @@ class BrakingBehavior extends YUKA.SteeringBehavior {
             neighbor.getDirection(neighbor_direction);
             const neighbor_heading = direction.dot(neighbor_direction.normalize());
             //Make sure the neighbor is in front and heading towards the same direction
-            if (facing >= 0.85 && neighbor_heading > 0.5 && distance_toNeighbor < distanceToClosestNeighbor) {
+            if (facing >= 0.8 && neighbor_heading > 0.5 && distance_toNeighbor < distanceToClosestNeighbor) {
 
                 distanceToClosestNeighbor = distance_toNeighbor;
                 closestNeighbor = neighbor;

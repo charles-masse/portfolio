@@ -12,7 +12,7 @@ import {worldToLocal,} from '../utilities/math.js';
 //'#2cc9ff' Blue
 //'#a2db3c' Green
 
-class GUI extends LIL.GUI {
+export default class GUI extends LIL.GUI {
 
     addDelaunay(object, property) {
         return new DelaunayController(this, object, property).disable();
@@ -141,7 +141,3 @@ class DelaunayController extends LIL.Controller {
     }
 
 }
-
-export {
-    GUI,
-};

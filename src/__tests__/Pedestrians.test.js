@@ -12,6 +12,11 @@ import {findBestNavmeshSpacing,} from '../modules/Pedestrians/utilities.js';
 const AGENT_NUMBER = 5000;
 const AGENT_RADIUS = 0.35;
 
+/**
+ * Returns the closest distance between all agents in the entity manager. This is used to check if any agents are intersecting.
+ * @param {Array} entities - The array of agents to check.
+ * @returns {number} The closest distance between all agents.
+ */
 function getClosestDistance(entities) {
 
     const min_distances = [];

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {Path,} from '../../extensions/Navigation.js';
+import {Path,} from '../../extensions/navigation.js';
 import EntityManager from '../../extensions/EntityManager.js';
 
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
@@ -11,7 +11,7 @@ import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 import Agent from './Agent.js';
 import vert_shader from './Shader.vert';
 import frag_shader from './Shader.frag';
-import {BrakingBehavior,} from './Behaviors.js';
+import {BrakingBehavior,} from './behaviors.js';
 
 const MAX_CARS = 75;
 
@@ -26,7 +26,11 @@ function createBB(pos, size=3) {
 
     return bounding_box;
 }
-
+/**
+ * Find a random point on the path and the index of the next waypoint.
+ * @param {Array<YUKA.Vector3>} waypoints - The waypoints the paths are made of.
+ * @returns {[number, YUKA.Vector3]} A random point on the path and the index of the next waypoint.
+ */
 function randomOnPath(waypoints) {
 
     const random_index = YUKA.MathUtils.randInt(1, waypoints.length - 1);
@@ -40,22 +44,20 @@ function randomOnPath(waypoints) {
 
     return [random_index, result];
 }
-
+/**
+ * Individually update an instance from the instacedMesh.
+ * @param {YUKA.GameEntity} entity - The agent linked to the instance being updated.
+ * @param {THREE.InstancedMesh} renderComponent - The instanced mesh the instance belongs to.
+ */
 function renderInstance(entity, renderComponent) {
     renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
 }
-/** Class representing the cars in the scene */
+
 export class Cars {
-    /**
-     * 
-     * @param {object} stageData - Data from JSON file containing roads 
-     * @param {THREE.LoadingManager} loadingManager - Three.js Loading manager to track loading progress
-     */
+
     constructor(stageData, loadingManager) {
 
         this.stageData = stageData;
-
-        console.log(stageData);
 
         this.initialized = false;
 
@@ -143,7 +145,7 @@ export class Cars {
                 for (const active_agent of this.manager.active_agents) {
 
                     const pos = active_agent.position;
-                    intersect = bounding_box.intersectsAABB(createBB(pos)); //TODO Real boundingbox, not Axis-Aligned
+                    intersect = bounding_box.intersectsAABB(createBB(pos)); //TODO Real BB, not Axis-Aligned
                     //Skip road if spawn is occupied
                     if (intersect) break;
 

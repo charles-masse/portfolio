@@ -11,13 +11,10 @@ export default defineConfig([
       reportUnusedDisableDirectives: "off"
     }
   },
-
   compat.configs["flat/recommended"],
-
   jsdoc({
     config: 'flat/recommended',
   }),
-
   { 
     files: ["**/*.{js,mjs,cjs}"],
     ignores: [".vite/**", ".node_modules/**"],

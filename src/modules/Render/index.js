@@ -9,6 +9,11 @@ import frag_outline from './Outline.frag';
 
 const MAX_DEPTH = "150.";
 
+/**
+ * Checks if an object is a renderable mesh.
+ * @param {THREE.Object3D} object - The object to check.
+ * @returns {boolean} True if the object is compatible, false otherwise.
+ */
 function isCompatible(object) {
 
     const geometry = object.geometry;

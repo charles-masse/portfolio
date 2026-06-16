@@ -1,5 +1,5 @@
 
-/*
+/**
  * This is a conversion of the RVO2 Library to JavaScript/Three.js/Yuka.
  *
  * Copyright 2008 University of North Carolina at Chapel Hill
@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../utilities/RVO2.js';
+import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../core/RVO2/utilities.js';
 
 const MAX_LEAF_SIZE = 10;
 

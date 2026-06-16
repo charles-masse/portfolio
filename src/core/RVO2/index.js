@@ -1,5 +1,5 @@
 
-/*
+/**
  * This is a conversion of the RVO2 Library to JavaScript/Three.js/Yuka.
  *
  * Copyright 2008 University of North Carolina at Chapel Hill
@@ -21,9 +21,15 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {RVO_EPSILON, absSq, det, sqr, abs,} from '../utilities/RVO2.js';
+import {RVO_EPSILON, absSq, det, sqr, abs,} from './utilities.js';
 
-function computeNewVelocity(agent, timeStep) {
+/**
+ * Computes the new velocity for a given agent based on the ORCA algorithm.
+ * @param {YUKA.Vehicle} agent - The agent for which to compute the new velocity.
+ * @param {number} timeStep - The time step to be used for the computation.
+ * @returns {THREE.Vector2} The new velocity for the agent.
+ */
+export function computeNewVelocity(agent, timeStep) {
 
     const newVelocity = new THREE.Vector2();
 
@@ -299,13 +305,12 @@ function computeNewVelocity(agent, timeStep) {
 
     }
 
-    const lineFail = linearProgram2(agent._orcaLines, agent.boundingRadius, velocity, false, newVelocity);
+    const lineFail = linearProgram2(agent._orcaLines, agent.maxSpeed, velocity, false, newVelocity);
 
     if (lineFail < agent._orcaLines.length) {
-        linearProgram3(agent._orcaLines, numObstLines, lineFail, agent.boundingRadius, newVelocity);
+        linearProgram3(agent._orcaLines, numObstLines, lineFail, agent.maxSpeed, newVelocity);
     }
 
-    
     return newVelocity;
 }
 
@@ -460,7 +465,3 @@ function linearProgram3(lines, numObstLines, beginLine, radius, result) {
     }
 
 }
-
-export {
-    computeNewVelocity,
-};

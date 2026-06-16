@@ -1,12 +1,12 @@
 
 import * as YUKA from 'yuka';
 
-import {GoToState,} from './States.js';
-
-import {computeNewVelocity,} from '../../core/ORCA.js';
+import {computeNewVelocity,} from '../../core/RVO2';
 // import {LocomotionClip, BlendSpaces,} from '../../core/BlendSpaces.js';
 
-import {StateMachine,} from '../../extensions/States.js';
+import {StateMachine,} from '../../extensions/states.js';
+
+import {CheerState, IdleState, RunState, WalkState,} from './states.js';
 
 const steeringForce = new YUKA.Vector3();
 const displacement = new YUKA.Vector3();
@@ -27,8 +27,8 @@ export default class extends YUKA.Vehicle {
         this.neighborhoodRadius = 4;
         this.maxNeighbors = 10;
 
-        this.orca_timeHorizon = 12;
-        this.orca_timeHorizonObst = 2;
+        this.orca_timeHorizon = 4;
+        this.orca_timeHorizonObst = 4;
         //Animation blending
         // agent.blendSpaces = new BlendSpaces(this);
 
@@ -60,15 +60,18 @@ export default class extends YUKA.Vehicle {
         // agent.blendSpaces.add(walk180R);
         //States
         this.stateMachine = new StateMachine(this);
-        this.stateMachine.add('GoTo', new GoToState());
-        this.stateMachine.changeTo('GoTo');
+        this.stateMachine.add('Cheer', new CheerState());
+        this.stateMachine.add('Idle', new IdleState());
+        this.stateMachine.add('Run', new RunState());
+        this.stateMachine.add('Walk', new WalkState());
         
+        this.stateMachine.changeTo('Walk');
+
     }
 
     setActive(bool) {
 
         this.active = bool;
-        this.canActivateTrigger = bool;
 
         if (bool) {
 
@@ -112,25 +115,26 @@ export default class extends YUKA.Vehicle {
                 this.velocity.multiplyScalar(this.maxSpeed);
             }
             //Search for the best new velocity.
-            const optimal_velocity = computeNewVelocity(this, delta); //TODO Use the original RVO2 library in C++
+            const optimal_velocity = computeNewVelocity(this, delta);
             this.velocity.set(optimal_velocity.x, 0, optimal_velocity.y);
             //Calculate displacement
             displacement.copy(this.velocity).multiplyScalar(delta);
             //Calculate target position
             target.copy(this.position).add(displacement);
-            //Clamp target to navmesh
-            const navMesh = this.manager.navMesh;
-            
-            navMesh.clampMovement(
-                navMesh.getClosestRegion(this.position),
-                this.position,
-                target,
-                target
-            );
+            // //Find path behavior
+            // let path;
+            // for (const behavior of this.steering.behaviors) {
+
+            //     if (behavior instanceof YUKA.FollowPathBehavior) {
+            //         path = behavior.path;
+
+            //         break;
+            //     }
+                
+            // }
             //Update the orientation if the vehicle has a non zero velocity
             if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-                // this.lookAt(target);
-                this.rotateTo(target, displacement.length());
+                this.lookAt(target);
             }
             //Update position
             this.position.copy(target);
@@ -142,14 +146,15 @@ export default class extends YUKA.Vehicle {
 
                 displacement.copy(velocitySmooth).multiplyScalar(delta);
                 target.copy(this.position).add(displacement);
-                // this.lookAt(target);
-                this.rotateTo(target, displacement.length());
+                this.lookAt(target);
 
             }
 
         }
 
         this.stateMachine.update();
+        //Reset activated triggers
+        this.triggers = [];
 
         return this;
     }

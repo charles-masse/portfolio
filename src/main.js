@@ -75,6 +75,10 @@ capped_time.connect(document);
 let accumulator = 0;
 
 animate();
+
+/**
+ * The main animation loop for the application. Framerate is capped at 24 FPS.
+ */
 function animate() {
     //Looping
     requestAnimationFrame(animate);
@@ -100,11 +104,16 @@ function animate() {
     }
 
 }
-
+/**
+ * Handles the transition end event for the loading screen.
+ * @param {TransitionEvent} event - The transition end event.
+ */
 function onTransitionEnd(event) {
     event.target.remove();
 }
-//Listeners
+/**
+ * Initializes event listeners.
+ */
 function initListeners() {
 
     window.addEventListener('resize', () => {
