@@ -5,7 +5,7 @@ import * as YUKA from 'yuka';
 
 import GUI from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
-import {NavMesh, Path,} from '../../extensions/Navigation.js';
+import {NavMesh, Path,} from '../../extensions/navigation.js';
 
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
 
@@ -64,7 +64,7 @@ function renderInstance(entity, renderComponent, camera) {
 
 }
 
-export class Pedestrians {
+class Pedestrians {
 
     constructor(stageData, camera, loadingManager) {
 
@@ -260,3 +260,8 @@ export class Pedestrians {
     }
 
 }
+
+export {
+    Pedestrians,
+    findBestNavMeshPoint,
+};

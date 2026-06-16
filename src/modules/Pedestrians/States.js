@@ -104,14 +104,16 @@ class WalkState extends State {
 
         }
         //Check if agent reached end of their path
-        if (follow.path.finished()) {
+        if (follow && follow.path.finished()) {
             owner.setActive(false);
         }
         //If agent is trying to reach a point, disable FollowPath
-        if (arrive.target != null) {
-            follow.weight = 0;
-        } else {
-            follow.weight = 1;
+        if (arrive) {
+            if (arrive.target != null) {
+                follow.weight = 0;
+            } else {
+                follow.weight = 1;
+            }
         }
 
     }

@@ -3,11 +3,11 @@ import {expect, test} from 'vitest';
 
 import * as YUKA from 'yuka';
 
-import {NavMesh,} from '../extensions/Navigation.js';
+import {NavMesh,} from '../extensions/navigation.js';
 import EntityManager from '../extensions/EntityManager.js';
 
 import Agent from '../modules/Pedestrians/Agent.js';
-import {findBestNavmeshSpacing,} from '../modules/Pedestrians/utilities.js';
+import {findBestNavMeshPoint,} from '../modules/Pedestrians';
 
 const AGENT_NUMBER = 5000;
 const AGENT_RADIUS = 0.35;
@@ -52,7 +52,7 @@ test('Spawning non-intersecting agents', () => {
 
         const entity = new Agent(i);
         entity.active = true;
-        const pos = findBestNavmeshSpacing(navMesh, entityManager.entities);
+        const pos = findBestNavMeshPoint(navMesh, entityManager.entities);
         entity.position.copy(pos);
 
         entityManager.add(entity);
