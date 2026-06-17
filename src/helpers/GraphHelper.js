@@ -6,7 +6,7 @@ import * as YUKA from 'yuka';
  * A helper function for visualizing the graph structure of a YUKA graph.
  * 
  * {@link https://github.com/Mugen87/yuka/blob/master/examples/graph/common/js/GraphHelper.js}
- * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author Mugen87
  * @param {YUKA.Graph} graph - The graph to visualize.
  * @param {number} nodeSize - The size of the nodes in the visualization.
  * @param {number} nodeColor - The color of the nodes in the visualization.

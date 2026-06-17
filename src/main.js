@@ -40,13 +40,12 @@ renderer.shadowMap.enabled = true;
 const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.setFocalLength(24);
-// camera.position.set(0, 14.188, 103.679);
-// camera.lookAt(0, 0, 30); //TODO load from json
-camera.position.set(0, 14.188, 60); //DELETE Stop sign debug
-camera.lookAt(0, 0, 10); //DELETE Stop sign debug
+//Cam
+const cam_data = stage_data.camera;
+const camera = new THREE.PerspectiveCamera(cam_data.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(...cam_data.position);
+camera.rotation.set(...cam_data.rotation);
+// console.log(camera.getFilmWidth(), camera.getFilmHeight());
 //Modules
 const city = new City(scene, loadingManager);
 scene.add(city.objects);

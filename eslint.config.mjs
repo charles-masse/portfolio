@@ -1,6 +1,7 @@
+
 import js from "@eslint/js";
-import compat from "eslint-plugin-compat";
 import globals from "globals";
+import compat from "eslint-plugin-compat";
 import {jsdoc} from 'eslint-plugin-jsdoc';
 import {defineConfig} from "eslint/config";
 
@@ -14,6 +15,7 @@ export default defineConfig([
   compat.configs["flat/recommended"],
   jsdoc({
     config: 'flat/recommended',
+    files: ["src/**/*.{js,mjs,cjs}"],
   }),
   { 
     files: ["**/*.{js,mjs,cjs}"],

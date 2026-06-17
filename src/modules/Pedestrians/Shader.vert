@@ -30,7 +30,7 @@ void main() {
     float vertex_id = float(gl_VertexID);
     vec3 anim_data = texture2D(
         animations,
-        vec2( (vertex_id + 0.5) / atlasSize.x, mod((instance_frame + 0.5), atlasSize.y) / atlasSize.y)
+        vec2((vertex_id + 0.5) / atlasSize.x, mod((instance_frame + 0.5), atlasSize.y) / atlasSize.y)
     ).rgb;
 
     vec3 anim_data_scaled = (anim_data - rest) * amplitude;

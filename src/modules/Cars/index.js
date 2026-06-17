@@ -13,21 +13,35 @@ import vert_shader from './Shader.vert';
 import frag_shader from './Shader.frag';
 import {BrakingBehavior,} from './behaviors.js';
 
-const MAX_CARS = 75;
+const MAX_CARS = 100;
+const CAR_SIZE = new YUKA.Vector3(1, 1, 2);
 
-function createBB(pos, size=3) {
-
-    const half_size = size / 2.;
-
-    const bounding_box = new YUKA.AABB(
-        pos.clone().add(new YUKA.Vector3(-half_size, -half_size, -half_size)),
-        pos.clone().add(new YUKA.Vector3( half_size,  half_size,  half_size))
-    );
-
-    return bounding_box;
-}
+const xaxis = new YUKA.Vector3();
+const yaxis = new YUKA.Vector3();
 /**
- * Find a random point on the path and the index of the next waypoint.
+ * Creates a direction matrix from a direction vector.
+ * 
+ * {@link https://stackoverflow.com/questions/18558910/direction-vector-to-rotation-matrix}
+ * @param {YUKA.Vector3} direction - The direction vector to be transformed into a matrix.
+ * @param {YUKA.Vector3} up - The up vector.
+ * @returns {YUKA.Matrix3} The direction matrix.
+ */
+function directionMatrixFromVector(direction, up=new YUKA.Vector3(0, 1, 0)) {
+
+    xaxis.crossVectors(up, direction).normalize();
+    yaxis.crossVectors(direction, xaxis).normalize();
+
+    const matrix = new YUKA.Matrix3();
+
+    return matrix.fromArray([
+        xaxis.x, yaxis.x, direction.x,
+        xaxis.y, yaxis.y, direction.y,
+        xaxis.z, yaxis.z, direction.z
+    ]);
+}
+
+/**
+ * Finds a random point on the path and the index of the next waypoint.
  * @param {Array<YUKA.Vector3>} waypoints - The waypoints the paths are made of.
  * @returns {[number, YUKA.Vector3]} A random point on the path and the index of the next waypoint.
  */
@@ -124,28 +138,43 @@ export class Cars {
         for (const agent of this.manager.inactive_agents) {
             //Find available spawn point
             let selected_road;
-            let selected_spawn;
+            let candidate_spawn;
             let selected_index;
 
             for (const road of this.stageData.roads) {
-
+                //Convert road waypoints to vectors
                 const road_vertex = road.map((point) => new YUKA.Vector3(...point));
-
-                let intersect = false;
                 //Spawn at random point on line or start of line
+                let intersect = false;
+                
                 if (!(this.initialized)) {
-                    [selected_index, selected_spawn] = randomOnPath(road_vertex);
-                } else {
+                    [selected_index, candidate_spawn] = randomOnPath(road_vertex);
+                }
+                
+                else {
+
                     selected_index = 1;
-                    selected_spawn = road_vertex[0];
+                    candidate_spawn = road_vertex[0];
+
                 }
 
-                const bounding_box = createBB(selected_spawn);
+                const direction = road_vertex[selected_index].clone().sub(candidate_spawn).normalize();
+
+                const candidate_BB = new YUKA.OBB(
+                    candidate_spawn,
+                    CAR_SIZE,
+                    directionMatrixFromVector(direction)
+                );
 
                 for (const active_agent of this.manager.active_agents) {
 
-                    const pos = active_agent.position;
-                    intersect = bounding_box.intersectsAABB(createBB(pos)); //TODO Real BB, not Axis-Aligned
+                    const active_BB = new YUKA.OBB(
+                        active_agent.position,
+                        CAR_SIZE,
+                        new YUKA.Matrix3().fromQuaternion(active_agent.rotation)
+                    );
+
+                    intersect = candidate_BB.intersectsOBB(active_BB);
                     //Skip road if spawn is occupied
                     if (intersect) break;
 
@@ -184,7 +213,7 @@ export class Cars {
                 //Cleanup old velocity
                 agent.velocity.set(0, 0, 0);
                 //Spawn agent
-                agent.position.copy(selected_spawn);
+                agent.position.copy(candidate_spawn);
                 agent.lookAt(selected_road[selected_index]);
                 //Set variation and color
                 this.instancedMesh.geometry.attributes.instance_color.array[agent.id] = Math.random();

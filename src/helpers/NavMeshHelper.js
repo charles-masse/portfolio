@@ -7,7 +7,7 @@ import * as YUKA from 'yuka';
  * A helper function for visualizing the convex regions of a navMesh.
  *
  * {@link https://github.com/Mugen87/yuka/blob/master/examples/navigation/common/js/NavMeshHelper.js}
- * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author Mugen87
  * @param {YUKA.NavMesh} navMesh - The navigation mesh to visualize.
  * @returns {THREE.Mesh} A mesh representing the convex regions of the navigation mesh.
  */

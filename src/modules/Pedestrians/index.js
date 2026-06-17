@@ -110,6 +110,7 @@ class Pedestrians {
         for (const obstacle of stageData.obstacles) {
             this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
         }
+        //Generate obstacle tree
         this.manager.buildObstacleTree();
         //Helpers
         // this.objects.add(createConvexRegionHelper(navMesh));
@@ -145,8 +146,6 @@ class Pedestrians {
         );
         this.objects.add(this.instancedMesh);
 
-            
-        
         const color = new Float32Array(MAX_AGENTS * 3);
         const variation = new Float32Array(MAX_AGENTS);
 

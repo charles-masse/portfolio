@@ -7,7 +7,7 @@ import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
 import vert_outline from './Outline.vert';
 import frag_outline from './Outline.frag';
 
-const MAX_DEPTH = "150.";
+const MAX_DEPTH = "100.";
 
 /**
  * Checks if an object is a renderable mesh.

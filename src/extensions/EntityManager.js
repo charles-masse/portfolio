@@ -146,6 +146,7 @@ export default class extends YUKA.EntityManager {
 
             if (left == begin) {
                 ++left;
+                // eslint-disable-next-line no-useless-assignment
                 ++right;
             }
 
@@ -159,7 +160,7 @@ export default class extends YUKA.EntityManager {
 
     }
 
-    buildObstacleTree() { //TODO Update the obstacle tree when it's changed
+    buildObstacleTree() {
         this.obstacleTree = this.buildObstacleTreeRecursive(this.obstacles);
     }
 
