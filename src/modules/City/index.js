@@ -114,7 +114,7 @@ export class City {
                 current_time = DAY_EVENTS[i].time;
                 next_time = DAY_EVENTS[(i + 1) % DAY_EVENTS.length].time;
                 
-                if (next_time < current_time) next_time += 1;
+                if (next_time < current_time) next_time++;
 
                 if (day_portion >= current_time && day_portion < next_time) {
 

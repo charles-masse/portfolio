@@ -41,11 +41,14 @@ const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
 //Cam
-const cam_data = stage_data.camera;
-const camera = new THREE.PerspectiveCamera(cam_data.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(...cam_data.position);
-camera.rotation.set(...cam_data.rotation);
-// console.log(camera.getFilmWidth(), camera.getFilmHeight());
+const camera = new THREE.PerspectiveCamera(stage_data.camera.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.matrix = new THREE.Matrix4().fromArray(stage_data.camera.matrix);
+camera.matrix.decompose(
+    camera.position,
+    camera.quaternion,
+    camera.scale
+);
+camera.updateMatrix();
 //Modules
 const city = new City(scene, loadingManager);
 scene.add(city.objects);

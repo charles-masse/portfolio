@@ -11,7 +11,7 @@ class CrosswalkTrigger extends YUKA.Trigger {
         this.region = region;
 
         this.maxNeighbors = 99;
-        this.neighborhoodRadius = 10;
+        this.neighborhoodRadius = 8;
 
         this.position.copy(region.polygon.centroid);
 

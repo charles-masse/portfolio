@@ -98,12 +98,12 @@ export class Traffic {
         
         if (this.state % 2 && accumulator >= GREEN_TIME) {
 
-            this.state += 1;
+            this.state++;
             accumulator = accumulator % GREEN_TIME;
 
         } else if (!(this.state % 2) && accumulator >= YELLOW_TIME) {
 
-            this.state += 1;
+            this.state++;
             accumulator = accumulator % YELLOW_TIME;
 
         }

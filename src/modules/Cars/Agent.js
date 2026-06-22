@@ -3,8 +3,6 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {degreesToRadians,} from '../../utilities/math.js';
-
 const steeringForce = new YUKA.Vector3();
 const displacement = new YUKA.Vector3();
 const acceleration = new YUKA.Vector3();
@@ -18,19 +16,20 @@ const right = new YUKA.Vector3();
 
 export default class extends YUKA.Vehicle {
 
-    constructor(id) {
+    constructor(id=-1) {
         super();
 
         this.active = false;
 
         this.id = id;
 
-        this.maxSpeed = 6;
-        this.maxTurnRate = degreesToRadians(30);
+        this.mass = 0.75;
+        this.maxSpeed = 5;
+        this.maxTurnRate = THREE.MathUtils.degToRad(5);
 
         this.boundingRadius = 2;
-        this.neighborhoodRadius = 8;
         this.maxNeighbors = 10;
+        this.neighborhoodRadius = 10;
 
     }
 
@@ -44,17 +43,18 @@ export default class extends YUKA.Vehicle {
 
     update(delta) {
         //Find path behavior
-        let behavior;
+        let path_behavior;
 
-        for (behavior of this.steering.behaviors) {
+        for (const behavior of this.steering.behaviors) {
 
             if (behavior instanceof YUKA.FollowPathBehavior) {
+                path_behavior = behavior;
                 break;
             }
 
         }
         //Disable if at end of path
-        if (behavior.path.finished()) {
+        if (path_behavior && path_behavior.path.finished()) {
 
             const aid = this.manager.active_agents.indexOf(this);
             this.manager.active_agents.splice(aid, 1);
@@ -75,9 +75,6 @@ export default class extends YUKA.Vehicle {
             this.velocity.normalize();
             this.velocity.multiplyScalar(this.maxSpeed);
         }
-        //Kill lateral velocity
-        const resistance = this.getLateralVelocity().multiplyScalar(-1);
-        this.velocity.add(resistance.multiplyScalar(THREE.MathUtils.inverseLerp(this.maxSpeed, 0.0001, this.velocity.length())));
         //Calculate displacement
         displacement.copy(this.velocity).multiplyScalar(delta);
         //Calculate target position

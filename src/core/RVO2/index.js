@@ -21,7 +21,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {RVO_EPSILON, absSq, det, sqr, abs,} from './utilities.js';
+import {absSq, det, sqr, abs,} from './utilities.js';
 
 /**
  * Computes the new velocity for a given agent based on the ORCA algorithm.
@@ -52,7 +52,7 @@ export function computeNewVelocity(agent, timeStep) {
 
         for (let j = 0; j < agent._orcaLines.length; ++j) {
 
-            if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -RVO_EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -RVO_EPSILON) {
+            if (det(relativePosition1.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -Number.EPSILON && det(relativePosition2.clone().multiplyScalar(invTimeHorizonObst).sub(agent._orcaLines[j].point), agent._orcaLines[j].direction) - invTimeHorizonObst * agent.boundingRadius >= -Number.EPSILON) {
                 alreadyCovered = true;
                 break;
             }
@@ -330,7 +330,7 @@ function linearProgram1(lines, lineNo, radius, optVelocity, directionOpt, result
         const denominator = det(lines[lineNo].direction, lines[i].direction);
         const numerator = det(lines[i].direction, lines[lineNo].point.clone().sub(lines[i].point));
 
-        if (Math.abs(denominator) <= RVO_EPSILON) {
+        if (Math.abs(denominator) <= Number.EPSILON) {
             //Lines lineNo and i are (almost) parallel.
             if (numerator < 0) {
                 return false;
@@ -429,7 +429,7 @@ function linearProgram3(lines, numObstLines, beginLine, radius, result) {
 
                 let determinant = det(lines[i].direction, lines[j].direction);
 
-                if (Math.abs(determinant) <= RVO_EPSILON) {
+                if (Math.abs(determinant) <= Number.EPSILON) {
                     //Line i and line j are parallel.
                     if (lines[i].direction.clone().dot(lines[j].direction) > 0) {
                         //Line i and line j point in the same direction.

@@ -19,8 +19,6 @@
 
 import * as THREE from 'three';
 
-export const RVO_EPSILON = 1e-8;
-
 /**
  * Computes the squared length of a specified two-dimensional vector.
  * @param {THREE.Vector2} v - The two-dimensional vector whose squared length is to be computed.

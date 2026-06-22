@@ -26,10 +26,10 @@ class State extends YUKA.State {
 
     execute(owner) {
 
-        this.current_frame += 1;
+        this.current_frame++;
         //Blend frames
         if (this.current_blendFrame != 0 && owner.stateMachine.previousState) {
-            this.current_blendFrame -= 1;
+            this.current_blendFrame--;
         }
 
     }

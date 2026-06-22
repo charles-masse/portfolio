@@ -16,7 +16,7 @@ const velocitySmooth = new YUKA.Vector3();
 
 export default class extends YUKA.Vehicle {
 
-    constructor(id) {
+    constructor(id=-1) {
         super();
 
         this.active = false;

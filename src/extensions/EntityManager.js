@@ -20,7 +20,7 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-import {RVO_EPSILON, absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../core/RVO2/utilities.js';
+import {absSq, det, leftOf, sqr, distSqPointLineSegment,} from '../core/RVO2/utilities.js';
 
 const MAX_LEAF_SIZE = 10;
 
@@ -189,10 +189,10 @@ export default class extends YUKA.EntityManager {
                 const j1LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ1.point);
                 const j2LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ2.point);
 
-                if (j1LeftOfI >= -RVO_EPSILON && j2LeftOfI >= -RVO_EPSILON) {
+                if (j1LeftOfI >= -Number.EPSILON && j2LeftOfI >= -Number.EPSILON) {
                     ++leftSize;
 
-                } else if (j1LeftOfI <= RVO_EPSILON && j2LeftOfI <= RVO_EPSILON) {
+                } else if (j1LeftOfI <= Number.EPSILON && j2LeftOfI <= Number.EPSILON) {
                     ++rightSize;
 
                 } else {
@@ -232,9 +232,9 @@ export default class extends YUKA.EntityManager {
             const j1LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ1.point);
             const j2LeftOfI = leftOf(obstacleI1.point, obstacleI2.point, obstacleJ2.point);
 
-            if (j1LeftOfI >= -RVO_EPSILON && j2LeftOfI >= -RVO_EPSILON) {
+            if (j1LeftOfI >= -Number.EPSILON && j2LeftOfI >= -Number.EPSILON) {
                 leftObstacles.push(obstacles[j]);
-            } else if (j1LeftOfI <= RVO_EPSILON && j2LeftOfI <= RVO_EPSILON) {
+            } else if (j1LeftOfI <= Number.EPSILON && j2LeftOfI <= Number.EPSILON) {
                 rightObstacles.push(obstacles[j]);
             } else {
                 //Split obstacle j.
