@@ -43,7 +43,9 @@ class ModuleBridge {
 
     sendMessage(sender, receiver, message, delay, data) {
 
-        this._messageDispatcher.dispatch(sender, receiver, message, delay, data);
+        if (receiver != undefined) {
+            this._messageDispatcher.dispatch(sender, receiver, message, delay, data);
+        }
 
         return this;
     }
