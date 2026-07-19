@@ -17,10 +17,10 @@ class CrosswalkTrigger extends YUKA.Trigger {
 
     }
 
-    // handleMessage(/*telegram*/) {
-    //     //Skip message
-    //     return true;
-    // }
+    handleMessage(/*telegram*/) {
+        //Skip message
+        return true;
+    }
 
     execute(entity) {
 

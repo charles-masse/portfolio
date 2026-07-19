@@ -28,7 +28,8 @@ export class Pedestrians {
     constructor(stageData, camera, loadingManager) {
 
         this.state = 0;
-
+        this.crosswalks = [];
+        
         this.objects = new THREE.Group();
         //Spawn points
         this.exits = stageData.spawns.map((pt) => new YUKA.Vector3(...pt));
@@ -170,8 +171,6 @@ export class Pedestrians {
     }
 
     #initCrosswalk() {
-
-        this.crosswalks = [];
         //TODO load from JSON
         const NWCross = new CrosswalkTrigger(new PolygonalTriggerRegion([
             new YUKA.Vector3(-7, 0, 25),
@@ -279,7 +278,7 @@ export class Pedestrians {
 
     update(delta) {
         //Wait until it fully loads before updating
-        if (this.manager.active_agents.length != 0) {
+        if (this.initialized) {
 
             this.activateAgents();
             this.manager.update(delta);
@@ -309,14 +308,14 @@ export class Pedestrians {
 
         this.state = this.state % 2;
 
-        if (this.state === 0) {
+        if (this.crosswalks.length && this.state === 0) {
 
             this.crosswalks[0].enabled = true;
             this.crosswalks[1].enabled = false;
             this.crosswalks[2].enabled = true;
             this.crosswalks[3].enabled = false;
 
-        } else if (this.state === 1) {
+        } else if (this.crosswalks.length && this.state === 1) {
 
             this.crosswalks[0].enabled = false;
             this.crosswalks[1].enabled = true;

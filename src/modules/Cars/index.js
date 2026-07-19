@@ -20,6 +20,8 @@ export class Cars {
 
     constructor(stageData, loadingManager) {
 
+        this.lights = [];
+
         this.objects = new THREE.Group();
         //Convert road waypoints to vectors
         this.roads = [];
@@ -96,8 +98,6 @@ export class Cars {
     }
 
     #initLights() {
-
-        this.lights = [];
         //TODO load from JSON
         const NWStop = new YUKA.GameEntity();
         NWStop.boundingRadius = 0.5;
@@ -206,7 +206,7 @@ export class Cars {
 
             }
         //Traffic
-        } else if (telegram.sender === this.bridge.getModuleByName('Pedestrians')) {
+        } else if (this.lights.length && telegram.sender === this.bridge.getModuleByName('Pedestrians')) {
 
             if (telegram.data == 0) {
 
