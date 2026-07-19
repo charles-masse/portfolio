@@ -325,7 +325,10 @@ export class Pedestrians {
         }
         //Sending message to cars
         const cars = this.bridge.getModuleByName('Cars');
-        this.manager.sendMessage(this, cars, 'Traffic lights', 0, this.state);
+
+        if (cars != undefined) {
+            this.manager.sendMessage(this, cars, 'Traffic lights', 0, this.state);
+        }
 
     }
 
