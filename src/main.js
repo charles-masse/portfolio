@@ -5,7 +5,7 @@ import {Cars} from './modules/Cars';
 import {Pedestrians} from './modules/Pedestrians';
 import {City} from './modules/City';
 
-import Bridge from './modules/bridge.js';
+import Bridge from './modules/Bridge.js';
 
 import {Render} from './modules/Render';
 
