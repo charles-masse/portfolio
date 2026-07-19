@@ -46,11 +46,12 @@ export default class extends ModuleBridge {
     }
 
     update(delta) {
+
         super.update(delta);
         //Disable loading screen after all modules have been initialized
         const loadingScreen = document.getElementById('loading-screen');
 
-        if (loadingScreen/* && this.pedestrians.initialized && this.cars.initialized && this.city.initialized*/) {
+        if (loadingScreen && this.modules.filter(module => module.initialized).length === this.modules.length) {
             
             loadingScreen.classList.add('fade-out');
             loadingScreen.addEventListener('transitionend', loadingScreen.remove);
