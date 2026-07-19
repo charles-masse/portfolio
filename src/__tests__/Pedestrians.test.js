@@ -11,7 +11,9 @@ import EntityManager from '../extensions/EntityManager.js';
 import {getClosestDistance} from './utilities.js';
 
 import Agent from '../modules/Pedestrians/Agent.js';
-import {findBestNavMeshPoint,} from '../modules/Pedestrians';
+import {findBestNavMeshPoint,} from '../modules/Pedestrians/utilities.js';
+
+const delta_time = 1 / 24.;
 
 const AGENT_NUMBER = 5000;
 const AGENT_RADIUS = new Agent().boundingRadius;
@@ -24,7 +26,6 @@ const polygons = [
     new YUKA.Polygon().fromContour([new YUKA.Vector3(50, 0, 50), new YUKA.Vector3(50, 0, -50), new YUKA.Vector3(-50, 0, -50)]),
 ];
 navMesh.fromPolygons(polygons.flat());
-entityManager.navMesh = navMesh;
 
 test('Spawning non-intersecting agents', () => {
 
@@ -33,8 +34,9 @@ test('Spawning non-intersecting agents', () => {
             const entity = new Agent(i);
             entity.active = true;
             entity.position.copy(findBestNavMeshPoint(navMesh, entityManager.entities));
+            entity.stateMachine.changeTo('Walk');
 
-            entityManager.add(entity);
+            entityManager.addAgent(entity);
 
         }
         //Update for neighbors
@@ -45,6 +47,7 @@ test('Spawning non-intersecting agents', () => {
 
         expect(distance).toBeGreaterThanOrEqual(AGENT_RADIUS);
     }
+
 );
 //Create obstacles
 entityManager.addObstacle([
@@ -94,7 +97,7 @@ test('Non-colliding agents during simulation', () => {
         const distances = [];
         //Run sim
         for (let i = 0; i < 240; ++i) {
-            entityManager.update(0.0415);
+            entityManager.update(delta_time);
             distances.push(getClosestDistance(entityManager.entities));
         }
 

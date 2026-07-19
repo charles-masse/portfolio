@@ -3,8 +3,6 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
-const SPACING = 4;
-
 const direction = new YUKA.Vector3();
 const neighbor_direction = new YUKA.Vector3();
 const toNeighbor = new YUKA.Vector3();
@@ -12,8 +10,6 @@ const toNeighbor = new YUKA.Vector3();
 class BrakingBehavior extends YUKA.SteeringBehavior {
 
     calculate(vehicle, force/*, delta*/) {
-
-        this.test = null;
 
         vehicle.getDirection(direction);
 
@@ -40,10 +36,8 @@ class BrakingBehavior extends YUKA.SteeringBehavior {
         }
         
         if (closestNeighbor) {
-            this.test = closestNeighbor;
             //Apply a braking force proportional to the obstacles distance from the vehicle
-            const spacing = vehicle.boundingRadius + closestNeighbor.boundingRadius + SPACING;
-
+            const spacing = vehicle.boundingRadius + (closestNeighbor.boundingRadius * 3);
             const dist_factor = THREE.MathUtils.inverseLerp(vehicle.neighborhoodRadius, spacing, distanceToClosestNeighbor);
 
             // const moving_entity = closestNeighbor instanceof YUKA.MovingEntity;

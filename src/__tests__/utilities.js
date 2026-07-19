@@ -24,6 +24,21 @@ function getClosestDistance(entities) {
     return Math.min(...min_distances);
 }
 
+/**
+ * Returns a point on a circle.
+ * @param {number} r - The radius of the cicle.
+ * @param {number} a - The angle of the point.
+ * @returns {number|number} The 2d point (x, y).
+ */
+function pointOnCircle(r, a) {
+
+    const x = r * Math.sin(a);
+    const y = r * Math.cos(a);
+
+    return {x:x, y:y};
+}
+
 export {
     getClosestDistance,
+    pointOnCircle,
 };

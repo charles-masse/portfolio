@@ -17,6 +17,11 @@ class CrosswalkTrigger extends YUKA.Trigger {
 
     }
 
+    // handleMessage(/*telegram*/) {
+    //     //Skip message
+    //     return true;
+    // }
+
     execute(entity) {
 
         if (this.enabled === true) {
@@ -36,23 +41,6 @@ class CrosswalkTrigger extends YUKA.Trigger {
 
 }
 
-class PolygonalTriggerRegion extends YUKA.TriggerRegion {
-
-    constructor(points) {
-        super();
-
-        this.polygon = new YUKA.Polygon().fromContour(points);
-        this.polygon.computeCentroid();
-
-    }
-
-    touching(entity) {
-        return this.polygon.contains(entity.position);
-    }
-
-}
-
 export {
     CrosswalkTrigger,
-    PolygonalTriggerRegion,
 };

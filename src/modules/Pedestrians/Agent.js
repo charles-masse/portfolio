@@ -19,14 +19,22 @@ export default class extends YUKA.Vehicle {
     constructor(id=-1) {
         super();
 
-        this.active = false;
-
         this.id = id;
 
+        this.active = false;
+        //States
+        this.stateMachine = new StateMachine(this);
+        this.stateMachine.add('Cheer', new CheerState());
+        this.stateMachine.add('Idle', new IdleState());
+        this.stateMachine.add('Run', new RunState());
+        this.stateMachine.add('Walk', new WalkState());
+        //Neighborhood
+        this.maxNeighbors = 10;
         this.boundingRadius = 0.375;
         this.neighborhoodRadius = 4;
-        this.maxNeighbors = 10;
-
+        //Forces
+        this.mass = 0.5;
+        //ORCA
         this.orca_timeHorizon = 4;
         this.orca_timeHorizonObst = 4;
         //Animation blending
@@ -58,14 +66,6 @@ export default class extends YUKA.Vehicle {
         // const walk180R = new LocomotionClip('walk180R');
         // walk180R.locomotion.set(0, 0, -0.5);
         // agent.blendSpaces.add(walk180R);
-        //States
-        this.stateMachine = new StateMachine(this);
-        this.stateMachine.add('Cheer', new CheerState());
-        this.stateMachine.add('Idle', new IdleState());
-        this.stateMachine.add('Run', new RunState());
-        this.stateMachine.add('Walk', new WalkState());
-        
-        this.stateMachine.changeTo('Walk');
 
     }
 
@@ -74,21 +74,22 @@ export default class extends YUKA.Vehicle {
         this.active = bool;
 
         if (bool) {
-
+            //Activate agent
+            this.stateMachine.changeTo('Walk');
             this.manager.active_agents.push(this);
-
+            //Remove from inactive agents
             const id = this.manager.inactive_agents.indexOf(this);
             this.manager.inactive_agents.splice(id, 1);
 
         }
 
         else {
-
+            //Send agent to shadow realm
             this.position.set(0, -9999, 0); //Shadow Realm
             this._renderComponentCallback(this, this._renderComponent);
-
+            //Add to inactive agents
             this.manager.inactive_agents.push(this);
-
+            //Remove from active agents
             const id = this.manager.active_agents.indexOf(this);
             this.manager.active_agents.splice(id, 1);
 
@@ -97,11 +98,13 @@ export default class extends YUKA.Vehicle {
     }
 
     handleMessage(telegram) {
-        this.stateMachine.handleMessage(telegram);
+        //Pass message to state machine
+        return this.stateMachine.handleMessage(telegram);
+        
     }
 
     update(delta) {
-
+        //Forces calculation
         if (this.maxSpeed != 0) {
             //Calculate steering force
             this.steering.calculate(delta, steeringForce);
@@ -121,20 +124,10 @@ export default class extends YUKA.Vehicle {
             displacement.copy(this.velocity).multiplyScalar(delta);
             //Calculate target position
             target.copy(this.position).add(displacement);
-            // //Find path behavior
-            // let path;
-            // for (const behavior of this.steering.behaviors) {
-
-            //     if (behavior instanceof YUKA.FollowPathBehavior) {
-            //         path = behavior.path;
-
-            //         break;
-            //     }
-                
-            // }
             //Update the orientation if the vehicle has a non zero velocity
             if (this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001) {
-                this.lookAt(target);
+                // this.lookAt(target);
+                this.rotateTo(target, displacement.length());
             }
             //Update position
             this.position.copy(target);
@@ -146,7 +139,8 @@ export default class extends YUKA.Vehicle {
 
                 displacement.copy(velocitySmooth).multiplyScalar(delta);
                 target.copy(this.position).add(displacement);
-                this.lookAt(target);
+                // this.lookAt(target);
+                this.rotateTo(target, displacement.length());
 
             }
 

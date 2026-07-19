@@ -3,8 +3,6 @@ import * as YUKA from 'yuka';
 
 import {State,} from '../../extensions/states.js';
 
-// import MovieScreen from '../../modules/MovieScreen'
-
 class CheerState extends State {
 
     constructor() {
@@ -15,13 +13,21 @@ class CheerState extends State {
         
     }
 
-    // onMessage(owner, telegram) {ta
+    execute(owner) {
+        super.execute(owner);
 
-    //     if (telegram.sender instanceof MovieScreen && telegram.data == true) {
-    //         owner.stateMachine.changeTo('GoTo');
-    //     }
-        
-    // }
+        owner.rotateTo(new YUKA.Vector3(), 0.1);
+
+    }
+
+    onMessage(owner, telegram) {
+
+        if (telegram.data == true) {
+            owner.stateMachine.changeTo('Walk');
+        }
+
+        return true;
+    }
 
 }
 
@@ -42,9 +48,6 @@ class IdleState extends State {
         let arrive;
 
         for (const behavior of owner.steering.behaviors) {
-            // if (behavior instanceof YUKA.FollowPathBehavior) {
-                // follow = behavior;
-            // } 
 
             if (behavior instanceof YUKA.ArriveBehavior) {
 
@@ -118,13 +121,14 @@ class WalkState extends State {
 
     }
 
-    // onMessage(owner, telegram) {
+    onMessage(owner, telegram) {
 
-    //     if (telegram.sender instanceof MovieScreen && telegram.data == false) {
-    //         owner.stateMachine.changeTo('Cheer');
-    //     }
+        if (telegram.data == false) {
+            owner.stateMachine.changeTo('Cheer');
+        }
 
-    // }
+            return true;
+    }
 
 }
 

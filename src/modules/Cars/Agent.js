@@ -3,6 +3,8 @@ import * as THREE from 'three';
 
 import * as YUKA from 'yuka';
 
+import {BrakingBehavior,} from './behaviors.js';
+
 const steeringForce = new YUKA.Vector3();
 const displacement = new YUKA.Vector3();
 const acceleration = new YUKA.Vector3();
@@ -22,14 +24,23 @@ export default class extends YUKA.Vehicle {
         this.active = false;
 
         this.id = id;
-
-        this.mass = 0.75;
-        this.maxSpeed = 5;
-        this.maxTurnRate = THREE.MathUtils.degToRad(5);
-
+        //Neighborhood
         this.boundingRadius = 2;
         this.maxNeighbors = 10;
         this.neighborhoodRadius = 10;
+        //Forces
+        this.mass = 0.75;
+        this.maxSpeed = 5;
+        this.maxTurnRate = THREE.MathUtils.degToRad(5);
+        //Steering
+        const brake = new BrakingBehavior();
+        this.steering.add(brake);
+        
+        const followPath = new YUKA.FollowPathBehavior();
+        this.steering.add(followPath);
+
+        // const onPath = new YUKA.OnPathBehavior();
+        // agent.steering.add(onPath);
 
     }
 
@@ -41,7 +52,7 @@ export default class extends YUKA.Vehicle {
         return right.clone().multiplyScalar(right.dot(this.velocity));
     }
 
-    update(delta) {
+    checkAtEndOfPath() {
         //Find path behavior
         let path_behavior;
 
@@ -64,6 +75,12 @@ export default class extends YUKA.Vehicle {
             this.active = false;
 
         }
+
+    }
+
+    update(delta) {
+        //Disable agent if at end of path
+        this.checkAtEndOfPath();
         //Calculate steering force
         this.steering.calculate(delta, steeringForce);
         //Acceleration = Force / Mass

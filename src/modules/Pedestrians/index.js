@@ -5,9 +5,12 @@ import * as YUKA from 'yuka';
 
 import GUI from '../../extensions/GUI.js';
 import EntityManager from '../../extensions/EntityManager.js';
-import {NavMesh, Path,} from '../../extensions/navigation.js';
+import {NavMesh, Path, PolygonalTriggerRegion,} from '../../extensions/navigation.js';
 
 import {loadGLTF, loadTexture, rawTexture,} from '../../utilities/loaders.js';
+
+import {CrosswalkTrigger,} from './triggers.js';
+import {findBestNavMeshPoint,} from './utilities.js';
 
 import Agent from './Agent.js';
 import vert_shader from './Shader.vert';
@@ -16,70 +19,42 @@ import {ArriveBehavior,} from './behaviors.js';
 // import {createGraphHelper,} from '../../helpers/GraphHelper.js';
 // import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
 
-const MAX_AGENTS = 200;
+const MAX_AGENTS = 250;
 
-/**
- * Find a point on the navmesh that is as far as possible from the other entities.
- * @param {YUKA.NavMesh} navMesh - The navmesh to find the point on.
- * @param {YUKA.GameEntity[]} entities - The entities to find the point far from.
- * @returns {YUKA.Vector3} The best point found.
- */
-function findBestNavMeshPoint(navMesh, entities) {
+let accumulator = 0;
 
-    let best;
-    let maxDist = -Infinity;
-
-    for (let i = 0; i < 10; i++) {
-
-        const pos = navMesh.randomPoint();
-        const minDist = Math.min(...entities.map((entity) => pos.distanceTo(entity.position)));
-
-        if (minDist > maxDist) {
-
-            maxDist = minDist;
-            best = pos;
-
-        }
-
-    }
-
-    return best;
-}
-
-/**
- * Individually update an instance from the instacedMesh.
- * @param {YUKA.GameEntity} entity - The agent linked to the instance being updated.
- * @param {THREE.InstancedMesh} renderComponent - The instanced mesh the instance belongs to.
- * @param {THREE.Camera} camera - The scene's camera, used to calculate the distance from the agent to the camera.
- */
-function renderInstance(entity, renderComponent, camera) {
-    //Geo
-    renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
-    //Attributes
-    const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
-    instance_depth.array[entity.id] = camera.position.clone().sub(entity.position).length();
-
-    const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
-    instance_frame.array[entity.id] = entity.stateMachine.currentState.current_frame;
-
-}
-
-class Pedestrians {
+export class Pedestrians {
 
     constructor(stageData, camera, loadingManager) {
 
+        this.state = 0;
+
+        this.objects = new THREE.Group();
+        //Spawn points
+        this.exits = stageData.spawns.map((pt) => new YUKA.Vector3(...pt));
+        //Entity manager
         this.manager = new EntityManager();
         this.manager.active_agents = [];
         this.manager.inactive_agents = [];
-
-        this.objects = new THREE.Group();
-
-        this.initUI();
-        this.init(stageData, camera, loadingManager);
+        
+        this.#initialize(stageData, camera, loadingManager);
  
     }
 
-    initUI() {
+    async #initialize(stageData, camera, loadingManager) {
+
+        this.initialized = false;
+
+        await this.#initUI();
+        await this.#initNavMesh(stageData);
+        await this.#initCrowd(stageData, camera, loadingManager);
+        await this.#initCrosswalk();
+
+        this.initialized = true;
+
+    }
+
+    #initUI() {
 
         const gui = new GUI({title:'Crowd Spawner'});
         gui.domElement.style.position = 'static';
@@ -97,28 +72,32 @@ class Pedestrians {
         
     }
 
-    async init(stageData, camera, loadingManager) {
+    #initNavMesh(stageData) {
         //Create navmesh
         const navMesh = new NavMesh();
         navMesh.mergeConvexRegions = false;
+
         const polygons = [stageData.navmesh.map((poly) => new YUKA.Polygon().fromContour(poly.map((pt) => new YUKA.Vector3(...pt))))];
         navMesh.fromPolygons(polygons.flat());
+
         this.manager.navMesh = navMesh;
-        //Create Spawn points
-        this.exits = stageData.spawns.map((pt) => new YUKA.Vector3(...pt));
-        //Create Obstacles
-        for (const obstacle of stageData.obstacles) {
-            this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
-        }
-        //Generate obstacle tree
-        this.manager.buildObstacleTree();
         //Helpers
         // this.objects.add(createConvexRegionHelper(navMesh));
         // this.objects.add(createGraphHelper(navMesh.graph, 0.25, 0x00ff00, 0xff0000));
+
+    }
+    
+    async #initCrowd(stageData, camera, loadingManager) {
+        //Generate obstacle tree
+        for (const obstacle of stageData.obstacles) {
+            this.manager.addObstacle(obstacle.map((pt) => new THREE.Vector2(pt[0], pt[2])));
+        }
+        
+        this.manager.buildObstacleTree();
         //Load
         const agent_mesh = await loadGLTF('Pedestrians/pictogram.gltf', loadingManager);
         const anim_texture = await loadTexture('Pedestrians/VAT.png', loadingManager);
-        const alpha_texture = await loadTexture('Pedestrians/pictogramAlpha.png', loadingManager);
+        const alpha_texture = await loadTexture('Pedestrians/alpha.png', loadingManager);
 
         const agent_geo = agent_mesh.geometry;
         //Custom attributes
@@ -154,11 +133,6 @@ class Pedestrians {
             const agent = new Agent(i);
             this.manager.inactive_agents.push(agent);
             //Steering
-            // const obstacle = new YUKA.ObstacleAvoidanceBehavior(this.manager.entities);
-            // obstacle.brakingWeight = agent.maxSpeed;
-            // obstacle.dBoxMinLength = agent.boundingRadius * 2;
-            // agent.steering.add(obstacle);
-
             const arrive = new ArriveBehavior();
             agent.steering.add(arrive);
 
@@ -167,7 +141,16 @@ class Pedestrians {
             //Render
             agent.setRenderComponent(
                 this.instancedMesh,
-                (entity, renderComponent) => renderInstance(entity, renderComponent, camera)
+                (entity, renderComponent) => {
+                    //Geo
+                    renderComponent.setMatrixAt(entity.id, entity.worldMatrix);
+                    //Attributes
+                    const instance_depth = renderComponent.geometry.getAttribute('instance_depth');
+                    instance_depth.array[entity.id] = camera.position.clone().sub(entity.position).length();
+
+                    const instance_frame = renderComponent.geometry.getAttribute('instance_frame');
+                    instance_frame.array[entity.id] = entity.stateMachine.currentState.current_frame;
+                }
             );
             this.manager.addAgent(agent);
             //Shader attributes
@@ -183,6 +166,52 @@ class Pedestrians {
 
         this.instancedMesh.geometry.setAttribute("instance_id", new THREE.InstancedBufferAttribute(color, 3));
         this.instancedMesh.geometry.setAttribute("instance_variation", new THREE.InstancedBufferAttribute(variation, 1));
+
+    }
+
+    #initCrosswalk() {
+
+        this.crosswalks = [];
+        //TODO load from JSON
+        const NWCross = new CrosswalkTrigger(new PolygonalTriggerRegion([
+            new YUKA.Vector3(-7, 0, 25),
+            new YUKA.Vector3(-6.5, 0, 26.5),
+            new YUKA.Vector3(-4, 0, 28),
+            new YUKA.Vector3(-2.75, 0, 27.5)
+        ]));
+        NWCross.forward = new YUKA.Vector3(0.58124, 0, -0.81373);
+        this.manager.add(NWCross);
+        this.crosswalks.push(NWCross);
+
+        const NECross = new CrosswalkTrigger(new PolygonalTriggerRegion([
+            new YUKA.Vector3(3.25, 0, 26.75),
+            new YUKA.Vector3(6, 0, 27.75),
+            new YUKA.Vector3(8.75, 0, 26),
+            new YUKA.Vector3(9.5, 0, 24)
+        ]));
+        NECross.forward = new YUKA.Vector3(-0.44721, 0, -0.89443);
+        this.manager.add(NECross);
+        this.crosswalks.push(NECross);
+
+        const SWCross = new CrosswalkTrigger(new PolygonalTriggerRegion([
+            new YUKA.Vector3(-11, 0, 35.25),
+            new YUKA.Vector3(-13, 0, 35.25),
+            new YUKA.Vector3(-9.5, 0, 42.5),
+            new YUKA.Vector3(-9, 0, 38.5)
+        ]));
+        SWCross.forward = new YUKA.Vector3(-0.53, 0, 0.848);
+        this.manager.add(SWCross);
+        this.crosswalks.push(SWCross);
+
+        const SECross = new CrosswalkTrigger(new PolygonalTriggerRegion([
+            new YUKA.Vector3(13, 0, 35.25),
+            new YUKA.Vector3(11, 0, 39),
+            new YUKA.Vector3(12.5, 0, 42.25),
+            new YUKA.Vector3(15, 0, 37)
+        ]));
+        SECross.forward = new YUKA.Vector3(0.44721, 0, 0.89443);
+        this.manager.add(SECross);
+        this.crosswalks.push(SECross);
 
     }
 
@@ -217,9 +246,9 @@ class Pedestrians {
                 //Reset velocity and activate
                 agent.velocity.set(0, 0, 0);
 
-                // agent.smoother = null;
+                agent.smoother = null;
                 agent.lookAt(path.current());
-                // agent.smoother = new YUKA.Smoother(50);
+                agent.smoother = new YUKA.Smoother(25);
 
                 agent.setActive(true);
 
@@ -231,6 +260,18 @@ class Pedestrians {
                 agent.setActive(false);
 
             }
+
+        }
+
+    }
+
+    handleMessage(telegram) {
+
+        if (telegram.sender === this.bridge.getModuleByName('City')) {
+
+            this.manager.active_agents.forEach((entity) => {
+                this.manager.sendMessage(telegram.sender, entity, telegram.message, telegram.delay, telegram.data);
+            });
 
         }
 
@@ -255,12 +296,39 @@ class Pedestrians {
             }
 
         }
+        //Traffic lights
+        //TODO
+        accumulator += delta;
+
+        if (accumulator >= 15) {
+
+            this.state++;
+            accumulator = accumulator % 15;
+        
+        }
+
+        this.state = this.state % 2;
+
+        if (this.state === 0) {
+
+            this.crosswalks[0].enabled = true;
+            this.crosswalks[1].enabled = false;
+            this.crosswalks[2].enabled = true;
+            this.crosswalks[3].enabled = false;
+
+        } else if (this.state === 1) {
+
+            this.crosswalks[0].enabled = false;
+            this.crosswalks[1].enabled = true;
+            this.crosswalks[2].enabled = false;
+            this.crosswalks[3].enabled = true;
+
+        }
+        //Sending message to cars
+        const cars = this.bridge.getModuleByName('Cars');
+
+        this.manager.sendMessage(this, cars, 'Traffic lights', 0, this.state);
 
     }
 
 }
-
-export {
-    Pedestrians,
-    findBestNavMeshPoint,
-};

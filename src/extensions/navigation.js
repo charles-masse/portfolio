@@ -163,7 +163,24 @@ class NavMesh extends YUKA.NavMesh {
 
 }
 
+class PolygonalTriggerRegion extends YUKA.TriggerRegion {
+
+    constructor(points) {
+        super();
+
+        this.polygon = new YUKA.Polygon().fromContour(points);
+        this.polygon.computeCentroid();
+
+    }
+
+    touching(entity) {
+        return this.polygon.contains(entity.position);
+    }
+
+}
+
 export {
     Path,
     NavMesh,
+    PolygonalTriggerRegion,
 };

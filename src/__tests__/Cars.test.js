@@ -5,11 +5,12 @@ import * as YUKA from 'yuka';
 
 import EntityManager from '../extensions/EntityManager.js';
 
-import {getClosestDistance} from './utilities.js';
+import {getClosestDistance, pointOnCircle,} from './utilities.js';
 
 import Agent from '../modules/Cars/Agent.js';
-import {BrakingBehavior} from '../modules/Cars/behaviors.js';
-import {checkIntersection, randomOnPath} from '../modules/Cars';
+import {checkIntersection, randomOnPath} from '../modules/Cars/utilities.js';
+
+const delta_time = 1 / 24.;
 
 const AGENT_RADIUS = new Agent().boundingRadius;
 
@@ -17,20 +18,6 @@ const CIRCLE_RES = 30;
 const CIRCLE_RADIUS = 100;
 
 const MAX_FAIL = 10;
-
-/**
- * Returns a point on a circle.
- * @param {number} r - The radius of the cicle.
- * @param {number} a - The angle of the point.
- * @returns {number|number} The 2d point (x, y).
- */
-function pointOnCircle(r, a) {
-
-    const x = r * Math.sin(a);
-    const y = r * Math.cos(a);
-
-    return {x:x, y:y};
-}
 //Create Manager
 const entityManager = new EntityManager();
 //Create circle
@@ -66,15 +53,15 @@ test('Spawning non-intersecting agents', () => {
 
                 entity.active = true;
                 entity.position.copy(random_point[1]);
-                //Braking
-                entity.steering.add(new BrakingBehavior());
-                //Follow path
+                //Create path
                 const path = new YUKA.Path();
                 path.loop = true;
+
                 for (const point of circle.slice(random_point[0]).concat(circle.slice(0, random_point[0]))) {
                     path.add(point);
                 }
-                entity.steering.add(new YUKA.FollowPathBehavior(path));
+                //TODO: Find path behavior
+                entity.steering.behaviors[1].path = path;
 
                 entityManager.add(entity);
 
@@ -92,6 +79,7 @@ test('Spawning non-intersecting agents', () => {
 
         expect(distance).toBeGreaterThanOrEqual(AGENT_RADIUS);
     }
+    
 );
 
 test('Braking without intersection', () => {
@@ -99,7 +87,7 @@ test('Braking without intersection', () => {
         const distances = [];
         //Run sim
         for (let i = 0; i < 24; ++i) {
-            entityManager.update(0.0415);
+            entityManager.update(delta_time);
             distances.push(getClosestDistance(entityManager.entities));
         }
         //Check distance between agents
@@ -108,4 +96,5 @@ test('Braking without intersection', () => {
 
         expect(distance).toBeGreaterThanOrEqual(AGENT_RADIUS);
     }
+
 );

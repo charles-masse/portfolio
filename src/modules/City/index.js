@@ -5,6 +5,8 @@ import {loadOBJ, loadTexture,} from '../../utilities/loaders.js';
 
 import {START_TIME_SECS, SUN_SPEED, DAY_EVENTS,} from '../../settings.js';
 
+let elapsed = 0;
+
 export class City {
 
     constructor(scene, loadingManager) {
@@ -15,11 +17,21 @@ export class City {
 
         this.current_event = 0;
         
-        this.init(loadingManager);
+        this.#initialize(loadingManager);
 
     }
 
-    async init(loadingManager) {
+    async #initialize(loadingManager) {
+
+        this.initialized = false;
+
+        await this.#initCity(loadingManager);
+
+        this.initialized = true;
+
+    }
+
+    async #initCity(loadingManager) {
 
         this.scene.background = new THREE.Color();
 
@@ -99,7 +111,21 @@ export class City {
 
     }
 
-    update(elapsed) {
+    interact() {
+
+        if (this.video.paused) {
+            this.video.play();
+        } else {
+            this.video.pause();
+        }
+
+        this.playButton.visible = this.video.paused;
+
+    }
+
+    update(delta) {
+
+        elapsed += delta;
 
         if (this.sun) {
 
@@ -124,8 +150,12 @@ export class City {
                 }
 
             }
-
+            //Check for current event id
             const current_id = this.current_event;
+            //Send message to car module
+            const cars = this.bridge.getModuleByName('Cars');
+            this.bridge.sendMessage(this, cars, '[Nightfall] Current event', 0, current_id);
+
             const current = DAY_EVENTS[current_id];
 
             const next_id = (this.current_event + 1) % DAY_EVENTS.length;
@@ -150,22 +180,6 @@ export class City {
             this.city.material.emissive.lerpColors(current.emissive_color, next.emissive_color, blend_factor);
         }
 
-    }
-
-    interact() {
-
-        if (this.video.paused) {
-            this.video.play();
-        } else {
-            this.video.pause();
-        }
-
-        this.playButton.visible = this.video.paused;
-        //Send message to agents
-        // this.pedestrians.manager.entities.forEach((entity) => {
-        //     this.pedestrians.manager.sendMessage(this, entity, '[MovieScreen] State Change', 0, this.video.paused);
-        // });
-        
     }
 
 }
