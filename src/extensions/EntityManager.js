@@ -36,6 +36,19 @@ export default class extends YUKA.EntityManager {
 
     }
 
+    sendMessage( sender, receiver, message, delay, data ) {
+
+        if (receiver != undefined) {
+            this._messageDispatcher.dispatch( sender, receiver, message, delay, data );
+        } 
+
+        else {
+            YUKA.Logger.warn('YUKA.EntityManager: Cannot send message to undefined receiver');
+        }
+
+        return this;
+    }
+
     addAgent(entity) {
         this.add(entity);
     }

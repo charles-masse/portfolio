@@ -37,6 +37,7 @@ export default class extends ModuleBridge {
                 city.interact();
                 // Send message to pedestrians
                 const pedestrians = this.getModuleByName('Pedestrians');
+                
                 this.sendMessage(city, pedestrians, '[MovieScreen] State Change', 0, city.video.paused);
 
             }
