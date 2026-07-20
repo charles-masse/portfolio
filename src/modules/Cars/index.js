@@ -195,7 +195,7 @@ export class Cars {
 
     handleMessage(telegram) {
         //Headlights
-        if (telegram.sender === this.bridge.getModuleByName('City')) {
+        if (telegram.sender === this.bridge.get('City')) {
             //TODO activate/deactivate alpha
             for (const agent of this.manager.active_agents) {
                 if (telegram.data >= 2) {
@@ -206,7 +206,7 @@ export class Cars {
 
             }
         //Traffic
-        } else if (this.lights.length && telegram.sender === this.bridge.getModuleByName('Pedestrians')) {
+        } else if (this.lights.length && telegram.sender === this.bridge.get('Pedestrians')) {
 
             if (telegram.data == 0) {
 

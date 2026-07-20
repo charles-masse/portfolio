@@ -153,7 +153,7 @@ export class City {
             //Check for current event id
             const current_id = this.current_event;
             //Send message to car module
-            const cars = this.bridge.getModuleByName('Cars');
+            const cars = this.bridge.get('Cars');
 
             this.bridge.sendMessage(this, cars, '[Nightfall] Current event', 0, current_id);
 

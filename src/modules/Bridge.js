@@ -5,19 +5,18 @@ import {ModuleBridge} from '../core/modules.js';
 
 import GUI from '../extensions/GUI.js';
 
-const controller_values = {
-    id: 0,
-    'Pos x': 0,
-    'Pos y': 0,
-    'Pos z': 0,
-    'Dir x': 0,
-    'Dir y': 0,
-    'Dir z': 0,
-    Variation:'skirt',
-    Distance:[],
-    Result:[]
-};
-    
+// const controller_values = {
+//     id: 0,
+//     'Pos x': 0,
+//     'Pos y': 0,
+//     'Pos z': 0,
+//     'Dir x': 0,
+//     'Dir y': 0,
+//     'Dir z': 0,
+//     Variation:'skirt',
+//     Distance:[],
+//     Result:[]
+// };
 
 export default class extends ModuleBridge {
 
@@ -43,7 +42,7 @@ export default class extends ModuleBridge {
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse, this.camera);
             //Movie screen
-            const city = this.getModuleByName('City');
+            const city = this.get('City');
 
             const intersection = raycaster.intersectObject(city.objects.children[4], true);
 
@@ -51,7 +50,7 @@ export default class extends ModuleBridge {
 
                 city.interact();
                 // Send message to pedestrians
-                const pedestrians = this.getModuleByName('Pedestrians');
+                const pedestrians = this.get('Pedestrians');
                 
                 this.sendMessage(city, pedestrians, '[MovieScreen] State Change', 0, city.video.paused);
 
@@ -94,7 +93,7 @@ export default class extends ModuleBridge {
         //Disable loading screen after all modules have been initialized
         const loadingScreen = document.getElementById('loading-screen');
 
-        if (loadingScreen && this.modules.filter(module => module.initialized).length === this.modules.length) {
+        if (loadingScreen&& this.modules.values().filter(module => module.initialized).length === this.modules.length) {
             
             loadingScreen.classList.add('fade-out');
             loadingScreen.addEventListener('transitionend', loadingScreen.remove);

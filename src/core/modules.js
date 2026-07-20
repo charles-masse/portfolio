@@ -7,28 +7,21 @@ class ModuleBridge {
 
         this._messageDispatcher = new YUKA.MessageDispatcher();
 
-        this.modules = [];
+        this.modules = new Map();
 
     }
 
-    add(module) {
+    add(id, module) {
 
-        this.modules.push(module);
+        this.modules.set(id, module);
 
         module.bridge = this;
 
         return this;
     }
 
-    getModuleByName(name) {
-
-        const module_id = this.modules.map(module => module.constructor.name).indexOf(name);
-
-        if (module_id != -1) {
-            return this.modules[module_id];
-        }
-
-        return;
+    get(id) {
+        return this.modules.get(id);
     }
 
     remove(module) {
@@ -58,8 +51,8 @@ class ModuleBridge {
 
         const modules = this.modules;
         // update modules
-        for (let i = (modules.length - 1); i >= 0; i--) {
-            modules[i].update(delta);
+        for (const module of modules.values()) {
+            module.update(delta);
         }
 
     }

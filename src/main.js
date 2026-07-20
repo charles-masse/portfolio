@@ -58,9 +58,9 @@ const pedestrians = new Pedestrians(stage_data, camera, loadingManager);
 scene.add(pedestrians.objects);
 
 const bridge = new Bridge(camera);
-bridge.add(city);
-bridge.add(cars);
-bridge.add(pedestrians);
+bridge.add('City', city);
+bridge.add('Cars', cars);
+bridge.add('Pedestrians', pedestrians);
 
 const render = new Render(renderer, scene, camera, pedestrians);
 //Listeners

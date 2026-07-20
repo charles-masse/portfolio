@@ -266,7 +266,7 @@ export class Pedestrians {
 
     handleMessage(telegram) {
 
-        if (telegram.sender === this.bridge.getModuleByName('City')) {
+        if (telegram.sender === this.bridge.get('City')) {
 
             this.manager.active_agents.forEach((entity) => {
                 this.manager.sendMessage(telegram.sender, entity, telegram.message, telegram.delay, telegram.data);
@@ -324,7 +324,7 @@ export class Pedestrians {
 
         }
         //Sending message to cars
-        const cars = this.bridge.getModuleByName('Cars');
+        const cars = this.bridge.get('Cars');
 
         this.manager.sendMessage(this, cars, 'Traffic lights', 0, this.state);
 
