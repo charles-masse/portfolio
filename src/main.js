@@ -11,6 +11,7 @@ import {Render} from './modules/Render';
 
 import {loadJSON,} from './utilities/loaders.js';
 
+import {PerspectiveCamera} from './extensions/three.js';
 import Stats from './extensions/Stats.js';
 //UI
 const stats = new Stats();
@@ -33,20 +34,14 @@ const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(stage_data.camera.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.matrix = new THREE.Matrix4().fromArray(stage_data.camera.matrix);
-camera.matrix.decompose(
-    camera.position,
-    camera.quaternion,
-    camera.scale
-);
-camera.updateMatrix();
+const camera = new PerspectiveCamera().fromJSON(stage_data.camera);
 
 const renderer = new THREE.WebGLRenderer({
     canvas : document.querySelector('#canvas'),
 });
-renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
+//Match Window size/ratio
+resizeWindow();
 //Modules
 const city = new City(scene, loadingManager);
 scene.add(city.objects);
@@ -65,7 +60,7 @@ bridge.add('Pedestrians', pedestrians);
 const render = new Render(renderer, scene, camera, pedestrians);
 //Listeners
 initListeners();
-//Animation loop
+//Framecap
 const time = new THREE.Timer();
 time.connect(document);
 
@@ -74,8 +69,15 @@ const capped_time = new THREE.Timer();
 capped_time.connect(document);
 
 let accumulator = 0;
-
+//Run
 animate();
+
+/**
+ * Initializes listeners.
+ */
+function initListeners() {
+    window.addEventListener('resize', resizeWindow);
+}
 
 /**
  * The main animation loop for the application. Framerate is capped at 24 FPS.
@@ -103,18 +105,13 @@ function animate() {
     }
 
 }
-/**
- * Initializes listeners.
- */
-function initListeners() {
 
-    window.addEventListener('resize', () => {
+function resizeWindow() {
 
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
 
-        renderer.setSize(window.innerWidth, window.innerHeight);
-
-    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
+
