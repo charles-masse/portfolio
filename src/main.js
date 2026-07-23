@@ -29,7 +29,7 @@ const loadingManager = new THREE.LoadingManager(
     }
 
 );
-
+//Data from JSON
 const stage_data = await loadJSON('stage.json', loadingManager);
 //Scene
 const scene = new THREE.Scene();

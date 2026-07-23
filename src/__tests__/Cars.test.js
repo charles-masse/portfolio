@@ -60,8 +60,15 @@ test('Spawning non-intersecting agents', () => {
                 for (const point of circle.slice(random_point[0]).concat(circle.slice(0, random_point[0]))) {
                     path.add(point);
                 }
-                //TODO: Find path behavior
-                entity.steering.behaviors[1].path = path;
+                //Add Path to behavior
+                for (const behavior of entity.steering.behaviors) {
+
+                    if (behavior instanceof YUKA.FollowPathBehavior) {
+                        behavior.path = path;
+                        break;
+                    }
+
+                }
 
                 entityManager.add(entity);
 

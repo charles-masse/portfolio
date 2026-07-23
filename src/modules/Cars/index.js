@@ -196,7 +196,7 @@ export class Cars {
     handleMessage(telegram) {
         //Headlights
         if (telegram.sender === this.bridge.get('City')) {
-            //TODO activate/deactivate alpha
+            //activate/deactivate alpha
             for (const agent of this.manager.active_agents) {
                 if (telegram.data >= 2) {
                     this.instancedMesh.geometry.attributes.instance_headlights.array[agent.id] = 0.;
@@ -208,20 +208,21 @@ export class Cars {
         //Traffic
         } else if (this.lights.length && telegram.sender === this.bridge.get('Pedestrians')) {
 
-            if (telegram.data == 0) {
+            this.lights[0].active = true;
+            this.lights[1].active = true;
+            this.lights[2].active = true;
+            this.lights[3].active = true;
+
+            if (telegram.data == 1) {
 
                 this.lights[0].active = false;
-                this.lights[1].active = true;
                 this.lights[2].active = false;
-                this.lights[3].active = true;
 
             } 
             
-            else if (telegram.data == 1) {
+            if (telegram.data == 3) {
 
-                this.lights[0].active = true;
                 this.lights[1].active = false;
-                this.lights[2].active = true;
                 this.lights[3].active = false;
 
             }

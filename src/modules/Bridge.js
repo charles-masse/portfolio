@@ -32,7 +32,7 @@ export default class extends ModuleBridge {
 
     #initListeners() {
 
-        window.addEventListener('pointerdown', () => {
+        window.addEventListener('pointerdown', (event) => {
 
             const mouse = new THREE.Vector2(
                 (event.clientX / window.innerWidth) * 2 - 1,
@@ -93,7 +93,7 @@ export default class extends ModuleBridge {
         //Disable loading screen after all modules have been initialized
         const loadingScreen = document.getElementById('loading-screen');
 
-        if (loadingScreen&& this.modules.values().filter(module => module.initialized).length === this.modules.length) {
+        if (loadingScreen && this.modules.values().filter(module => module.initialized).length === this.modules.length) {
             
             loadingScreen.classList.add('fade-out');
             loadingScreen.addEventListener('transitionend', loadingScreen.remove);

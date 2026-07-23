@@ -19,7 +19,7 @@ import {ArriveBehavior,} from './behaviors.js';
 // import {createGraphHelper,} from '../../helpers/GraphHelper.js';
 // import {createConvexRegionHelper,} from '../../helpers/NavMeshHelper.js';
 
-const MAX_AGENTS = 250;
+const MAX_AGENTS = 200;
 
 let accumulator = 0;
 
@@ -296,7 +296,6 @@ export class Pedestrians {
 
         }
         //Traffic lights
-        //TODO
         accumulator += delta;
 
         if (accumulator >= 15) {
@@ -306,26 +305,32 @@ export class Pedestrians {
         
         }
 
-        this.state = this.state % 2;
+        this.state = this.state % 4;
 
-        if (this.crosswalks.length && this.state === 0) {
+        if (this.crosswalks.length) {
 
             this.crosswalks[0].enabled = true;
-            this.crosswalks[1].enabled = false;
-            this.crosswalks[2].enabled = true;
-            this.crosswalks[3].enabled = false;
-
-        } else if (this.crosswalks.length && this.state === 1) {
-
-            this.crosswalks[0].enabled = false;
             this.crosswalks[1].enabled = true;
-            this.crosswalks[2].enabled = false;
+            this.crosswalks[2].enabled = true;
             this.crosswalks[3].enabled = true;
+
+            if (this.state === 1) {
+
+                this.crosswalks[1].enabled = false;
+                this.crosswalks[3].enabled = false;
+
+            }
+            
+            if (this.state === 3) {
+
+                this.crosswalks[0].enabled = false;
+                this.crosswalks[2].enabled = false;
+
+            }
 
         }
         //Sending message to cars
         const cars = this.bridge.get('Cars');
-
         this.manager.sendMessage(this, cars, 'Traffic lights', 0, this.state);
 
     }

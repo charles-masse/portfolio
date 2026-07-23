@@ -69,6 +69,3 @@ Finally, crowd simulation is not just about optimizing the geo. During steering 
 
 ### Be interesting on phones and computers
 
-
-## Special Thanks
-- [Mugen87](https://github.com/Mugen87) for the [Yuka Game AI library](https://github.com/Mugen87/yuka)
